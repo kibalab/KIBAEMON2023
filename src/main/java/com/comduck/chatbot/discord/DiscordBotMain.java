@@ -4,13 +4,12 @@ import com.sun.org.apache.xpath.internal.functions.FuncFalse;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.Channel;
-import net.dv8tion.jda.core.entities.Emote;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageReaction;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.managers.AudioManager;
+
 import java.awt.Color;
 
 public class DiscordBotMain extends ListenerAdapter {
@@ -72,6 +71,17 @@ public class DiscordBotMain extends ListenerAdapter {
             event.getChannel().sendMessage(eb.build()).queue();
             Message sendMsg = event.getMessage();
             wait_reaction(sendMsg, "⏹" );
+        }
+        else if( msg.startsWith("join") )
+        {
+            VoiceChannel Vch = event.getMember().getVoiceState().getChannel();
+            AudioManager audiomng = event.getGuild().getAudioManager();
+            audiomng.openAudioConnection(Vch);
+        }
+        else if( msg.startsWith("stop") )
+        {
+            VoiceChannel Vch = event.getGuild().getSelfMember().getVoiceState().getChannel();
+            event.getGuild().getAudioManager().closeAudioConnection();
         }
     }
 
