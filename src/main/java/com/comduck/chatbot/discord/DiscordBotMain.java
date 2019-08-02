@@ -169,6 +169,30 @@ public class DiscordBotMain extends ListenerAdapter {
 
 
         }
+
+        else if( msg.startsWith("volume") )
+        {
+            String _Nvol = msg.replaceFirst("volume ", "");
+            PlayerManager manager = PlayerManager.getInstance();
+            GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
+            AudioPlayer player = musicManager.player;
+
+            int Ovol = player.getVolume();
+            int Nvol = Integer.parseInt(_Nvol);
+
+            if(Nvol > 100){
+                Nvol = 100;
+            }
+
+            event.getChannel().sendMessage(String.format(
+                    "> 음량 제어 %d->%s",
+                    Ovol,
+                    Nvol
+            )).queue();
+
+            player.setVolume(Nvol);
+        }
+
         else if( msg.startsWith("tracklist") )
         {
             PlayerManager manager = PlayerManager.getInstance();
@@ -199,10 +223,13 @@ public class DiscordBotMain extends ListenerAdapter {
                 ));
                 Queue playelist = scheduler.getQueue();
                 String str = "";
-                for(int i=1; playelist.size() != 0; i++){
-                   AudioTrack t = (AudioTrack) playelist.poll();
-                   str += String.format("%d. %s\n", i, t.getInfo().title);
+                if(playelist.size() != 0) {
+                    for (int i = 1; playelist.size() != 0; i++) {
+                        AudioTrack t = (AudioTrack) playelist.poll();
+                        str += String.format("%d. %s\n", i, t.getInfo().title);
+                    }
                 }
+                else{str = "None";}
                 eb.addField("TrackList", str, false);
                 event.getChannel().sendMessage(eb.build()).queue();
             }
