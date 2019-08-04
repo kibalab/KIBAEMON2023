@@ -53,10 +53,11 @@ public class TrackScheduler extends AudioEventAdapter {
 
     //트랙이 끝났을 경우 발생함
     @Override
-    public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        // Only start the next track if the end reason is suitable for it (FINISHED or LOAD_FAILED)
-        if (endReason.mayStartNext) {
-            nextTrack();
-        }
+        public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+            // Only start the next track if the end reason is suitable for it (FINISHED or LOAD_FAILED)
+            if (endReason.mayStartNext) {
+                nextTrack();
+                System.out.println("Check");
+            }
     }
 }
