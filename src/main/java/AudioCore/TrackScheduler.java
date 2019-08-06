@@ -35,6 +35,7 @@ public class TrackScheduler extends AudioEventAdapter {
         // something is playing, it returns false and does nothing. In that case the player was already playing so this
         // track goes to the queue instead.
         if (!player.startTrack(track, true)) {
+            track.stop();
             queue.offer(track);
         }
     }
@@ -57,7 +58,7 @@ public class TrackScheduler extends AudioEventAdapter {
             // Only start the next track if the end reason is suitable for it (FINISHED or LOAD_FAILED)
             if (endReason.mayStartNext) {
                 nextTrack();
-                System.out.println("Check");
+                System.out.println("Check " + track.getPosition());
             }
     }
 }

@@ -18,10 +18,15 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.managers.AudioManager;
 
 import java.awt.Color;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 public class DiscordBotMain extends ListenerAdapter {
+
+    public int globalVolume = 10;
 
     public static void main(String[] args) throws Exception {
         new DiscordBotMain().start();
@@ -46,6 +51,7 @@ public class DiscordBotMain extends ListenerAdapter {
     public void onGenericMessageReaction(GenericMessageReactionEvent event) {
         super.onGenericMessageReaction(event);
         System.out.println(String.format("{'Type': 'Reaction', 'Guild_Name': '%s', 'Chennal_Name': '%s', 'Author': '%s', 'Reaction': '%s', 'Message_ID': '%s'}", event.getGuild().getName(), event.getChannel().getName(), event.getUser().getName(), event.getReaction(), event.getMessageId() ));
+        System.out.println(event.getUser().isBot());
     }
 
     //메시지 수신 이벤트
@@ -116,7 +122,7 @@ public class DiscordBotMain extends ListenerAdapter {
 
             PlayerManager manager = PlayerManager.getInstance();
             manager.loadAndPlay(event, url);
-            manager.getGuildMusicManager(event.getGuild()).player.setVolume(10);
+            manager.getGuildMusicManager(event.getGuild()).player.setVolume(globalVolume);
         }
         else if( msg.startsWith("join") )
         {
@@ -221,8 +227,8 @@ public class DiscordBotMain extends ListenerAdapter {
                     Ovol,
                     Nvol
             )).queue();
-
-            player.setVolume(Nvol);
+            globalVolume = Nvol;
+            player.setVolume(globalVolume);
         }
 
         else if( msg.startsWith("tracklist") )
@@ -253,21 +259,22 @@ public class DiscordBotMain extends ListenerAdapter {
                         formatTime(player.getPlayingTrack().getPosition()),
                         formatTime(player.getPlayingTrack().getDuration())
                 ));
-                Queue playelist = scheduler.getQueue();
+                List playelist = new ArrayList(scheduler.getQueue());
                 String str = "";
                 if(playelist.size() != 0) {
-                    for (int i = 1; playelist.size() != 0; i++) {
-                        AudioTrack t = (AudioTrack) playelist.poll();
-                        str += String.format("%d. %s\n", i, t.getInfo().title);
+                    for (int i = 0;  true; i++) {
+                        if ( playelist.size() == i )
+                        {
+                            break;
+                        }
+                        AudioTrack t = (AudioTrack) playelist.get(i);
+                        str += String.format("%d. %s\n", i+1, t.getInfo().title);
                     }
                 }
                 else{str = "None";}
                 eb.addField("TrackList", str, false);
                 event.getChannel().sendMessage(eb.build()).queue();
             }
-
-
-
         }
     }
 

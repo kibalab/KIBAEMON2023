@@ -124,6 +124,7 @@ public class PlayerManager {
     //큐에 넘기기
     private void play(GuildMusicManager musicManager, AudioTrack track)
     {
+        track.stop();
         musicManager.scheduler.queue(track);
     }
 
