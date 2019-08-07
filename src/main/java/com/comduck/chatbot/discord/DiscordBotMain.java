@@ -52,27 +52,26 @@ public class DiscordBotMain extends ListenerAdapter {
 
     /**
      * 리액션 수신 이벤트
+     *
      * @param event
      */
     @Override
     public void onGenericMessageReaction(GenericMessageReactionEvent event) {
         super.onGenericMessageReaction(event);
-        System.out.println(String.format("{'Type': 'Reaction', 'Guild_Name': '%s', 'Chennal_Name': '%s', 'Author': '%s', 'Reaction': '%s', 'Message_ID': '%s'}", event.getGuild().getName(), event.getChannel().getName(), event.getUser().getName(), event.getReaction(), event.getMessageId() ));
-        if( !event.getUser().isBot() )
-        {
+        System.out.println(String.format("{'Type': 'Reaction', 'Guild_Name': '%s', 'Chennal_Name': '%s', 'Author': '%s', 'Reaction': '%s', 'Message_ID': '%s'}", event.getGuild().getName(), event.getChannel().getName(), event.getUser().getName(), event.getReaction(), event.getMessageId()));
+        if (!event.getUser().isBot()) {
             onReactionBindCommand(event);
         }
     }
 
     /**
      * 리액션 커맨드
+     *
      * @param event
      */
-    private void onReactionBindCommand(GenericMessageReactionEvent event)
-    {
+    private void onReactionBindCommand(GenericMessageReactionEvent event) {
         //Stop
-        if( event.getReactionEmote().getName().equals("⏹") )
-        {
+        if (event.getReactionEmote().getName().equals("⏹")) {
             event.getChannel().sendMessage(String.format(
                     "> 대기열 재생 중지 ``%s``",
                     event.getUser().getName()
@@ -86,15 +85,13 @@ public class DiscordBotMain extends ListenerAdapter {
             player.stopTrack();
             player.setPaused(false);
         }
-        if( event.getReactionEmote().getName().equals("⏭") )
-        {
+        if (event.getReactionEmote().getName().equals("⏭")) {
             PlayerManager manager = PlayerManager.getInstance();
             GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
             AudioPlayer player = musicManager.player;
             TrackScheduler scheduler = musicManager.scheduler;
 
-            if(player.getPlayingTrack() == null)
-            {
+            if (player.getPlayingTrack() == null) {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0xff6624));
                 eb.addField("경고 Warning", String.format(
@@ -102,9 +99,7 @@ public class DiscordBotMain extends ListenerAdapter {
                         event.getUser().getName()
                 ), false);
                 event.getChannel().sendMessage(eb.build()).queue();
-            }
-            else
-            {
+            } else {
                 event.getChannel().sendMessage(String.format(
                         "> 곡 스킵 ``%s``",
                         event.getUser().getName()
@@ -113,8 +108,7 @@ public class DiscordBotMain extends ListenerAdapter {
             }
         }
         //printURL
-        if( event.getReactionEmote().getName().equals("🎦") )
-        {
+        if (event.getReactionEmote().getName().equals("🎦")) {
             PlayerManager manager = PlayerManager.getInstance();
             GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
             AudioPlayer player = musicManager.player;
@@ -122,14 +116,13 @@ public class DiscordBotMain extends ListenerAdapter {
 
             event.getChannel().sendMessage(String.format("> %s", player.getPlayingTrack().getInfo().uri)).queue();
         }
-        if( event.getReactionEmote().getName().equals("\uD83C\uDFB6") )
-        {
+        if (event.getReactionEmote().getName().equals("\uD83C\uDFB6")) {
             PlayerManager manager = PlayerManager.getInstance();
             GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
             AudioPlayer player = musicManager.player;
             TrackScheduler scheduler = musicManager.scheduler;
 
-            if(player.getPlayingTrack() == null){
+            if (player.getPlayingTrack() == null) {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0xff6624));
                 eb.addField("경고 Warning", String.format(
@@ -137,9 +130,7 @@ public class DiscordBotMain extends ListenerAdapter {
                         event.getUser().getName().toString()
                 ), false);
                 event.getChannel().sendMessage(eb.build()).queue();
-            }
-            else
-            {
+            } else {
                 AudioTrackInfo info = player.getPlayingTrack().getInfo();
 
                 EmbedBuilder eb = new EmbedBuilder();
@@ -152,22 +143,22 @@ public class DiscordBotMain extends ListenerAdapter {
                 ));
                 List playelist = new ArrayList(scheduler.getQueue());
                 String str = "";
-                if(playelist.size() != 0) {
-                    for (int i = 0;  true; i++) {
-                        if ( playelist.size() == i )
-                        {
+                if (playelist.size() != 0) {
+                    for (int i = 0; true; i++) {
+                        if (playelist.size() == i) {
                             break;
                         }
                         AudioTrack t = (AudioTrack) playelist.get(i);
-                        str += String.format("%d. %s\n", i+1, t.getInfo().title);
+                        str += String.format("%d. %s\n", i + 1, t.getInfo().title);
                     }
+                } else {
+                    str = "None";
                 }
-                else{str = "None";}
                 eb.addField("TrackList", str, false);
                 event.getChannel().sendMessage(eb.build()).queue();
             }
         }
-        if( event.getReactionEmote().getName().equals("\uD83D\uDD00") ){
+        if (event.getReactionEmote().getName().equals("\uD83D\uDD00")) {
             PlayerManager manager = PlayerManager.getInstance();
             GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
             AudioPlayer player = musicManager.player;
@@ -175,25 +166,24 @@ public class DiscordBotMain extends ListenerAdapter {
             Queue queue = scheduler.getQueue();
             List<AudioTrack> list = new ArrayList<>();
 
-            if(queue.size() != 0){
-                for(int i=0; true; i++){
+            if (queue.size() != 0) {
+                for (int i = 0; true; i++) {
                     list.add((AudioTrack) queue.poll());
-                    if( queue.size() == 0 ){
+                    if (queue.size() == 0) {
                         break;
                     }
                 }
 
                 Collections.shuffle(list);
 
-                for(int i=0; true; i++){
+                for (int i = 0; true; i++) {
                     queue.offer(list.get(i));
-                    if( queue.size() == list.size() ){
+                    if (queue.size() == list.size()) {
                         break;
                     }
                 }
                 event.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", event.getUser().getName())).queue();
-            }
-            else{
+            } else {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0xff6624));
                 eb.addField("경고 Warning", String.format(
@@ -207,38 +197,37 @@ public class DiscordBotMain extends ListenerAdapter {
 
     /**
      * 메시지 수신 이벤트
+     *
      * @param event
      */
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
 
         //로그 출력
-        System.out.println(String.format("{'Type': 'Message', 'Guild_Name': '%s', 'Chennal_Name': '%s', 'Author': '%s', 'Context': '%s'}", event.getGuild().getName(), event.getChannel().getName(), event.getAuthor().getName(), event.getMessage().getContentRaw() ));
+        System.out.println(String.format("{'Type': 'Message', 'Guild_Name': '%s', 'Chennal_Name': '%s', 'Author': '%s', 'Context': '%s'}", event.getGuild().getName(), event.getChannel().getName(), event.getAuthor().getName(), event.getMessage().getContentRaw()));
         //System.out.println("[Log] " + event.getGuild().getName() + event.getAuthor().getName().getName() + " : " + event.getMessage().getContentDisplay());
 
-        if( event.getAuthor().isBot() ){
-            if( commandQueue.size() >= 1 )
-            {
+        if (event.getAuthor().isBot()) {
+            if (commandQueue.size() >= 1) {
                 ReactionInterface(event);
             }
         }
 
         //커맨드 모음에 데이터 인풋
-        boolean commandRun =  CommandInterface(event);
-        if(!commandRun){
+        boolean commandRun = CommandInterface(event);
+        if (!commandRun) {
             //System.out.println( String.format( "{'Error': 'Unknown Command', 'Context': '%s'}", event.getMessage().getContentRaw() ) );
         }
     }
 
-    private  boolean ReactionInterface(MessageReceivedEvent event) {
+    private boolean ReactionInterface(MessageReceivedEvent event) {
         Message sendMsg = event.getMessage();
-        if( commandQueue.poll() == "play" )
-        {
-            wait_reaction(sendMsg, "⏹" );//stop
-            wait_reaction(sendMsg, "⏭" );//skip
-            wait_reaction(sendMsg, "\uD83C\uDFA6" );//printURL
-            wait_reaction(sendMsg, "\uD83C\uDFB6" );//tracklist
-            wait_reaction(sendMsg, "\uD83D\uDD00" );//Shuffle
+        if (commandQueue.poll() == "play") {
+            wait_reaction(sendMsg, "⏹");//stop
+            wait_reaction(sendMsg, "⏭");//skip
+            wait_reaction(sendMsg, "\uD83C\uDFA6");//printURL
+            wait_reaction(sendMsg, "\uD83C\uDFB6");//tracklist
+            wait_reaction(sendMsg, "\uD83D\uDD00");//Shuffle
             return true;
         }
         return false;
@@ -246,22 +235,23 @@ public class DiscordBotMain extends ListenerAdapter {
 
     /**
      * 입력 데이터 처리
+     *
      * @param event
      * @return
      */
     private boolean CommandInterface(MessageReceivedEvent event) {
         //접두사 여부 식별
         String msg = "";
-        if( !event.getMessage().getContentRaw().startsWith("?") )
-        {return false;}
-        else
-        {
+        if (!event.getMessage().getContentRaw().startsWith("?")) {
+            return false;
+        } else {
             msg = event.getMessage().getContentRaw();
             msg = msg.substring(1, msg.length());
         }
-        if( event.getGuild().getName() == "Nerine force" )
-        {
-            if( event.getChannel().getName() != "bot-command" ){return false;}
+        if (event.getGuild().getName() == "Nerine force") {
+            if (event.getChannel().getName() != "bot-command") {
+                return false;
+            }
         }
         BotCommands(event, msg);
         //명령어가 없을경우 false반환
@@ -270,53 +260,32 @@ public class DiscordBotMain extends ListenerAdapter {
 
     /**
      * 명령어 실행
+     *
      * @param event
      * @param msg
      */
-    private void BotCommands(final MessageReceivedEvent event, String msg)
-    {
-        if( msg.startsWith("test") )
-        {
+    private void BotCommands(final MessageReceivedEvent event, String msg) {
+        if (msg.startsWith("test")) {
             cmd_test(event);
-        }
-        else if( msg.startsWith("play") )
-        {
+        } else if (msg.startsWith("play")) {
             cmd_play(event, msg);
-        }
-        else if( msg.startsWith("join") )
-        {
+        } else if (msg.startsWith("join")) {
             cmd_join(event);
-        }
-        else if( msg.startsWith("leave") || msg.startsWith("out"))
-        {
+        } else if (msg.startsWith("leave") || msg.startsWith("out")) {
             cmd_leave(event);
-        }
-        else if( msg.startsWith("stop") )
-        {
+        } else if (msg.startsWith("stop")) {
             cmd_stop(event);
-        }
-        else if( msg.startsWith("skip") || msg.startsWith("next"))
-        {
+        } else if (msg.startsWith("skip") || msg.startsWith("next")) {
             cmd_skip(event);
-        }
-        else if( msg.startsWith("volume") || msg.startsWith("vol") )
-        {
+        } else if (msg.startsWith("volume") || msg.startsWith("vol")) {
             cmd_volume(event, msg);
-        }
-        else if( msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("slist"))
-        {
+        } else if (msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("slist")) {
             cmd_tracklist(event);
-        }
-        else if( msg.startsWith("goto") )
-        {
+        } else if (msg.startsWith("goto")) {
             cmd_goto(event, msg);
-        }
-        else if( msg.startsWith("shuffle") ||  msg.startsWith("mix") || msg.startsWith("sf"))
-        {
+        } else if (msg.startsWith("shuffle") || msg.startsWith("mix") || msg.startsWith("sf")) {
             cmd_shuffle(event, msg);
-        }
-        else if( msg.startsWith("repeat") || msg.startsWith("replay") || msg.startsWith("rp") )
-        {
+        } else if (msg.startsWith("repeat") || msg.startsWith("replay") || msg.startsWith("rp")) {
             cmd_repeat(event);
         }
     }
@@ -324,19 +293,18 @@ public class DiscordBotMain extends ListenerAdapter {
     //#region 명령어 함수
     //명령어 함수////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private boolean cmd_test(MessageReceivedEvent event)
-    {
+    private boolean cmd_test(MessageReceivedEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("OK", null);
         eb.setColor(new Color(0x244aff));
         eb.addField("Test Embed", "이 Embed 메시지는 다용도 테스트 메시지 입니다.", false);
         event.getChannel().sendMessage(eb.build()).queue();
         Message sendMsg = event.getMessage();
-        wait_reaction(sendMsg, "⏹" );
+        wait_reaction(sendMsg, "⏹");
         return true;
     }
-    private boolean cmd_play(MessageReceivedEvent event, String msg)
-    {
+
+    private boolean cmd_play(MessageReceivedEvent event, String msg) {
         String url = msg.replaceFirst("play ", "");
 
         VoiceChannel Vch = event.getMember().getVoiceState().getChannel();
@@ -350,12 +318,13 @@ public class DiscordBotMain extends ListenerAdapter {
         commandQueue.add("play");
         return true;
     }
-    private boolean cmd_join(MessageReceivedEvent event)
-    {
+
+    private boolean cmd_join(MessageReceivedEvent event) {
         VoiceChannel Vch = event.getMember().getVoiceState().getChannel();
-        if( event.getGuild().getName() == "Nerine force" )
-        {
-            if( Vch.getName() != "Music" ){return false;}
+        if (event.getGuild().getName() == "Nerine force") {
+            if (Vch.getName() != "Music") {
+                return false;
+            }
         }
         event.getChannel().sendMessage(String.format(
                 "> %s 입장 ``%s``",
@@ -366,8 +335,8 @@ public class DiscordBotMain extends ListenerAdapter {
         audiomng.openAudioConnection(Vch);
         return true;
     }
-    private boolean cmd_leave(MessageReceivedEvent event)
-    {
+
+    private boolean cmd_leave(MessageReceivedEvent event) {
         VoiceChannel Vch = event.getGuild().getSelfMember().getVoiceState().getChannel();
         event.getChannel().sendMessage(String.format(
                 "> %s 퇴장 ``%s``",
@@ -386,8 +355,8 @@ public class DiscordBotMain extends ListenerAdapter {
         player.setPaused(false);
         return true;
     }
-    private boolean cmd_stop(MessageReceivedEvent event)
-    {
+
+    private boolean cmd_stop(MessageReceivedEvent event) {
         event.getChannel().sendMessage(String.format(
                 "> 대기열 재생 중지 ``%s``",
                 event.getAuthor().getName()
@@ -398,21 +367,19 @@ public class DiscordBotMain extends ListenerAdapter {
         TrackScheduler scheduler = musicManager.scheduler;
 
 
-
         scheduler.getQueue().clear();
         player.stopTrack();
         player.setPaused(false);
         return true;
     }
-    private boolean cmd_skip(MessageReceivedEvent event)
-    {
+
+    private boolean cmd_skip(MessageReceivedEvent event) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
         TrackScheduler scheduler = musicManager.scheduler;
 
-        if(player.getPlayingTrack() == null)
-        {
+        if (player.getPlayingTrack() == null) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0xff6624));
             eb.addField("경고 Warning", String.format(
@@ -420,9 +387,7 @@ public class DiscordBotMain extends ListenerAdapter {
                     event.getAuthor().getName().toString()
             ), false);
             event.getChannel().sendMessage(eb.build()).queue();
-        }
-        else
-        {
+        } else {
             event.getChannel().sendMessage(String.format(
                     "> 곡 스킵 ``%s``",
                     event.getAuthor().getName()
@@ -431,8 +396,8 @@ public class DiscordBotMain extends ListenerAdapter {
         }
         return true;
     }
-    private boolean cmd_volume(MessageReceivedEvent event, String msg)
-    {
+
+    private boolean cmd_volume(MessageReceivedEvent event, String msg) {
         String _Nvol = msg.replaceFirst("volume ", "");
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
@@ -441,7 +406,7 @@ public class DiscordBotMain extends ListenerAdapter {
         int Ovol = player.getVolume();
         int Nvol = Integer.parseInt(_Nvol);
 
-        if(Nvol > 100){
+        if (Nvol > 100) {
             Nvol = 100;
         }
 
@@ -454,14 +419,14 @@ public class DiscordBotMain extends ListenerAdapter {
         player.setVolume(globalVolume);
         return true;
     }
-    private boolean cmd_tracklist(MessageReceivedEvent event)
-    {
+
+    private boolean cmd_tracklist(MessageReceivedEvent event) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
         TrackScheduler scheduler = musicManager.scheduler;
 
-        if(player.getPlayingTrack() == null){
+        if (player.getPlayingTrack() == null) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0xff6624));
             eb.addField("경고 Warning", String.format(
@@ -469,9 +434,7 @@ public class DiscordBotMain extends ListenerAdapter {
                     event.getAuthor().getName().toString()
             ), false);
             event.getChannel().sendMessage(eb.build()).queue();
-        }
-        else
-        {
+        } else {
             AudioTrackInfo info = player.getPlayingTrack().getInfo();
 
             EmbedBuilder eb = new EmbedBuilder();
@@ -484,32 +447,31 @@ public class DiscordBotMain extends ListenerAdapter {
             ));
             List playelist = new ArrayList(scheduler.getQueue());
             String str = "";
-            if(playelist.size() != 0) {
-                for (int i = 0;  true; i++) {
-                    if ( playelist.size() == i )
-                    {
+            if (playelist.size() != 0) {
+                for (int i = 0; true; i++) {
+                    if (playelist.size() == i) {
                         break;
                     }
                     AudioTrack t = (AudioTrack) playelist.get(i);
-                    str += String.format("%d. %s\n", i+1, t.getInfo().title);
+                    str += String.format("%d. %s\n", i + 1, t.getInfo().title);
                 }
+            } else {
+                str = "None";
             }
-            else{str = "None";}
             eb.addField("TrackList", str, false);
             event.getChannel().sendMessage(eb.build()).queue();
         }
         return true;
     }
-    private boolean cmd_goto(MessageReceivedEvent event, String msg)
-    {
+
+    private boolean cmd_goto(MessageReceivedEvent event, String msg) {
         msg = msg.replaceFirst("goto ", "");
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
         TrackScheduler scheduler = musicManager.scheduler;
 
-        if(player.getPlayingTrack() == null)
-        {
+        if (player.getPlayingTrack() == null) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0xff6624));
             eb.addField("경고 Warning", String.format(
@@ -518,9 +480,7 @@ public class DiscordBotMain extends ListenerAdapter {
             ), false);
             event.getChannel().sendMessage(eb.build()).queue();
             return false;
-        }
-        else
-        {
+        } else {
             long time = formatLong(msg);
             System.out.println(time);
             player.getPlayingTrack().setPosition(time);
@@ -528,8 +488,8 @@ public class DiscordBotMain extends ListenerAdapter {
         }
         return true;
     }
-    private boolean cmd_shuffle(MessageReceivedEvent event, String msg)
-    {
+
+    private boolean cmd_shuffle(MessageReceivedEvent event, String msg) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
@@ -537,26 +497,26 @@ public class DiscordBotMain extends ListenerAdapter {
         Queue queue = scheduler.getQueue();
         List<AudioTrack> list = new ArrayList<>();
 
-        for(int i=0; true; i++){
+        for (int i = 0; true; i++) {
             list.add((AudioTrack) queue.poll());
-            if( queue.size() == 0 ){
+            if (queue.size() == 0) {
                 break;
             }
         }
 
         Collections.shuffle(list);
 
-        for(int i=0; true; i++){
+        for (int i = 0; true; i++) {
             queue.offer(list.get(i));
-            if( queue.size() == list.size() ){
+            if (queue.size() == list.size()) {
                 break;
             }
         }
         event.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", event.getAuthor().getName())).queue();
         return true;
     }
-    private boolean cmd_repeat(MessageReceivedEvent event)
-    {
+
+    private boolean cmd_repeat(MessageReceivedEvent event) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
@@ -570,17 +530,14 @@ public class DiscordBotMain extends ListenerAdapter {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private String formatTime(long time)
-    {
+    private String formatTime(long time) {
         final long h = time / TimeUnit.HOURS.toMillis(1);
         final long m = time % TimeUnit.HOURS.toMillis(1) / TimeUnit.MINUTES.toMillis(1);
         final long s = time % TimeUnit.MINUTES.toMillis(1) / TimeUnit.SECONDS.toMillis(1);
 
-        if(h != 0){
+        if (h != 0) {
             return String.format("%2d:%2d:%2d", h, m, s);
-        }
-        else
-        {
+        } else {
             return String.format("%2d:%2d", m, s);
         }
     }
@@ -588,26 +545,22 @@ public class DiscordBotMain extends ListenerAdapter {
     private long formatLong(String msg) {
         String[] StrTime = msg.split(":");
         long LongTime = 0;
-        if( StrTime.length == 3 ){
+        if (StrTime.length == 3) {
             LongTime += Long.parseLong(StrTime[0]) * 60 * 60;
             LongTime += Long.parseLong(StrTime[1]) * 60;
             LongTime += Long.parseLong(StrTime[2]);
-        }
-        else if( StrTime.length == 2 ){
+        } else if (StrTime.length == 2) {
             LongTime += Long.parseLong(StrTime[0]) * 60;
             LongTime += Long.parseLong(StrTime[1]);
-        }
-        else
-        {
+        } else {
             LongTime += Long.parseLong(StrTime[1]);
         }
 
-        return LongTime*1000;
+        return LongTime * 1000;
     }
 
     //미완성
-    private void wait_reaction(Message msg, String emote)
-    {
+    private void wait_reaction(Message msg, String emote) {
         msg.addReaction(emote).queue();
     }
     //#endregion

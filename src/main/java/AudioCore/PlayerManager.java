@@ -24,8 +24,7 @@ public class PlayerManager {
     private final AudioPlayerManager playerManager;
     private final Map<Long, GuildMusicManager> musicManagers;
 
-    private PlayerManager()
-    {
+    private PlayerManager() {
         this.musicManagers = new HashMap<Long, GuildMusicManager>();
 
         this.playerManager = new DefaultAudioPlayerManager();
@@ -34,31 +33,28 @@ public class PlayerManager {
     }
 
     //
-    public synchronized GuildMusicManager getGuildMusicManager(Guild guild)
-    {
+    public synchronized GuildMusicManager getGuildMusicManager(Guild guild) {
         long guildId = guild.getIdLong();
         GuildMusicManager musicManager = musicManagers.get(guildId);
 
-        if(musicManager == null)
-        {
+        if (musicManager == null) {
             musicManager = new GuildMusicManager(playerManager);
             musicManagers.put(guildId, musicManager);
         }
 
         guild.getAudioManager().setSendingHandler(musicManager.getSendHandler());
 
-        return  musicManager;
+        return musicManager;
     }
 
     /**
      * 트랙 로드
+     *
      * @param event
      * @param trackUrl
      */
-    public void loadAndPlay(final MessageReceivedEvent event, final String trackUrl)
-    {
-        if(!isURL(trackUrl) && !trackUrl.startsWith("ytsearch:"))
-        {
+    public void loadAndPlay(final MessageReceivedEvent event, final String trackUrl) {
+        if (!isURL(trackUrl) && !trackUrl.startsWith("ytsearch:")) {
             event.getChannel().sendMessage("> Youtube또는 SoundCloud의 링크를 넣어주세요.").queue();
         }
 
@@ -78,7 +74,7 @@ public class PlayerManager {
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
                 AudioTrack firstTrack = audioPlaylist.getSelectedTrack();
 
-                if(firstTrack == null){
+                if (firstTrack == null) {
                     firstTrack = audioPlaylist.getTracks().get(0);
                 }
 
@@ -90,7 +86,7 @@ public class PlayerManager {
                                 "리스트가 대기열에 추가되었습니다.\n%s\n``%s``",
                                 audioPlaylist.getName(),
                                 event.getAuthor().getName()
-                ), false);
+                        ), false);
                 event.getChannel().sendMessage(eb.build()).queue();
 
                 play(musicManager, firstTrack);
@@ -108,15 +104,13 @@ public class PlayerManager {
                 eb.setColor(new Color(0xff3e3e));
                 eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getAuthor().getName()), false);
                 event.getChannel().sendMessage(eb.build()).queue();
-                event.getChannel().sendMessage("> "+e.toString()).queue();
+                event.getChannel().sendMessage("> " + e.toString()).queue();
             }
         });
     }
 
-    private boolean isURL(String Url)
-    {
-        try
-        {
+    private boolean isURL(String Url) {
+        try {
             new URL(Url);
             return true;
 
@@ -127,22 +121,22 @@ public class PlayerManager {
 
     /**
      * 큐에 넘기기
+     *
      * @param musicManager
      * @param track
      */
-    private void play(GuildMusicManager musicManager, AudioTrack track)
-    {
+    private void play(GuildMusicManager musicManager, AudioTrack track) {
         track.stop();
         musicManager.scheduler.queue(track);
     }
 
     /**
      * 스크립트 전체 인스턴스로 반환
+     *
      * @return
      */
     public static synchronized PlayerManager getInstance() {
-        if(INSTANCE == null)
-        {
+        if (INSTANCE == null) {
             INSTANCE = new PlayerManager();
         }
         return INSTANCE;
