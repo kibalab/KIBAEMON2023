@@ -11,6 +11,7 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.ShutdownEvent;
+import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -72,7 +73,7 @@ public class DiscordBotMain extends ListenerAdapter {
     private void onReactionBindCommand(GenericMessageReactionEvent event) {
         //Stop
         if (event.getReactionEmote().getName().equals("⏹")) {
-            event.getChannel().sendMessage(String.format(
+            /*event.getChannel().sendMessage(String.format(
                     "> 대기열 재생 중지 ``%s``",
                     event.getUser().getName()
             )).queue();
@@ -83,7 +84,8 @@ public class DiscordBotMain extends ListenerAdapter {
 
             scheduler.getQueue().clear();
             player.stopTrack();
-            player.setPaused(false);
+            player.setPaused(false);*/
+            cmd_stop(event);
         }
         if (event.getReactionEmote().getName().equals("⏭")) {
             PlayerManager manager = PlayerManager.getInstance();
@@ -356,11 +358,24 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_stop(MessageReceivedEvent event) {
-        event.getChannel().sendMessage(String.format(
-                "> 대기열 재생 중지 ``%s``",
-                event.getAuthor().getName()
-        )).queue();
+    private boolean cmd_stop(GenericMessageEvent event) {
+
+        if (event instanceof MessageReceivedEvent) {
+            MessageReceivedEvent msgEvent = (MessageReceivedEvent)event;
+
+            msgEvent.getChannel().sendMessage(String.format(
+                    "> 대기열 재생 중지 ``%s``",
+                    msgEvent.getAuthor().getName()
+            )).queue();
+        } else if (event instanceof GenericMessageReactionEvent) {
+            GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent)event;
+
+            reactionEvent.getChannel().sendMessage(String.format(
+                    "> 대기열 재생 중지 ``%s``",
+                    reactionEvent.getUser().getName()
+            )).queue();
+        }
+
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
