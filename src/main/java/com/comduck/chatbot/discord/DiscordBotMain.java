@@ -1,15 +1,18 @@
 package com.comduck.chatbot.discord;
 
+import AudioCore.CommandManager;
 import AudioCore.GuildMusicManager;
 import AudioCore.PlayerManager;
 import AudioCore.TrackScheduler;
 import com.sedmelluq.discord.lavaplayer.player.*;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.ShutdownEvent;
+import net.dv8tion.jda.core.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
@@ -25,18 +28,36 @@ public class DiscordBotMain extends ListenerAdapter {
 
     int globalVolume = 10;
     Queue commandQueue = new LinkedList();
+    HashMap<String, CommandManager> commandManagerMap;
 
     public static void main(String[] args) throws Exception {
         new DiscordBotMain().start();
     }
 
     private void start() throws Exception {
+        commandManagerMap = new HashMap<>();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
         String token = "NjA2NDc1NzE4MzA1Nzc1NjM2.XULmjw.vYwYU3M816BsjuW-mXxXauGVVx4";
         builder.setToken(token);
 
         builder.addEventListener(this);
         builder.buildAsync();
+    }
+
+    @Override
+    public void onGuildReady(GuildReadyEvent event) {
+        PlayerManager manager = PlayerManager.getInstance();
+        GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
+
+        /*
+        나중에 이거로 고칠것.
+        GuildMusicManager musicManager = new GuildMusicManager();
+         */
+
+        AudioPlayer player = musicManager.player;
+        TrackScheduler scheduler = musicManager.scheduler;
+
+        commandManagerMap.put(event.getGuild().getId(), new CommandManager(musicManager, player, scheduler));
     }
 
     @Override
@@ -378,6 +399,7 @@ public class DiscordBotMain extends ListenerAdapter {
         scheduler.getQueue().clear();
         player.stopTrack();
         player.setPaused(false);
+
         return true;
     }
 
