@@ -50,7 +50,11 @@ public class PlayerManager {
         return  musicManager;
     }
 
-    //트랙 로드
+    /**
+     * 트랙 로드
+     * @param event
+     * @param trackUrl
+     */
     public void loadAndPlay(final MessageReceivedEvent event, final String trackUrl)
     {
         if(!isURL(trackUrl) && !trackUrl.startsWith("ytsearch:"))
@@ -121,14 +125,21 @@ public class PlayerManager {
         }
     }
 
-    //큐에 넘기기
+    /**
+     * 큐에 넘기기
+     * @param musicManager
+     * @param track
+     */
     private void play(GuildMusicManager musicManager, AudioTrack track)
     {
         track.stop();
         musicManager.scheduler.queue(track);
     }
 
-    //스크립트 전체 인스턴스로 반환
+    /**
+     * 스크립트 전체 인스턴스로 반환
+     * @return
+     */
     public static synchronized PlayerManager getInstance() {
         if(INSTANCE == null)
         {

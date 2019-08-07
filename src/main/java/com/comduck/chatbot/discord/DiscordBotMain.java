@@ -50,7 +50,10 @@ public class DiscordBotMain extends ListenerAdapter {
         super.onShutdown(event);
     }
 
-    //리액션 수신 이벤트
+    /**
+     * 리액션 수신 이벤트
+     * @param event
+     */
     @Override
     public void onGenericMessageReaction(GenericMessageReactionEvent event) {
         super.onGenericMessageReaction(event);
@@ -61,7 +64,10 @@ public class DiscordBotMain extends ListenerAdapter {
         }
     }
 
-    //리액션 커맨드
+    /**
+     * 리액션 커맨드
+     * @param event
+     */
     private void onReactionBindCommand(GenericMessageReactionEvent event)
     {
         //Stop
@@ -199,7 +205,10 @@ public class DiscordBotMain extends ListenerAdapter {
         }
     }
 
-    //메시지 수신 이벤트
+    /**
+     * 메시지 수신 이벤트
+     * @param event
+     */
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
 
@@ -235,7 +244,11 @@ public class DiscordBotMain extends ListenerAdapter {
         return false;
     }
 
-    //입력 데이터 처리
+    /**
+     * 입력 데이터 처리
+     * @param event
+     * @return
+     */
     private boolean CommandInterface(MessageReceivedEvent event) {
         //접두사 여부 식별
         String msg = "";
@@ -255,7 +268,11 @@ public class DiscordBotMain extends ListenerAdapter {
         return false;
     }
 
-    //명렁어 실행
+    /**
+     * 명령어 실행
+     * @param event
+     * @param msg
+     */
     private void BotCommands(final MessageReceivedEvent event, String msg)
     {
         if( msg.startsWith("test") )
@@ -304,6 +321,7 @@ public class DiscordBotMain extends ListenerAdapter {
         }
     }
 
+    //#region 명령어 함수
     //명령어 함수////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private boolean cmd_test(MessageReceivedEvent event)
@@ -592,4 +610,5 @@ public class DiscordBotMain extends ListenerAdapter {
     {
         msg.addReaction(emote).queue();
     }
+    //#endregion
 }
