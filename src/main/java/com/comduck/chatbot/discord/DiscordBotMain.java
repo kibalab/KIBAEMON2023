@@ -6,7 +6,6 @@ import AudioCore.TrackScheduler;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import net.dv8tion.jda.client.entities.Application;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
@@ -19,12 +18,6 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.managers.AudioManager;
 
 import java.awt.Color;
-import java.lang.reflect.Array;
-import java.sql.Time;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalTime;
-import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -85,7 +78,7 @@ public class DiscordBotMain extends ListenerAdapter {
             scheduler.getQueue().clear();
             player.stopTrack();
             player.setPaused(false);*/
-            cmd_stop(event);
+            cmdStop(event);
         }
         if (event.getReactionEmote().getName().equals("⏭")) {
             PlayerManager manager = PlayerManager.getInstance();
@@ -211,18 +204,18 @@ public class DiscordBotMain extends ListenerAdapter {
 
         if (event.getAuthor().isBot()) {
             if (commandQueue.size() >= 1) {
-                ReactionInterface(event);
+                reactionInterface(event);
             }
         }
 
         //커맨드 모음에 데이터 인풋
-        boolean commandRun = CommandInterface(event);
+        boolean commandRun = commandInterface(event);
         if (!commandRun) {
             //System.out.println( String.format( "{'Error': 'Unknown Command', 'Context': '%s'}", event.getMessage().getContentRaw() ) );
         }
     }
 
-    private boolean ReactionInterface(MessageReceivedEvent event) {
+    private boolean reactionInterface(MessageReceivedEvent event) {
         Message sendMsg = event.getMessage();
         if (commandQueue.poll() == "play") {
             wait_reaction(sendMsg, "⏹");//stop
@@ -241,7 +234,7 @@ public class DiscordBotMain extends ListenerAdapter {
      * @param event
      * @return
      */
-    private boolean CommandInterface(MessageReceivedEvent event) {
+    private boolean commandInterface(MessageReceivedEvent event) {
         //접두사 여부 식별
         String msg = "";
         if (!event.getMessage().getContentRaw().startsWith("?")) {
@@ -255,7 +248,7 @@ public class DiscordBotMain extends ListenerAdapter {
                 return false;
             }
         }
-        BotCommands(event, msg);
+        botCommands(event, msg);
         //명령어가 없을경우 false반환
         return false;
     }
@@ -266,36 +259,36 @@ public class DiscordBotMain extends ListenerAdapter {
      * @param event
      * @param msg
      */
-    private void BotCommands(final MessageReceivedEvent event, String msg) {
+    private void botCommands(final MessageReceivedEvent event, String msg) {
         if (msg.startsWith("test")) {
-            cmd_test(event);
+            cmdTest(event);
         } else if (msg.startsWith("play")) {
-            cmd_play(event, msg);
+            cmdPlay(event, msg);
         } else if (msg.startsWith("join")) {
-            cmd_join(event);
+            cmdJoin(event);
         } else if (msg.startsWith("leave") || msg.startsWith("out")) {
-            cmd_leave(event);
+            cmdLeave(event);
         } else if (msg.startsWith("stop")) {
-            cmd_stop(event);
+            cmdStop(event);
         } else if (msg.startsWith("skip") || msg.startsWith("next")) {
-            cmd_skip(event);
+            cmdSkip(event);
         } else if (msg.startsWith("volume") || msg.startsWith("vol")) {
-            cmd_volume(event, msg);
+            cmdVolume(event, msg);
         } else if (msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("slist")) {
-            cmd_tracklist(event);
+            cmdTrackList(event);
         } else if (msg.startsWith("goto")) {
-            cmd_goto(event, msg);
+            cmdGoTo(event, msg);
         } else if (msg.startsWith("shuffle") || msg.startsWith("mix") || msg.startsWith("sf")) {
-            cmd_shuffle(event, msg);
+            cmdShuffle(event, msg);
         } else if (msg.startsWith("repeat") || msg.startsWith("replay") || msg.startsWith("rp")) {
-            cmd_repeat(event);
+            cmdRepeat(event);
         }
     }
 
     //#region 명령어 함수
     //명령어 함수////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private boolean cmd_test(MessageReceivedEvent event) {
+    private boolean cmdTest(MessageReceivedEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("OK", null);
         eb.setColor(new Color(0x244aff));
@@ -306,7 +299,7 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_play(MessageReceivedEvent event, String msg) {
+    private boolean cmdPlay(MessageReceivedEvent event, String msg) {
         String url = msg.replaceFirst("play ", "");
 
         VoiceChannel Vch = event.getMember().getVoiceState().getChannel();
@@ -321,7 +314,7 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_join(MessageReceivedEvent event) {
+    private boolean cmdJoin(MessageReceivedEvent event) {
         VoiceChannel Vch = event.getMember().getVoiceState().getChannel();
         if (event.getGuild().getName() == "Nerine force") {
             if (Vch.getName() != "Music") {
@@ -338,7 +331,7 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_leave(MessageReceivedEvent event) {
+    private boolean cmdLeave(MessageReceivedEvent event) {
         VoiceChannel Vch = event.getGuild().getSelfMember().getVoiceState().getChannel();
         event.getChannel().sendMessage(String.format(
                 "> %s 퇴장 ``%s``",
@@ -358,7 +351,7 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_stop(GenericMessageEvent event) {
+    private boolean cmdStop(GenericMessageEvent event) {
 
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent)event;
@@ -388,7 +381,7 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_skip(MessageReceivedEvent event) {
+    private boolean cmdSkip(MessageReceivedEvent event) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
@@ -412,7 +405,7 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_volume(MessageReceivedEvent event, String msg) {
+    private boolean cmdVolume(MessageReceivedEvent event, String msg) {
         String _Nvol = msg.replaceFirst("volume ", "");
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
@@ -435,7 +428,7 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_tracklist(MessageReceivedEvent event) {
+    private boolean cmdTrackList(MessageReceivedEvent event) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
@@ -479,7 +472,7 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_goto(MessageReceivedEvent event, String msg) {
+    private boolean cmdGoTo(MessageReceivedEvent event, String msg) {
         msg = msg.replaceFirst("goto ", "");
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
@@ -504,7 +497,7 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_shuffle(MessageReceivedEvent event, String msg) {
+    private boolean cmdShuffle(MessageReceivedEvent event, String msg) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
@@ -531,13 +524,13 @@ public class DiscordBotMain extends ListenerAdapter {
         return true;
     }
 
-    private boolean cmd_repeat(MessageReceivedEvent event) {
+    private boolean cmdRepeat(MessageReceivedEvent event) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
         TrackScheduler scheduler = musicManager.scheduler;
         String msg = "play " + player.getPlayingTrack().getInfo().uri;
-        cmd_play(event, msg);
+        cmdPlay(event, msg);
         event.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", event.getAuthor().getName())).queue();
         return true;
     }
