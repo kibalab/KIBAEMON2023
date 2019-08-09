@@ -1,9 +1,6 @@
 package com.comduck.chatbot.discord;
 
-import AudioCore.CommandManager;
-import AudioCore.GuildMusicManager;
-import AudioCore.PlayerManager;
-import AudioCore.TrackScheduler;
+import AudioCore.*;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -24,10 +21,10 @@ import java.awt.Color;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class DiscordBotMain extends ListenerAdapter {
+public class DiscordBotMain extends ListenerAdapter implements PostCommandListener {
 
     int globalVolume = 10;
-    Queue commandQueue = new LinkedList();
+    Queue commandQueue = new LinkedList<GenericMessageEvent>();
     HashMap<String, CommandManager> commandManagerMap;
 
     public static void main(String[] args) throws Exception {
@@ -593,5 +590,11 @@ public class DiscordBotMain extends ListenerAdapter {
     private void wait_reaction(Message msg, String emote) {
         msg.addReaction(emote).queue();
     }
+
+    @Override
+    public void onPostCommand(GenericMessageEvent genericMessageEvent) {
+        commandQueue.add(genericMessageEvent);
+    }
+
     //#endregion
 }

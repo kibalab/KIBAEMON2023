@@ -7,19 +7,39 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.core.managers.AudioManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CommandManager {
     GuildMusicManager musicManager; // = manager.getGuildMusicManager(event.getGuild());
     AudioPlayer player; // = musicManager.player;
     TrackScheduler scheduler; // = musicManager.scheduler;
 
+    List<PostCommandListener> postCommandListeners;
+
     public CommandManager(GuildMusicManager guildMusicManager, AudioPlayer player, TrackScheduler scheduler) {
         this.musicManager = guildMusicManager;
         this.player = player;
         this.scheduler = scheduler;
+        this.postCommandListeners = new ArrayList<>();
+    }
+
+    public void addPostCommandListener(PostCommandListener listener) {
+        this.postCommandListeners.add(listener);
+    }
+
+    public void removePostCommandListener(PostCommandListener listener) {
+        this.postCommandListeners.remove(listener);
     }
 
     public void playCommand() {
 
+    }
+
+    private void raisePostCommand(GenericMessageEvent event) {
+        for (PostCommandListener listener : postCommandListeners) {
+            listener.onPostCommand(event);
+        }
     }
 
     public void stopCommand(GenericMessageEvent event) {
@@ -45,5 +65,7 @@ public class CommandManager {
         scheduler.getQueue().clear();
         player.stopTrack();
         player.setPaused(false);
+
+        raisePostCommand(event);
     }
 }
