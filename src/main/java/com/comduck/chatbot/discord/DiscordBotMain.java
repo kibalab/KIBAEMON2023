@@ -54,12 +54,19 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         AudioPlayer player = musicManager.player;
         TrackScheduler scheduler = musicManager.scheduler;
 
-        commandManagerMap.put(event.getGuild().getId(), new CommandManager(musicManager, player, scheduler));
+        CommandManager cmdManager = new CommandManager(musicManager, player, scheduler);
+        cmdManager.addPostCommandListener(this);
+
+        commandManagerMap.put(event.getGuild().getId(), cmdManager);
     }
 
     @Override
     public void onShutdown(ShutdownEvent event) {
         super.onShutdown(event);
+
+        for (CommandManager cmdManager : commandManagerMap.values()) {
+            cmdManager.removePostCommandListener(this);
+        }
     }
 
     /**
