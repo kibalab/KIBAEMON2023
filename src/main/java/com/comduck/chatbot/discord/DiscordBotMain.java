@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 public class DiscordBotMain extends ListenerAdapter implements PostCommandListener {
 
-    int globalVolume = 10;
+
     Queue commandQueue = new LinkedList<GenericMessageEvent>();
     HashMap<String, CommandManager> commandManagerMap;
 
@@ -84,41 +84,10 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     private void onReactionBindCommand(GenericMessageReactionEvent event) {
         //Stop
         if (event.getReactionEmote().getName().equals("⏹")) {
-            /*event.getChannel().sendMessage(String.format(
-                    "> 대기열 재생 중지 ``%s``",
-                    event.getUser().getName()
-            )).queue();
-            PlayerManager manager = PlayerManager.getInstance();
-            GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
-            AudioPlayer player = musicManager.player;
-            TrackScheduler scheduler = musicManager.scheduler;
-
-            scheduler.getQueue().clear();
-            player.stopTrack();
-            player.setPaused(false);*/
-            cmdStop(event);
+            commandManagerMap.get(event.getGuild().getId()).stopCommand(event);
         }
         if (event.getReactionEmote().getName().equals("⏭")) {
-            PlayerManager manager = PlayerManager.getInstance();
-            GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
-            AudioPlayer player = musicManager.player;
-            TrackScheduler scheduler = musicManager.scheduler;
-
-            if (player.getPlayingTrack() == null) {
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(new Color(0xff6624));
-                eb.addField("경고 Warning", String.format(
-                        "대기열이 비어 있습니다.\n``%s``",
-                        event.getUser().getName()
-                ), false);
-                event.getChannel().sendMessage(eb.build()).queue();
-            } else {
-                event.getChannel().sendMessage(String.format(
-                        "> 곡 스킵 ``%s``",
-                        event.getUser().getName()
-                )).queue();
-                scheduler.nextTrack();
-            }
+            commandManagerMap.get(event.getGuild().getId()).skipCommand(event);
         }
         //printURL
         if (event.getReactionEmote().getName().equals("🎦")) {
@@ -130,81 +99,10 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             event.getChannel().sendMessage(String.format("> %s", player.getPlayingTrack().getInfo().uri)).queue();
         }
         if (event.getReactionEmote().getName().equals("\uD83C\uDFB6")) {
-            PlayerManager manager = PlayerManager.getInstance();
-            GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
-            AudioPlayer player = musicManager.player;
-            TrackScheduler scheduler = musicManager.scheduler;
-
-            if (player.getPlayingTrack() == null) {
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(new Color(0xff6624));
-                eb.addField("경고 Warning", String.format(
-                        "대기열이 비어 있습니다.\n``%s``",
-                        event.getUser().getName().toString()
-                ), false);
-                event.getChannel().sendMessage(eb.build()).queue();
-            } else {
-                AudioTrackInfo info = player.getPlayingTrack().getInfo();
-
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(new Color(0x244aff));
-                eb.setTitle(String.format(
-                        "재생중 - %s [%s/%s]",
-                        info.title,
-                        formatTime(player.getPlayingTrack().getPosition()),
-                        formatTime(player.getPlayingTrack().getDuration())
-                ));
-                List playelist = new ArrayList(scheduler.getQueue());
-                String str = "";
-                if (playelist.size() != 0) {
-                    for (int i = 0; true; i++) {
-                        if (playelist.size() == i) {
-                            break;
-                        }
-                        AudioTrack t = (AudioTrack) playelist.get(i);
-                        str += String.format("%d. %s\n", i + 1, t.getInfo().title);
-                    }
-                } else {
-                    str = "None";
-                }
-                eb.addField("TrackList", str, false);
-                event.getChannel().sendMessage(eb.build()).queue();
-            }
+            commandManagerMap.get(event.getGuild().getId()).tracklistCommand(event);
         }
         if (event.getReactionEmote().getName().equals("\uD83D\uDD00")) {
-            PlayerManager manager = PlayerManager.getInstance();
-            GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
-            AudioPlayer player = musicManager.player;
-            TrackScheduler scheduler = musicManager.scheduler;
-            Queue queue = scheduler.getQueue();
-            List<AudioTrack> list = new ArrayList<>();
-
-            if (queue.size() != 0) {
-                for (int i = 0; true; i++) {
-                    list.add((AudioTrack) queue.poll());
-                    if (queue.size() == 0) {
-                        break;
-                    }
-                }
-
-                Collections.shuffle(list);
-
-                for (int i = 0; true; i++) {
-                    queue.offer(list.get(i));
-                    if (queue.size() == list.size()) {
-                        break;
-                    }
-                }
-                event.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", event.getUser().getName())).queue();
-            } else {
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(new Color(0xff6624));
-                eb.addField("경고 Warning", String.format(
-                        "대기열이 비어 있습니다.\n``%s``",
-                        event.getUser().getName().toString()
-                ), false);
-                event.getChannel().sendMessage(eb.build()).queue();
-            }
+            commandManagerMap.get(event.getGuild().getId()).shuffleCommand(event);
         }
     }
 
@@ -222,6 +120,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         if (event.getAuthor().isBot()) {
             if (commandQueue.size() >= 1) {
+                System.out.println(true);
                 reactionInterface(event);
             }
         }
@@ -235,7 +134,9 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     private boolean reactionInterface(MessageReceivedEvent event) {
         Message sendMsg = event.getMessage();
-        if (commandQueue.poll() == "play") {
+        String msg = ((Message) commandQueue.poll()).getContentDisplay();
+        System.out.println(msg);
+        if (msg.startsWith("?play")) {
             wait_reaction(sendMsg, "⏹");//stop
             wait_reaction(sendMsg, "⏭");//skip
             wait_reaction(sendMsg, "\uD83C\uDFA6");//printURL
@@ -278,28 +179,42 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      * @param msg
      */
     private void botCommands(final MessageReceivedEvent event, String msg) {
+        PlayerManager manager = PlayerManager.getInstance();
+        GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
+        AudioPlayer player = musicManager.player;
+        TrackScheduler scheduler = musicManager.scheduler;
         if (msg.startsWith("test")) {
             cmdTest(event);
         } else if (msg.startsWith("play")) {
-            cmdPlay(event, msg);
+            commandManagerMap.get(event.getGuild().getId()).playCommand(event, msg);
+            //cmdPlay(event, msg);
         } else if (msg.startsWith("join")) {
-            cmdJoin(event);
+            commandManagerMap.get(event.getGuild().getId()).joinCommand(event);
+            //cmdJoin(event);
         } else if (msg.startsWith("leave") || msg.startsWith("out")) {
-            cmdLeave(event);
+            commandManagerMap.get(event.getGuild().getId()).leaveCommand(event);
+            //cmdLeave(event);
         } else if (msg.startsWith("stop")) {
-            cmdStop(event);
+            commandManagerMap.get(event.getGuild().getId()).stopCommand(event);
+            //cmdStop(event);
         } else if (msg.startsWith("skip") || msg.startsWith("next")) {
-            cmdSkip(event);
+            commandManagerMap.get(event.getGuild().getId()).skipCommand(event);
+            //cmdSkip(event);
         } else if (msg.startsWith("volume") || msg.startsWith("vol")) {
-            cmdVolume(event, msg);
+            commandManagerMap.get(event.getGuild().getId()).volumeCommand(event, msg);
+            //cmdVolume(event, msg);
         } else if (msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("slist")) {
-            cmdTrackList(event);
+            commandManagerMap.get(event.getGuild().getId()).tracklistCommand(event);
+            //cmdTrackList(event);
         } else if (msg.startsWith("goto")) {
-            cmdGoTo(event, msg);
+            commandManagerMap.get(event.getGuild().getId()).gotoCommand(event, msg);
+            //cmdGoTo(event, msg);
         } else if (msg.startsWith("shuffle") || msg.startsWith("mix") || msg.startsWith("sf")) {
-            cmdShuffle(event, msg);
+            commandManagerMap.get(event.getGuild().getId()).shuffleCommand(event);
+            //cmdShuffle(event, msg);
         } else if (msg.startsWith("repeat") || msg.startsWith("replay") || msg.startsWith("rp")) {
-            cmdRepeat(event);
+            commandManagerMap.get(event.getGuild().getId()).repeatCommand(event);
+            //cmdRepeat(event);
         }
     }
 
@@ -316,7 +231,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         wait_reaction(sendMsg, "⏹");
         return true;
     }
-
+/*
     private boolean cmdPlay(MessageReceivedEvent event, String msg) {
         String url = msg.replaceFirst("play ", "");
 
@@ -331,7 +246,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         commandQueue.add("play");
         return true;
     }
-
     private boolean cmdJoin(MessageReceivedEvent event) {
         VoiceChannel Vch = event.getMember().getVoiceState().getChannel();
         if (event.getGuild().getName() == "Nerine force") {
@@ -348,7 +262,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         audiomng.openAudioConnection(Vch);
         return true;
     }
-
     private boolean cmdLeave(MessageReceivedEvent event) {
         VoiceChannel Vch = event.getGuild().getSelfMember().getVoiceState().getChannel();
         event.getChannel().sendMessage(String.format(
@@ -368,7 +281,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         player.setPaused(false);
         return true;
     }
-
     private boolean cmdStop(GenericMessageEvent event) {
 
         if (event instanceof MessageReceivedEvent) {
@@ -399,7 +311,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         return true;
     }
-
     private boolean cmdSkip(MessageReceivedEvent event) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
@@ -423,7 +334,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         }
         return true;
     }
-
     private boolean cmdVolume(MessageReceivedEvent event, String msg) {
         String _Nvol = msg.replaceFirst("volume ", "");
         PlayerManager manager = PlayerManager.getInstance();
@@ -446,7 +356,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         player.setVolume(globalVolume);
         return true;
     }
-
     private boolean cmdTrackList(MessageReceivedEvent event) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
@@ -490,7 +399,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         }
         return true;
     }
-
     private boolean cmdGoTo(MessageReceivedEvent event, String msg) {
         msg = msg.replaceFirst("goto ", "");
         PlayerManager manager = PlayerManager.getInstance();
@@ -515,7 +423,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         }
         return true;
     }
-
     private boolean cmdShuffle(MessageReceivedEvent event, String msg) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
@@ -542,7 +449,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         event.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", event.getAuthor().getName())).queue();
         return true;
     }
-
     private boolean cmdRepeat(MessageReceivedEvent event) {
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
@@ -553,38 +459,9 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         event.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", event.getAuthor().getName())).queue();
         return true;
     }
-
+*/
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private String formatTime(long time) {
-        final long h = time / TimeUnit.HOURS.toMillis(1);
-        final long m = time % TimeUnit.HOURS.toMillis(1) / TimeUnit.MINUTES.toMillis(1);
-        final long s = time % TimeUnit.MINUTES.toMillis(1) / TimeUnit.SECONDS.toMillis(1);
-
-        if (h != 0) {
-            return String.format("%2d:%2d:%2d", h, m, s);
-        } else {
-            return String.format("%2d:%2d", m, s);
-        }
-    }
-
-    private long formatLong(String msg) {
-        String[] StrTime = msg.split(":");
-        long LongTime = 0;
-        if (StrTime.length == 3) {
-            LongTime += Long.parseLong(StrTime[0]) * 60 * 60;
-            LongTime += Long.parseLong(StrTime[1]) * 60;
-            LongTime += Long.parseLong(StrTime[2]);
-        } else if (StrTime.length == 2) {
-            LongTime += Long.parseLong(StrTime[0]) * 60;
-            LongTime += Long.parseLong(StrTime[1]);
-        } else {
-            LongTime += Long.parseLong(StrTime[1]);
-        }
-
-        return LongTime * 1000;
-    }
 
     //미완성
     private void wait_reaction(Message msg, String emote) {
@@ -593,7 +470,9 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     @Override
     public void onPostCommand(GenericMessageEvent genericMessageEvent) {
-        commandQueue.add(genericMessageEvent);
+        MessageReceivedEvent msgEvent = (MessageReceivedEvent) genericMessageEvent;
+        System.out.println("Event Check");
+        commandQueue.add(msgEvent.getMessage());
     }
 
     //#endregion

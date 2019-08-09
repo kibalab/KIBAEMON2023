@@ -107,8 +107,60 @@ public class PlayerManager {
         });
     }
 
-    private void loadAndPlay_Reaction(GenericMessageReactionEvent event) {
+    private void loadAndPlay_Reaction(GenericMessageReactionEvent event, String trackUrl) {
+        if (!isURL(trackUrl) && !trackUrl.startsWith("ytsearch:")) {
+            event.getChannel().sendMessage("> Youtube또는 SoundCloud의 링크를 넣어주세요.").queue();
+        }
 
+        final GuildMusicManager musicManager = getGuildMusicManager(event.getGuild());
+
+        //트랙 로드, 에러 관련 처리/이벤트
+        playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
+            public void trackLoaded(AudioTrack track) {
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(new Color(0x244aff));
+                eb.addField(track.getInfo().title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getUser().getName()), false);
+                event.getChannel().sendMessage(eb.build()).queue();
+
+                play(musicManager, track);
+            }
+
+            public void playlistLoaded(AudioPlaylist audioPlaylist) {
+                AudioTrack firstTrack = audioPlaylist.getSelectedTrack();
+
+                if (firstTrack == null) {
+                    firstTrack = audioPlaylist.getTracks().get(0);
+                }
+
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(new Color(0x244aff));
+                eb.addField(
+                        String.format("첫곡 : %s", firstTrack.getInfo().title),
+                        String.format(
+                                "리스트가 대기열에 추가되었습니다.\n%s\n``%s``",
+                                audioPlaylist.getName(),
+                                event.getUser().getName()
+                        ), false);
+                event.getChannel().sendMessage(eb.build()).queue();
+
+                play(musicManager, firstTrack);
+            }
+
+            public void noMatches() {
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(new Color(0xff3e3e));
+                eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getUser().getName()), false);
+                event.getChannel().sendMessage(eb.build()).queue();
+            }
+
+            public void loadFailed(FriendlyException e) {
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(new Color(0xff3e3e));
+                eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getUser().getName()), false);
+                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessage("> " + e.toString()).queue();
+            }
+        });
     }
 
     /**
@@ -121,7 +173,7 @@ public class PlayerManager {
         if (event instanceof MessageReceivedEvent) {
             loadAndPlay_Msg((MessageReceivedEvent)event, trackUrl);
         } else if (event instanceof GenericMessageReactionEvent) {
-            loadAndPlay_Reaction((GenericMessageReactionEvent)event); // 삭제 예정
+            loadAndPlay_Reaction((GenericMessageReactionEvent)event, trackUrl); // 삭제 예정
         }
     }
 
