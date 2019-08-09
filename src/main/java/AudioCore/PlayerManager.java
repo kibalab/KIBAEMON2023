@@ -122,78 +122,78 @@ public class PlayerManager {
                 eb.addField(track.getInfo().title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getUser().getName()), false);
                 event.getChannel().sendMessage(eb.build()).queue();
 
-                play(musicManager, track);
-            }
-
-            public void playlistLoaded(AudioPlaylist audioPlaylist) {
-                AudioTrack firstTrack = audioPlaylist.getSelectedTrack();
-
-                if (firstTrack == null) {
-                    firstTrack = audioPlaylist.getTracks().get(0);
-                }
-
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(new Color(0x244aff));
-                eb.addField(
-                        String.format("첫곡 : %s", firstTrack.getInfo().title),
-                        String.format(
-                                "리스트가 대기열에 추가되었습니다.\n%s\n``%s``",
-                                audioPlaylist.getName(),
-                                event.getUser().getName()
-                        ), false);
-                event.getChannel().sendMessage(eb.build()).queue();
-
-                play(musicManager, firstTrack);
-            }
-
-            public void noMatches() {
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(new Color(0xff3e3e));
-                eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getUser().getName()), false);
-                event.getChannel().sendMessage(eb.build()).queue();
-            }
-
-            public void loadFailed(FriendlyException e) {
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(new Color(0xff3e3e));
-                eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getUser().getName()), false);
-                event.getChannel().sendMessage(eb.build()).queue();
-                event.getChannel().sendMessage("> " + e.toString()).queue();
-            }
-        });
+        play(musicManager, track);
     }
 
-    /**
-     * 트랙 로드
-     *
-     * @param event
-     * @param trackUrl
-     */
-    public void loadAndPlay(final GenericMessageEvent event, final String trackUrl) {
-        if (event instanceof MessageReceivedEvent) {
-            loadAndPlay_Msg((MessageReceivedEvent)event, trackUrl);
-        } else if (event instanceof GenericMessageReactionEvent) {
-            loadAndPlay_Reaction((GenericMessageReactionEvent)event, trackUrl); // 삭제 예정
+    public void playlistLoaded(AudioPlaylist audioPlaylist) {
+        AudioTrack firstTrack = audioPlaylist.getSelectedTrack();
+
+        if (firstTrack == null) {
+            firstTrack = audioPlaylist.getTracks().get(0);
         }
+
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(new Color(0x244aff));
+        eb.addField(
+                String.format("첫곡 : %s", firstTrack.getInfo().title),
+                String.format(
+                        "리스트가 대기열에 추가되었습니다.\n%s\n``%s``",
+                        audioPlaylist.getName(),
+                        event.getUser().getName()
+                ), false);
+        event.getChannel().sendMessage(eb.build()).queue();
+
+        play(musicManager, firstTrack);
     }
 
-    private boolean isURL(String Url) {
+    public void noMatches() {
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(new Color(0xff3e3e));
+        eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getUser().getName()), false);
+        event.getChannel().sendMessage(eb.build()).queue();
+    }
+
+    public void loadFailed(FriendlyException e) {
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(new Color(0xff3e3e));
+        eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getUser().getName()), false);
+        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessage("> " + e.toString()).queue();
+    }
+});
+        }
+
+/**
+ * 트랙 로드
+ *
+ * @param event
+ * @param trackUrl
+ */
+public void loadAndPlay(final GenericMessageEvent event, final String trackUrl) {
+        if (event instanceof MessageReceivedEvent) {
+        loadAndPlay_Msg((MessageReceivedEvent)event, trackUrl);
+        } else if (event instanceof GenericMessageReactionEvent) {
+        loadAndPlay_Reaction((GenericMessageReactionEvent)event, trackUrl); // 삭제 예정
+        }
+        }
+
+private boolean isURL(String Url) {
         try {
-            new URL(Url);
-            return true;
+        new URL(Url);
+        return true;
 
         } catch (MalformedURLException e) {
-            return false;
+        return false;
         }
-    }
+        }
 
-    /**
-     * 큐에 넘기기
-     *
-     * @param musicManager
-     * @param track
-     */
-    private void play(GuildMusicManager musicManager, AudioTrack track) {
+/**
+ * 큐에 넘기기
+ *
+ * @param musicManager
+ * @param track
+ */
+private void play(GuildMusicManager musicManager, AudioTrack track) {
         track.stop();
         musicManager.scheduler.queue(track);
     }

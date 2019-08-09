@@ -5,9 +5,11 @@ import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+import net.dv8tion.jda.client.entities.Application;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.events.ShutdownEvent;
 import net.dv8tion.jda.core.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.core.events.message.GenericMessageEvent;
@@ -16,13 +18,16 @@ import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.managers.AudioManager;
+import org.apache.log4j.Logger;
 
 import java.awt.Color;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class DiscordBotMain extends ListenerAdapter implements PostCommandListener {
-
 
     Queue commandQueue = new LinkedList<GenericMessageEvent>();
     HashMap<String, CommandManager> commandManagerMap;
@@ -43,6 +48,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     @Override
     public void onGuildReady(GuildReadyEvent event) {
+
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
 
@@ -58,6 +64,39 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         cmdManager.addPostCommandListener(this);
 
         commandManagerMap.put(event.getGuild().getId(), cmdManager);
+        //onReadyMessage(event);
+    }
+
+    public void onReadyMessage(GuildReadyEvent event) {
+        for(TextChannel channel : event.getGuild().getTextChannels()) {
+            boolean channelTrue = false;
+            //channelTrue = channel.getId().equals("607208059504427018"); // Nerine Force - bot_command
+            //channelTrue = channel.getId().equals("424887201281605661"); // LucidLab - 명령어
+
+            if(channel.getId().equals("607208059504427018")) {
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setColor(new Color(0x1BC3FF));
+                eb.setAuthor("Ready!",null,"https://cdn.discordapp.com/attachments/452403281428217856/609442329593643019/KIBAEMON-ICON.png"); //
+                eb.setTitle("KIBAEMON 준비완료!");
+                eb.setThumbnail("https://cdn.discordapp.com/attachments/452403281428217856/609441237228978254/KIBAEMON-LOGO.png");
+                SimpleDateFormat format2 = new SimpleDateFormat ( "yyyy년 MM월dd일");
+                Date time = new Date();
+                eb.addField("기동일(오늘)",format2.format(time),true);
+                eb.addField("라이브러리", "JDA(JAVA)", true);
+                eb.addField("환경", String.format(
+                        "OS: %s\nJAVA: %s\nJVM: %s\nJRE: %s\nCORE: %s\nMEMORY(BYTE): %s",
+                        System.getProperty("os.name"),
+                        System.getProperty("java.version"),
+                        System.getProperty("java.vm.name"),
+                        System.getProperty("java.specification.name"),
+                        Runtime.getRuntime().availableProcessors(),
+                        Runtime.getRuntime().freeMemory()
+                ), true);
+                eb.setFooter("KIBAEMON 2019 in JBot Project", null);
+                channel.sendMessage(eb.build()).queue();
+            }
+        }
+
     }
 
     @Override
@@ -77,7 +116,13 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     @Override
     public void onGenericMessageReaction(GenericMessageReactionEvent event) {
         super.onGenericMessageReaction(event);
-        System.out.println(String.format("{'Type': 'Reaction', 'Guild_Name': '%s', 'Chennal_Name': '%s', 'Author': '%s', 'Reaction': '%s', 'Message_ID': '%s'}", event.getGuild().getName(), event.getChannel().getName(), event.getUser().getName(), event.getReaction(), event.getMessageId()));
+        System.out.println(String.format(
+                "{'Type': 'Reaction', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s'}",
+                event.getGuild().getName(), event.getGuild().getId(),
+                event.getChannel().getName(), event.getChannel().getId(),
+                event.getUser().getName(), event.getUser().getId(),
+                event.getMessageId()
+        ));
         if (!event.getUser().isBot()) {
             onReactionBindCommand(event);
         }
@@ -93,6 +138,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         if (event.getReactionEmote().getName().equals("⏹")) {
             commandManagerMap.get(event.getGuild().getId()).stopCommand(event);
         }
+        //Skip
         if (event.getReactionEmote().getName().equals("⏭")) {
             commandManagerMap.get(event.getGuild().getId()).skipCommand(event);
         }
@@ -105,9 +151,11 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
             event.getChannel().sendMessage(String.format("> %s", player.getPlayingTrack().getInfo().uri)).queue();
         }
+        //TrackList
         if (event.getReactionEmote().getName().equals("\uD83C\uDFB6")) {
             commandManagerMap.get(event.getGuild().getId()).tracklistCommand(event);
         }
+        //Shuffle TrackList
         if (event.getReactionEmote().getName().equals("\uD83D\uDD00")) {
             commandManagerMap.get(event.getGuild().getId()).shuffleCommand(event);
         }
@@ -122,7 +170,14 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     public void onMessageReceived(MessageReceivedEvent event) {
 
         //로그 출력
-        System.out.println(String.format("{'Type': 'Message', 'Guild_Name': '%s', 'Chennal_Name': '%s', 'Author': '%s', 'Context': '%s'}", event.getGuild().getName(), event.getChannel().getName(), event.getAuthor().getName(), event.getMessage().getContentRaw()));
+        System.out.println(String.format(
+                "{'Type': 'Message#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'Context': '%s'}",
+                event.getMessage().getId(),
+                event.getGuild().getName(), event.getGuild().getId(),
+                event.getChannel().getName(), event.getChannel().getId(),
+                event.getAuthor().getName(), event.getAuthor().getId(),
+                event.getMessage().getContentRaw()
+        ));
         //System.out.println("[Log] " + event.getGuild().getName() + event.getAuthor().getName().getName() + " : " + event.getMessage().getContentDisplay());
 
         if (event.getAuthor().isBot()) {
@@ -238,7 +293,10 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         wait_reaction(sendMsg, "⏹");
         return true;
     }
-/*
+
+    private void noUse()
+    {
+        /*
     private boolean cmdPlay(MessageReceivedEvent event, String msg) {
         String url = msg.replaceFirst("play ", "");
 
@@ -467,6 +525,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         return true;
     }
 */
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -478,7 +538,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     @Override
     public void onPostCommand(GenericMessageEvent genericMessageEvent) {
         MessageReceivedEvent msgEvent = (MessageReceivedEvent) genericMessageEvent;
-        System.out.println("Event Check");
         commandQueue.add(msgEvent.getMessage());
     }
 

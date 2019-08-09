@@ -5,10 +5,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.core.managers.AudioManager;
+import org.apache.log4j.Logger;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -18,6 +20,8 @@ import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 public class CommandManager {
+
+
     GuildMusicManager musicManager; // = manager.getGuildMusicManager(event.getGuild());
     AudioPlayer player; // = musicManager.player;
     TrackScheduler scheduler; // = musicManager.scheduler;
