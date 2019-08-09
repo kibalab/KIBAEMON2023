@@ -10,8 +10,11 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
 
 import java.awt.*;
 import java.net.MalformedURLException;
@@ -47,13 +50,8 @@ public class PlayerManager {
         return musicManager;
     }
 
-    /**
-     * 트랙 로드
-     *
-     * @param event
-     * @param trackUrl
-     */
-    public void loadAndPlay(final MessageReceivedEvent event, final String trackUrl) {
+
+    private void loadAndPlay_Msg(MessageReceivedEvent event, String trackUrl) {
         if (!isURL(trackUrl) && !trackUrl.startsWith("ytsearch:")) {
             event.getChannel().sendMessage("> Youtube또는 SoundCloud의 링크를 넣어주세요.").queue();
         }
@@ -107,6 +105,24 @@ public class PlayerManager {
                 event.getChannel().sendMessage("> " + e.toString()).queue();
             }
         });
+    }
+
+    private void loadAndPlay_Reaction(GenericMessageReactionEvent event) {
+
+    }
+
+    /**
+     * 트랙 로드
+     *
+     * @param event
+     * @param trackUrl
+     */
+    public void loadAndPlay(final GenericMessageEvent event, final String trackUrl) {
+        if (event instanceof MessageReceivedEvent) {
+            loadAndPlay_Msg((MessageReceivedEvent)event, trackUrl);
+        } else if (event instanceof GenericMessageReactionEvent) {
+            loadAndPlay_Reaction((GenericMessageReactionEvent)event); // 삭제 예정
+        }
     }
 
     private boolean isURL(String Url) {
