@@ -53,17 +53,13 @@ public class CommandManager {
 
     public void playCommand(GenericMessageEvent event, String msg) {
         VoiceChannel Vch = null;
-        String url = "";
+        String url = msg.replaceFirst("play", "").replace(" ", "");
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
-
-            url = msg.replaceFirst("play ", "");
 
             Vch = ((MessageReceivedEvent) event).getMember().getVoiceState().getChannel();
         } else if (event instanceof GenericMessageReactionEvent) {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
-
-            url = this.player.getPlayingTrack().getInfo().uri;
 
             Vch = ((GenericMessageReactionEvent) event).getMember().getVoiceState().getChannel();
         }
@@ -72,16 +68,26 @@ public class CommandManager {
         audiomng.openAudioConnection(Vch);
 
         PlayerManager manager = PlayerManager.getInstance();
+        System.out.println(url);
+        if(url.equals("")) {
+            url = this.player.getPlayingTrack().getInfo().uri;
+        }
         manager.loadAndPlay(event, url);
         manager.getGuildMusicManager(event.getGuild()).player.setVolume(globalVolume);
 
         raisePostCommand(event);
     }
 
-    public void joinCommand(GenericMessageEvent event) {
+    public void joinCommand(GenericMessageEvent event, String msg) {
+        String VchID = msg.replaceFirst("join", "").replace(" ", "");
         VoiceChannel Vch = null;
         if (event instanceof MessageReceivedEvent) {
-            Vch = ((MessageReceivedEvent) event).getMember().getVoiceState().getChannel();
+            //System.out.println(VchID);
+            if(!VchID.equals("")) {
+                Vch = ((MessageReceivedEvent) event).getGuild().getVoiceChannelById(VchID);
+            } else {
+                Vch = ((MessageReceivedEvent) event).getMember().getVoiceState().getChannel();
+            }
             if (event.getGuild().getName() == "Nerine force") {
                 if (Vch.getName() != "Music") {
                     return;
@@ -94,7 +100,19 @@ public class CommandManager {
             )).queue();
         }
         AudioManager audiomng = event.getGuild().getAudioManager();
-        audiomng.openAudioConnection(Vch);
+        try {
+            audiomng.openAudioConnection(Vch);
+        } catch (Exception e) {
+            EmbedBuilder eb = new EmbedBuilder();
+            eb.setColor(new Color(0xFF1A1E));
+            eb.addField("오류 Error", String.format(
+                    "%s 에 입장할수 없습니다.\n``%s``",
+                    Vch.getName(),
+                    ((MessageReceivedEvent) event).getAuthor().getName().toString()
+            ), false);
+            event.getChannel().sendMessage(eb.build()).queue();
+        }
+
     }
 
     public void leaveCommand(GenericMessageEvent event) {
@@ -115,6 +133,9 @@ public class CommandManager {
     }
 
     public void stopCommand(GenericMessageEvent event) {
+        if (this.player.getPlayingTrack() == null) {
+            return;
+        }
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent)event;
 
@@ -139,6 +160,9 @@ public class CommandManager {
     }
 
     public void skipCommand(GenericMessageEvent event) {
+        if (this.player.getPlayingTrack() == null) {
+            return;
+        }
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
             if (this.player.getPlayingTrack() == null) {
@@ -177,6 +201,9 @@ public class CommandManager {
     }
 
     public void volumeCommand(GenericMessageEvent event, String msg) {
+        if (this.player.getPlayingTrack() == null) {
+            return;
+        }
         String _Nvol = msg.replaceFirst("volume ", "");
 
         int Ovol = this.player.getVolume();
@@ -243,6 +270,9 @@ public class CommandManager {
     }
 
     public void gotoCommand(GenericMessageEvent event, String msg) {
+        if (this.player.getPlayingTrack() == null) {
+            return;
+        }
         msg = msg.replaceFirst("goto ", "");
 
         if (this.player.getPlayingTrack() == null) {
@@ -272,6 +302,9 @@ public class CommandManager {
     }
 
     public void shuffleCommand(GenericMessageEvent event) {
+        if (this.player.getPlayingTrack() == null) {
+            return;
+        }
         Queue queue = scheduler.getQueue();
         List<AudioTrack> list = new ArrayList<>();
 
@@ -300,6 +333,9 @@ public class CommandManager {
     }
 
     public void repeatCommand(GenericMessageEvent event) {
+        if (this.player.getPlayingTrack() == null) {
+            return;
+        }
         String msg = "play " + this.player.getPlayingTrack().getInfo().uri;
         playCommand(event, msg);
         if (event instanceof MessageReceivedEvent) {

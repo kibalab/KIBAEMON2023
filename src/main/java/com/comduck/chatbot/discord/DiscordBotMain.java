@@ -117,11 +117,12 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     public void onGenericMessageReaction(GenericMessageReactionEvent event) {
         super.onGenericMessageReaction(event);
         System.out.println(String.format(
-                "{'Type': 'Reaction', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s'}",
+                "{'Type': 'Reaction', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}",
                 event.getGuild().getName(), event.getGuild().getId(),
                 event.getChannel().getName(), event.getChannel().getId(),
                 event.getUser().getName(), event.getUser().getId(),
-                event.getMessageId()
+                event.getMessageId(),
+                event.getReactionEmote().toString()
         ));
         if (!event.getUser().isBot()) {
             onReactionBindCommand(event);
@@ -158,6 +159,10 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         //Shuffle TrackList
         if (event.getReactionEmote().getName().equals("\uD83D\uDD00")) {
             commandManagerMap.get(event.getGuild().getId()).shuffleCommand(event);
+        }
+        //Repeat
+        if (event.getReactionEmote().getName().equals("\uD83D\uDD02")) {
+            commandManagerMap.get(event.getGuild().getId()).repeatCommand(event);
         }
     }
 
@@ -204,6 +209,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             wait_reaction(sendMsg, "\uD83C\uDFA6");//printURL
             wait_reaction(sendMsg, "\uD83C\uDFB6");//tracklist
             wait_reaction(sendMsg, "\uD83D\uDD00");//Shuffle
+            wait_reaction(sendMsg, "\uD83D\uDD02");//Repeat
             return true;
         }
         return false;
@@ -251,7 +257,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             commandManagerMap.get(event.getGuild().getId()).playCommand(event, msg);
             //cmdPlay(event, msg);
         } else if (msg.startsWith("join")) {
-            commandManagerMap.get(event.getGuild().getId()).joinCommand(event);
+            commandManagerMap.get(event.getGuild().getId()).joinCommand(event, msg);
             //cmdJoin(event);
         } else if (msg.startsWith("leave") || msg.startsWith("out")) {
             commandManagerMap.get(event.getGuild().getId()).leaveCommand(event);
