@@ -247,10 +247,13 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      * @param msg
      */
     private void botCommands(final MessageReceivedEvent event, String msg) {
+
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
         TrackScheduler scheduler = musicManager.scheduler;
+
+        //커맨드 호출
         if (msg.startsWith("test")) {
             cmdTest(event);
         } else if (msg.startsWith("play")) {
@@ -289,6 +292,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     //#region 명령어 함수
     //명령어 함수////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //유일하게 메인에 남은 명령어 ( 테스트용 )
     private boolean cmdTest(MessageReceivedEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("OK", null);

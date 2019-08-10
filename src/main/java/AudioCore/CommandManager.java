@@ -11,12 +11,16 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.core.managers.AudioManager;
 import org.apache.log4j.Logger;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 public class CommandManager {
@@ -37,14 +41,17 @@ public class CommandManager {
         this.postCommandListeners = new ArrayList<>();
     }
 
+    // 커맨드 실행 기록 이벤트의 리스너 생성
     public void addPostCommandListener(PostCommandListener listener) {
         this.postCommandListeners.add(listener);
     }
 
+    // 커맨드 실행 기록 이벤트의 리스너 삭제
     public void removePostCommandListener(PostCommandListener listener) {
         this.postCommandListeners.remove(listener);
     }
 
+    // 커맨드 실행 기록 이벤트 발생
     private void raisePostCommand(GenericMessageEvent event) {
         for (PostCommandListener listener : postCommandListeners) {
             listener.onPostCommand(event);
@@ -54,6 +61,8 @@ public class CommandManager {
     public void playCommand(GenericMessageEvent event, String msg) {
         VoiceChannel Vch = null;
         String url = msg.replaceFirst("play", "").replace(" ", "");
+
+        // GenericMessageEvent 종속 메소드 분리
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
 
@@ -66,43 +75,54 @@ public class CommandManager {
 
         AudioManager audiomng = event.getGuild().getAudioManager();
         audiomng.openAudioConnection(Vch);
-
         PlayerManager manager = PlayerManager.getInstance();
-        System.out.println(url);
+
+        //1. 파라미터 없으면 현재 재생되고 있는 음액 재신청
+        //2. URL이 아니면 유튜브에 검색
         if(url.equals("")) {
             url = this.player.getPlayingTrack().getInfo().uri;
+        } else if (!isURL(url) && !url.startsWith("ytsearch:")) {
+            LinkedHashMap<Integer, String> video = searchYoutube(url);
+            url = video.get(0);
+            event.getChannel().sendMessage(String.format("> 영상검색결과: %s", url)).queue();
         }
+
+        //음악 재생
         manager.loadAndPlay(event, url);
         manager.getGuildMusicManager(event.getGuild()).player.setVolume(globalVolume);
 
+        //커맨드 실행 기록 이벤트 발생
         raisePostCommand(event);
     }
 
     public void joinCommand(GenericMessageEvent event, String msg) {
         String VchID = msg.replaceFirst("join", "").replace(" ", "");
         VoiceChannel Vch = null;
+
         if (event instanceof MessageReceivedEvent) {
-            //System.out.println(VchID);
+
+            //1. 파라미터값이 있으면 해당 VoiceChennal을 가져옴
+            //2. 없으면 요청한 유저가 있는 VoiceChennal을 가져옴
             if(!VchID.equals("")) {
                 Vch = ((MessageReceivedEvent) event).getGuild().getVoiceChannelById(VchID);
             } else {
                 Vch = ((MessageReceivedEvent) event).getMember().getVoiceState().getChannel();
             }
-            if (event.getGuild().getName() == "Nerine force") {
-                if (Vch.getName() != "Music") {
-                    return;
-                }
-            }
+
             event.getChannel().sendMessage(String.format(
                     "> %s 입장 ``%s``",
                     Vch.getName(),
                     ((MessageReceivedEvent) event).getAuthor().getName()
             )).queue();
+
         }
         AudioManager audiomng = event.getGuild().getAudioManager();
+
+        // VoiceChennal에 입장, 안되면 오류Embed 출력
         try {
             audiomng.openAudioConnection(Vch);
         } catch (Exception e) {
+
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0xFF1A1E));
             eb.addField("오류 Error", String.format(
@@ -111,12 +131,14 @@ public class CommandManager {
                     ((MessageReceivedEvent) event).getAuthor().getName().toString()
             ), false);
             event.getChannel().sendMessage(eb.build()).queue();
+
         }
 
     }
 
     public void leaveCommand(GenericMessageEvent event) {
         VoiceChannel Vch = null;
+
         if (event instanceof MessageReceivedEvent) {
             Vch = ((MessageReceivedEvent) event).getMember().getVoiceState().getChannel();
             event.getChannel().sendMessage(String.format(
@@ -127,15 +149,20 @@ public class CommandManager {
         }
         event.getGuild().getAudioManager().closeAudioConnection();
 
+        //stopCommand와 같은 부분
         this.scheduler.getQueue().clear();
         this.player.stopTrack();
         this.player.setPaused(false);
     }
 
     public void stopCommand(GenericMessageEvent event) {
+
+        //재생되고 있는 트랙이 있는지 확인
         if (this.player.getPlayingTrack() == null) {
             return;
         }
+
+        //GenericMessageEvent 종속 메소드 분리후 처리
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent)event;
 
@@ -152,17 +179,25 @@ public class CommandManager {
             )).queue();
         }
 
+        //1. tracklist를 초기화
+        //2. 현재 재생되고 있는 트랙 정지
+        //3. 플레이어 일시정지
         this.scheduler.getQueue().clear();
         this.player.stopTrack();
         this.player.setPaused(false);
 
+        //커맨드 실행 기록 이벤트 발생
         raisePostCommand(event);
     }
 
     public void skipCommand(GenericMessageEvent event) {
+
+        //재생되고 있는 트랙이 있는지 확인
         if (this.player.getPlayingTrack() == null) {
             return;
         }
+
+        // Stop과 같은 처리구조
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
             if (this.player.getPlayingTrack() == null) {
@@ -201,14 +236,20 @@ public class CommandManager {
     }
 
     public void volumeCommand(GenericMessageEvent event, String msg) {
+
+        //재생되고 있는 트랙이 있는지 확인
         if (this.player.getPlayingTrack() == null) {
             return;
         }
+
+        //파라미터 분리
         String _Nvol = msg.replaceFirst("volume ", "");
 
+        //현재 음량과 요청 음량을 가져옴
         int Ovol = this.player.getVolume();
         int Nvol = Integer.parseInt(_Nvol);
 
+        //최대 음량 제한
         if (Nvol > 100) {
             Nvol = 100;
         }
@@ -218,11 +259,17 @@ public class CommandManager {
                 Ovol,
                 Nvol
         )).queue();
+
+        //1.다음 곡도 같은 음량을 유지하기 위해 전역변수에 담음
+        //2.플레이어 음량 변경
         globalVolume = Nvol;
         this.player.setVolume(globalVolume);
     }
 
     public void tracklistCommand(GenericMessageEvent event) {
+
+        //재생되고 있는 트랙이 있는지 확인
+        // (재생되고 있는 트랙이 없으면 tracklist도 비어있는걸로 판단)
         if (player.getPlayingTrack() == null) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0xff6624));
@@ -240,7 +287,9 @@ public class CommandManager {
                 ), false);
             }
             event.getChannel().sendMessage(eb.build()).queue();
-        } else {
+        } else { // 비어있지 않으면
+
+            //현재재생되고 있는 트랙의 정보를 가져옴 (title, Position, Duration)
             AudioTrackInfo info = player.getPlayingTrack().getInfo();
 
             EmbedBuilder eb = new EmbedBuilder();
@@ -251,6 +300,10 @@ public class CommandManager {
                     formatTime(player.getPlayingTrack().getPosition()),
                     formatTime(player.getPlayingTrack().getDuration())
             ));
+
+            //1. tracklist 큐의 데이터를 리스트로 복제
+            //2. list의 인덱스를 확인하여 문자열에 담음
+            //3. Embed메시지를 생성하여 출력
             List playelist = new ArrayList(scheduler.getQueue());
             String str = "";
             if (playelist.size() != 0) {
@@ -270,11 +323,10 @@ public class CommandManager {
     }
 
     public void gotoCommand(GenericMessageEvent event, String msg) {
-        if (this.player.getPlayingTrack() == null) {
-            return;
-        }
+
         msg = msg.replaceFirst("goto ", "");
 
+        //재생되고 있는 트랙이 있는지 확인
         if (this.player.getPlayingTrack() == null) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0xff6624));
@@ -293,7 +345,9 @@ public class CommandManager {
             }
             event.getChannel().sendMessage(eb.build()).queue();
             return;
-        } else {
+        } else { //비어있지 않으면
+
+            //파라미터(시간 문자열)를 프레임단위로 환산하여 Position에 넣음
             long time = formatLong(msg);
             System.out.println(time);
             this.player.getPlayingTrack().setPosition(time);
@@ -302,12 +356,17 @@ public class CommandManager {
     }
 
     public void shuffleCommand(GenericMessageEvent event) {
+
+        //재생되고 있는 트랙이 있는지 확인
         if (this.player.getPlayingTrack() == null) {
             return;
         }
+
+        //큐를 가져옴, 빈 리스트(AudioTrack) 생성
         Queue queue = scheduler.getQueue();
         List<AudioTrack> list = new ArrayList<>();
 
+        //큐에서 하나씩 빼서 리스트에 넣음
         for (int i = 0; true; i++) {
             list.add((AudioTrack) queue.poll());
             if (queue.size() == 0) {
@@ -315,14 +374,17 @@ public class CommandManager {
             }
         }
 
+        //리스트를 무작위로 섞음
         Collections.shuffle(list);
 
+        //다시 큐에 넣음
         for (int i = 0; true; i++) {
             queue.offer(list.get(i));
             if (queue.size() == list.size()) {
                 break;
             }
         }
+
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
             event.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", ((MessageReceivedEvent) event).getAuthor().getName())).queue();
@@ -330,14 +392,22 @@ public class CommandManager {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
             event.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
         }
+
     }
 
     public void repeatCommand(GenericMessageEvent event) {
+
+        //재생되고 있는 트랙이 있는지 확인
         if (this.player.getPlayingTrack() == null) {
             return;
         }
+
+        //1. 현재 재생되고 있는 트랙의 url정보를 가져옴
+        //2. url 정보를 커맨드 메시지처럼 사용하기 위해 수정함
+        //3. playCommand 호출
         String msg = "play " + this.player.getPlayingTrack().getInfo().uri;
         playCommand(event, msg);
+
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
             event.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((MessageReceivedEvent) event).getAuthor().getName())).queue();
@@ -347,6 +417,7 @@ public class CommandManager {
         }
     }
 
+    // Long 타입 프레임을 String 타입 시간으로 환산
     private String formatTime(long time) {
         final long h = time / TimeUnit.HOURS.toMillis(1);
         final long m = time % TimeUnit.HOURS.toMillis(1) / TimeUnit.MINUTES.toMillis(1);
@@ -359,6 +430,7 @@ public class CommandManager {
         }
     }
 
+    // String 타입 시간을 Long 타입 프레임으로 환산
     private long formatLong(String msg) {
         String[] StrTime = msg.split(":");
         long LongTime = 0;
@@ -374,5 +446,42 @@ public class CommandManager {
         }
 
         return LongTime * 1000;
+    }
+
+    //URL여부 확인
+    private boolean isURL(String Url) {
+        try {
+            new URL(Url);
+            return true;
+
+        } catch (MalformedURLException e) {
+            return false;
+        }
+    }
+
+    //유튜브 검색
+    private LinkedHashMap<Integer, String> searchYoutube(String title) {
+        //유튜브 검색 경로 지정, 빈 해쉬맵 생성
+        String youtubeUrl = "https://www.youtube.com/results?search_query=";
+        LinkedHashMap<Integer, String> video = new LinkedHashMap<>();
+
+        //1. URL + title 로 검색하여 영상 제목을 전부 가져옴
+        //2. video 해쉬맵에 하나씩 담아서 반환
+        try {
+            Document doc = Jsoup.connect(youtubeUrl+title).get();
+            Elements titleE = doc.getElementsByTag("a").select("a[title]");
+            for(int i=0, j=0; titleE.size()> 1; i++) {
+                Element data = titleE.get(i);
+                if( data.classNames().contains("yt-uix-tile-link") ) {
+                    //System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" +data.attr("href"));
+                    video.put(j, "https://www.youtube.com"+data.attr("href"));
+                    j++;
+                }
+            }
+            return video;
+        } catch (Exception e) {
+            System.out.println(e);
+            return video;
+        }
     }
 }

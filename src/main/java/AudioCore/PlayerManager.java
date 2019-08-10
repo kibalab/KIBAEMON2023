@@ -15,11 +15,16 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.awt.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class PlayerManager {
@@ -52,9 +57,7 @@ public class PlayerManager {
 
 
     private void loadAndPlay_Msg(MessageReceivedEvent event, String trackUrl) {
-        if (!isURL(trackUrl) && !trackUrl.startsWith("ytsearch:")) {
-            event.getChannel().sendMessage("> Youtube또는 SoundCloud의 링크를 넣어주세요.").queue();
-        }
+
 
         final GuildMusicManager musicManager = getGuildMusicManager(event.getGuild());
 
@@ -108,9 +111,6 @@ public class PlayerManager {
     }
 
     private void loadAndPlay_Reaction(GenericMessageReactionEvent event, String trackUrl) {
-        if (!isURL(trackUrl) && !trackUrl.startsWith("ytsearch:")) {
-            event.getChannel().sendMessage("> Youtube또는 SoundCloud의 링크를 넣어주세요.").queue();
-        }
 
         final GuildMusicManager musicManager = getGuildMusicManager(event.getGuild());
 
@@ -170,22 +170,12 @@ public class PlayerManager {
  * @param trackUrl
  */
 public void loadAndPlay(final GenericMessageEvent event, final String trackUrl) {
-        if (event instanceof MessageReceivedEvent) {
+    if (event instanceof MessageReceivedEvent) {
         loadAndPlay_Msg((MessageReceivedEvent)event, trackUrl);
-        } else if (event instanceof GenericMessageReactionEvent) {
+    } else if (event instanceof GenericMessageReactionEvent) {
         loadAndPlay_Reaction((GenericMessageReactionEvent)event, trackUrl); // 삭제 예정
-        }
-        }
-
-private boolean isURL(String Url) {
-        try {
-        new URL(Url);
-        return true;
-
-        } catch (MalformedURLException e) {
-        return false;
-        }
-        }
+    }
+}
 
 /**
  * 큐에 넘기기
