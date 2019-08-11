@@ -135,6 +135,10 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      * @param event
      */
     private void onReactionBindCommand(GenericMessageReactionEvent event) {
+        //Pause
+        if (event.getReactionEmote().getName().equals("⏯")) {
+            commandManagerMap.get(event.getGuild().getId()).pauseCommand(event);
+        }
         //Stop
         if (event.getReactionEmote().getName().equals("⏹")) {
             commandManagerMap.get(event.getGuild().getId()).stopCommand(event);
@@ -204,6 +208,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         String msg = ((Message) commandQueue.poll()).getContentDisplay();
         System.out.println(msg);
         if (msg.startsWith("?play")) {
+            wait_reaction(sendMsg, "⏯");//pause
             wait_reaction(sendMsg, "⏹");//stop
             wait_reaction(sendMsg, "⏭");//skip
             wait_reaction(sendMsg, "\uD83C\uDFA6");//printURL
@@ -259,6 +264,9 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         } else if (msg.startsWith("play")) {
             commandManagerMap.get(event.getGuild().getId()).playCommand(event, msg);
             //cmdPlay(event, msg);
+        } else if (msg.startsWith("pause")) {
+            commandManagerMap.get(event.getGuild().getId()).pauseCommand(event);
+            //cmdPause(event);
         } else if (msg.startsWith("join")) {
             commandManagerMap.get(event.getGuild().getId()).joinCommand(event, msg);
             //cmdJoin(event);
@@ -286,6 +294,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         } else if (msg.startsWith("repeat") || msg.startsWith("replay") || msg.startsWith("rp")) {
             commandManagerMap.get(event.getGuild().getId()).repeatCommand(event);
             //cmdRepeat(event);
+        } else if (msg.startsWith("clear") || msg.startsWith("clr") || msg.startsWith("cls")) {
+            commandManagerMap.get(event.getGuild().getId()).clearCommand(event);
         }
     }
 

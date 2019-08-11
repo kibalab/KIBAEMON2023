@@ -58,7 +58,7 @@ public class TrackScheduler extends AudioEventAdapter {
             // Only start the next track if the end reason is suitable for it (FINISHED or LOAD_FAILED)
             if (endReason.mayStartNext) {
                 nextTrack();
-                System.out.println("Check " + track.getPosition());
+                //System.out.println("Check " + track.getPosition());
             }
     }
 }

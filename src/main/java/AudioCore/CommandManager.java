@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.core.events.message.GenericMessageEvent;
@@ -84,7 +85,6 @@ public class CommandManager {
         } else if (!isURL(url) && !url.startsWith("ytsearch:")) {
             LinkedHashMap<Integer, String> video = searchYoutube(url);
             url = video.get(0);
-            event.getChannel().sendMessage(String.format("> 영상검색결과: %s", url)).queue();
         }
 
         //음악 재생
@@ -93,6 +93,23 @@ public class CommandManager {
 
         //커맨드 실행 기록 이벤트 발생
         raisePostCommand(event);
+    }
+
+    public void pauseCommand(GenericMessageEvent event) {
+        if (!this.player.isPaused()) {
+            this.player.setPaused(true);
+        } else {
+            this.player.setPaused(false);
+        }
+
+
+        if (event instanceof MessageReceivedEvent) {
+            MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
+            event.getChannel().sendMessage(String.format("> 일시정지 ``%s``", ((MessageReceivedEvent) event).getAuthor().getName()));
+        } else if (event instanceof GenericMessageReactionEvent) {
+            GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
+            event.getChannel().sendMessage(String.format("> 일시정지 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName()));
+        }
     }
 
     public void joinCommand(GenericMessageEvent event, String msg) {
@@ -414,6 +431,15 @@ public class CommandManager {
         } else if (event instanceof GenericMessageReactionEvent) {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
             event.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
+        }
+    }
+
+    public void clearCommand(GenericMessageEvent event) {
+        MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
+        System.out.println(msgEvent.getChannel().getIterableHistory().complete().size());
+        for(Message msg : msgEvent.getChannel().getIterableHistory().complete()) {
+
+            msgEvent.getChannel().deleteMessageById(msg.getId()).queue(  );
         }
     }
 
