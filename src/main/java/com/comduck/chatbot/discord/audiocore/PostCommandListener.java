@@ -1,4 +1,4 @@
-package AudioCore;
+package com.comduck.chatbot.discord.audiocore;
 
 import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 

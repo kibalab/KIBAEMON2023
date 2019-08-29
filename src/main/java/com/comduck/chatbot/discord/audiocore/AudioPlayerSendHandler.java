@@ -1,4 +1,4 @@
-package AudioCore;
+package com.comduck.chatbot.discord.audiocore;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
