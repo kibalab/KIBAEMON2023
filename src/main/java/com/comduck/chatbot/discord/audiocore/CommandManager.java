@@ -57,6 +57,29 @@ public class CommandManager {
         }
     }
 
+    public void helpCommand(GenericMessageEvent event) {
+        String msg = "***임시 명령어 도움말***\r"+
+"```접두사 : '?' (명령어를 사용할때 가장앞에 반드시 포함되어있어야 합니다)\r"+
+"help : 명령어 도움말 입니다. [? 또는 hlp로 대체가능]\r"+
+"Music\r"+
+"    play [Url또는Title] : 음악을 재생합니다.\r"+
+"    pause : 음악을 일시정지 합니다\r"+
+"    join [음성채널ID] : 음성채널에 봇을 추가합니다.(ID가 없으면 요청자가 있는 방에 추가됩니다)\r"+
+"    leave : 음성채널에서 내보냅니다. [out으로 대체가능]\r"+
+"    stop : 대기열을 초기화 합니다.\r"+
+"    skip : 다음곡으로 넘어갑니다. [next로 대체가능]\r"+
+"    volume [0과 100사이값] : 음량을 조절합니다. [vol로 대체가능]\r"+
+"    tracklist : 대기열을 출력합니다. [songlist, tlist, slist로 대체가능]\r"+
+"    goto [시간 00:00] : 현재곡의 재생을 지정한 시간으로 이동합니다.\r"+
+"    shuffle : 대기열을 무작위로 섞습니다. [mix, sf로 대체가능]\r"+
+"    repeat : 현재 재생중인 곡을 다시 대기열에 추가합니다. [replay, rp로 대체가능]\r"+
+"    clear : 텍스트채널의 문자 50개씩 삭제합니다.\r"+
+"```\r"+
+"제작 : KIBA\r"+
+"도움 : JUNG ";
+        event.getChannel().sendMessage(msg).queue();
+    }
+
     public void playCommand(GenericMessageEvent event, String msg) {
         VoiceChannel Vch = null;
         String url = msg.replaceFirst("play", "").replace(" ", "");
@@ -85,10 +108,10 @@ public class CommandManager {
             url = video.get(0);
         }
 
+
         //음악 재생
         manager.loadAndPlay(event, url);
         manager.getGuildMusicManager(event.getGuild()).player.setVolume(globalVolume);
-
         //커맨드 실행 기록 이벤트 발생
         raisePostCommand(event);
     }

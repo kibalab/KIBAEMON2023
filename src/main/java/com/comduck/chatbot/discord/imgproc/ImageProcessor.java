@@ -7,6 +7,10 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -27,48 +31,57 @@ public class ImageProcessor {
         return src.getSubimage(rect.x, rect.y, rect.width, rect.height);
     }
 
-    public File processImage(File canvasFile, File thumbnailFile, File iconFile) {
+    public File processImage(File canvasFile, URL thumbnailFile, URL requesterIconFile, URL uploaderIconFile, String title, String uploader, String requester) {
         try {
             //Load Image
             BufferedImage image = ImageIO.read(canvasFile);
-            BufferedImage thum = ImageIO.read(thumbnailFile);
-            BufferedImage icon = ImageIO.read(iconFile);
+            BufferedImage thum = ImageIO.read(thumbnailFile.openStream());
+            BufferedImage uicon = ImageIO.read(uploaderIconFile.openStream());
+
+            URLConnection uc = requesterIconFile.openConnection();
+            uc.addRequestProperty("User-Agent",
+                    "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)");
+            BufferedImage ricon = ImageIO.read(uc.getInputStream());
 
             //섬네일 이미지 자름
             thum = cropImage(thum, new Rectangle(30, 60, 1210, 469));
 
             //그래픽 생성
             Graphics g = image.getGraphics();
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
             //Uploader Name TEXT
             //폰트 설정
             g.setFont(g.getFont().deriveFont(43f));
             //문자열 그림
-            g.drawString("UPLOADER", 120, 613);
+            g.drawString(uploader, 120, 613);
 
             //Requster Name TEXT
             g.setFont(g.getFont().deriveFont(43f));
-            g.drawString("REQUESTER", 695, 613);
+            g.drawString(requester, 695, 613);
 
             //Video Title TEXT
             g.setFont(g.getFont().deriveFont(54f));
-            g.drawString("VIDEO TITLE", 20, 525);
+            g.drawString(title, 20, 525);
 
             //Uploader Profile Image
             //클립생성(마스크 모양 생성)
-            g.setClip(new Ellipse2D.Float(25, 544, 80, 80));
+            g.setClip(new Ellipse2D.Float(24, 543, 82, 82));
             //클립에 이미지 그림
-            g.drawImage(icon, 25, 544, 80, 80, null);
+            g.drawImage(uicon, 24, 543, 82, 82, null);
 
             //Requester Profile Image
-            g.setClip(new Ellipse2D.Float(599, 544, 80, 80));
-            g.drawImage(icon, 599, 544, 80, 80, null);
+            g.setClip(new Ellipse2D.Float(600, 545, 80, 80));
+            g.drawImage(ricon, 600, 545, 80, 80, null);
 
             //Thumnail Image
             g.setClip(new RoundRectangle2D.Float(0, 0, 1280, 469, 50, 50));
             g.drawImage(thum, 0, 0, 1280, 469, null);
 
+
             //Edit close
+            g2d.dispose();
             g.dispose();
 
             //Save Image
@@ -79,7 +92,8 @@ public class ImageProcessor {
 
             return outFile;
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            System.out.println(ex);
         }
+        return canvasFile;
     }
 }

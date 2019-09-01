@@ -1,5 +1,6 @@
 package com.comduck.chatbot.discord.audiocore;
 
+import com.comduck.chatbot.discord.imgproc.ImageProcessor;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -12,9 +13,17 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.awt.*;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class PlayerManager {
@@ -45,6 +54,39 @@ public class PlayerManager {
         return musicManager;
     }
 
+    private URL searchIcon(String videoId, String uploaderName) {
+        //유튜브 검색 경로 지정, 빈 해쉬맵 생성
+        String youtubeUrl = "https://www.youtube.com/results?search_query=";
+        String youtubechennal = "";
+        //1. URL + title 로 검색하여 영상 제목을 전부 가져옴
+        //2. video 해쉬맵에 하나씩 담아서 반환
+        try {
+            Document doc = Jsoup.connect(youtubeUrl+videoId).get();
+            Elements titleE = doc.getElementsByTag("a");
+            for(int i=0; titleE.size()>i ; i++) {
+                Element data = titleE.get(i);
+                //System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" + data.className() + "\n" +data.attr("href"));
+                //System.out.println(data.text().equals(uploaderName));
+                if( data.text().equals(uploaderName) ) {
+
+                    youtubechennal = "https://www.youtube.com" + data.attr("href");
+                    break;
+                }
+            }
+            Document doc2 = Jsoup.connect(youtubechennal).get();
+            Elements imageE = doc2.getElementsByTag("img");
+            for(int i=0; imageE.size()>i ; i++) {
+                Element data = imageE.get(i);
+                if( data.attr("src").startsWith("https://") ) {
+                    //System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" + data.className() + "\n" +data.attr("src"));
+                    return new URL(data.attr("src"));
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return null;
+    }
 
     private void loadAndPlay_Msg(MessageReceivedEvent event, String trackUrl) {
 
@@ -54,10 +96,32 @@ public class PlayerManager {
         //트랙 로드, 에러 관련 처리/이벤트
         playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
             public void trackLoaded(AudioTrack track) {
-                EmbedBuilder eb = new EmbedBuilder();
+
+                File canvasFile = null;
+                URL thumbnailFile = null;
+                URL requesterIconFile = null;
+                URL uploaderIconFile = null;
+                try {
+                    canvasFile = new File("Image.png");
+                    String id = (track.getInfo().uri).replace("https://","");
+                    id = id.replace("watch?v=", "").split("/")[1];
+                    thumbnailFile = new URL("http://img.youtube.com/vi/"+id+"/maxresdefault.jpg");
+                    requesterIconFile = new URL(event.getAuthor().getAvatarUrl());
+                    uploaderIconFile = searchIcon(track.getInfo().uri, track.getInfo().author);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+
+                ImageProcessor imgProcessor = new ImageProcessor();
+                File img = imgProcessor.processImage(canvasFile, thumbnailFile, requesterIconFile, uploaderIconFile, track.getInfo().title, track.getInfo().author, event.getAuthor().getName());
+
+                event.getChannel().sendFile(img).queue();
+                event.getMessage().delete().queue();
+
+                /*EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0x244aff));
                 eb.addField(track.getInfo().title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getAuthor().getName()), false);
-                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessage(eb.build()).queue();*/
 
                 play(musicManager, track);
             }
@@ -107,10 +171,10 @@ public class PlayerManager {
         //트랙 로드, 에러 관련 처리/이벤트
         playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
             public void trackLoaded(AudioTrack track) {
-                EmbedBuilder eb = new EmbedBuilder();
+                /*EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0x244aff));
-                eb.addField(track.getInfo().title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getUser().getName()), false);
-                event.getChannel().sendMessage(eb.build()).queue();
+                eb.addField(track.getInfo().title, String.format("곡이 대기열에 다시 추가되었습니다.\n``%s``", event.getUser().getName()), false);*/
+                event.getChannel().sendMessage(String.format("> 대기열에 곡 재신청 ``%s``", event.getUser().getName())).queue();
 
         play(musicManager, track);
     }
