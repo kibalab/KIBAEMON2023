@@ -2,11 +2,14 @@ package com.comduck.chatbot.discord;
 
 import com.comduck.chatbot.discord.audiocore.*;
 import com.sedmelluq.discord.lavaplayer.player.*;
+import net.dv8tion.jda.client.events.call.voice.CallVoiceLeaveEvent;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.ShutdownEvent;
+import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildReadyEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
@@ -37,6 +40,12 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     }
 
     @Override
+    public void onGuildJoin(GuildJoinEvent event) {
+        super.onGuildJoin(event);
+
+    }
+
+    @Override
     public void onGuildReady(GuildReadyEvent event) {
 
         PlayerManager manager = PlayerManager.getInstance();
@@ -63,7 +72,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             //channelTrue = channel.getId().equals("607208059504427018"); // Nerine Force - bot_command
             //channelTrue = channel.getId().equals("424887201281605661"); // LucidLab - 명령어
 
-            if(channel.getId().equals("607208059504427018")) {
+            if(channel.getId().equals("558886994676285443")) {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0x1BC3FF));
                 eb.setAuthor("Ready!",null,"https://cdn.discordapp.com/attachments/452403281428217856/609442329593643019/KIBAEMON-ICON.png"); //
@@ -95,6 +104,25 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         for (CommandManager cmdManager : commandManagerMap.values()) {
             cmdManager.removePostCommandListener(this);
+        }
+    }
+
+
+    @Override
+    public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
+        super.onGuildVoiceLeave(event);
+
+        if (event.getGuild().getAudioManager().getConnectedChannel() != null) {
+            return;
+        } else if (event.getChannelLeft() != null) {
+            return;
+        }
+
+
+        if (event.getChannelLeft().getMembers().size() <= 1) {
+            if(event.getGuild().getAudioManager().getConnectedChannel().getIdLong() == event.getChannelLeft().getIdLong()) {
+                event.getGuild().getAudioManager().closeAudioConnection();
+            }
         }
     }
 
@@ -249,7 +277,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         TrackScheduler scheduler = musicManager.scheduler;
 
         //커맨드 호출
-        if (msg.startsWith("help") || msg.startsWith("?") || msg.startsWith("hlp")) {
+        if (msg.startsWith("help") || msg.startsWith("hlp")) {
             commandManagerMap.get(event.getGuild().getId()).helpCommand(event);
         } else if (msg.startsWith("test")) {
             cmdTest(event);

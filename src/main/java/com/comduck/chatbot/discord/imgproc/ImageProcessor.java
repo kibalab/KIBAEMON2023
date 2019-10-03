@@ -31,12 +31,34 @@ public class ImageProcessor {
         return src.getSubimage(rect.x, rect.y, rect.width, rect.height);
     }
 
-    public File processImage(File canvasFile, URL thumbnailFile, URL requesterIconFile, URL uploaderIconFile, String title, String uploader, String requester) {
+    public File processImage(File canvasFile, String id, URL requesterIconFile, URL uploaderIconFile, String title, String uploader, String requester) {
         try {
+
+
             //Load Image
             BufferedImage image = ImageIO.read(canvasFile);
-            BufferedImage thum = ImageIO.read(thumbnailFile.openStream());
+            BufferedImage thum = null;
+            try {
+                URL thumbnailFile = new URL("http://img.youtube.com/vi/" + id + "/maxresdefault.jpg");
+                thum = ImageIO.read(thumbnailFile.openStream());
+            } catch (Exception e1) {
+                try {
+                    URL thumbnailFile = new URL("http://i.ytimg.com/vi/" + id + "/maxresdefault.jpg");
+                    thum = ImageIO.read(thumbnailFile.openStream());
+                } catch (Exception e2) {
+                    try {
+                        URL thumbnailFile = new URL("http://i.ytimg.com/vi/" + id + "/sddefault.jpg");
+                        thum = ImageIO.read(thumbnailFile.openStream());
+                    } catch (Exception e3) {
+                        e1.printStackTrace();
+                        e2.printStackTrace();
+                        e3.printStackTrace();
+                    }
+
+                }
+            }
             BufferedImage uicon = ImageIO.read(uploaderIconFile.openStream());
+
 
             URLConnection uc = requesterIconFile.openConnection();
             uc.addRequestProperty("User-Agent",

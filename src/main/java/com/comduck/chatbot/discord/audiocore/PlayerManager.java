@@ -58,35 +58,47 @@ public class PlayerManager {
         //유튜브 검색 경로 지정, 빈 해쉬맵 생성
         String youtubeUrl = "https://www.youtube.com/results?search_query=";
         String youtubechennal = "";
+        Document doc = null, doc2 = null;
         //1. URL + title 로 검색하여 영상 제목을 전부 가져옴
         //2. video 해쉬맵에 하나씩 담아서 반환
         try {
-            Document doc = Jsoup.connect(youtubeUrl+videoId).get();
+            doc = Jsoup.connect(youtubeUrl+videoId).get();
             Elements titleE = doc.getElementsByTag("a");
             for(int i=0; titleE.size()>i ; i++) {
                 Element data = titleE.get(i);
                 //System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" + data.className() + "\n" +data.attr("href"));
-                //System.out.println(data.text().equals(uploaderName));
-                if( data.text().equals(uploaderName) ) {
+                //System.out.println(i + " " + data.text());
+                if(uploaderName.endsWith("VEVO")) {
 
-                    youtubechennal = "https://www.youtube.com" + data.attr("href");
+                    try {
+                        youtubechennal = "https://www.youtube.com/user/" + uploaderName;
+                        doc2 = Jsoup.connect(youtubechennal).get();
+                    } catch (Exception e) {
+                        youtubechennal = "https://www.youtube.com" + data.attr("href");
+                        doc2 = Jsoup.connect(youtubechennal).get();
+                    }
+
                     break;
                 }
+                if( data.text().equals(uploaderName)) {
+                    youtubechennal = "https://www.youtube.com" + data.attr("href");
+                    doc2 = Jsoup.connect(youtubechennal).get();
+                break;
             }
-            Document doc2 = Jsoup.connect(youtubechennal).get();
-            Elements imageE = doc2.getElementsByTag("img");
-            for(int i=0; imageE.size()>i ; i++) {
-                Element data = imageE.get(i);
-                if( data.attr("src").startsWith("https://") ) {
-                    //System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" + data.className() + "\n" +data.attr("src"));
-                    return new URL(data.attr("src"));
                 }
+        Elements imageE = doc2.getElementsByTag("img");
+        for(int i=0; imageE.size()>i ; i++) {
+            Element data = imageE.get(i);
+            if( data.attr("src").startsWith("https://") ) {
+                //System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" + data.className() + "\n" +data.attr("src"));
+                return new URL(data.attr("src"));
             }
-        } catch (Exception e) {
-            System.out.println(e);
         }
-        return null;
+    } catch (Exception e) {
+        System.out.println(e);
     }
+        return null;
+}
 
     private void loadAndPlay_Msg(MessageReceivedEvent event, String trackUrl) {
 
@@ -98,22 +110,23 @@ public class PlayerManager {
             public void trackLoaded(AudioTrack track) {
 
                 File canvasFile = null;
-                URL thumbnailFile = null;
                 URL requesterIconFile = null;
                 URL uploaderIconFile = null;
+                String videoId = track.getInfo().identifier;
                 try {
                     canvasFile = new File("Image.png");
+
                     String id = (track.getInfo().uri).replace("https://","");
                     id = id.replace("watch?v=", "").split("/")[1];
-                    thumbnailFile = new URL("http://img.youtube.com/vi/"+id+"/maxresdefault.jpg");
+
                     requesterIconFile = new URL(event.getAuthor().getAvatarUrl());
-                    uploaderIconFile = searchIcon(track.getInfo().uri, track.getInfo().author);
+                    uploaderIconFile = searchIcon(track.getInfo().identifier, track.getInfo().author);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 }
 
                 ImageProcessor imgProcessor = new ImageProcessor();
-                File img = imgProcessor.processImage(canvasFile, thumbnailFile, requesterIconFile, uploaderIconFile, track.getInfo().title, track.getInfo().author, event.getAuthor().getName());
+                File img = imgProcessor.processImage(canvasFile, videoId, requesterIconFile, uploaderIconFile, track.getInfo().title, track.getInfo().author, event.getAuthor().getName());
 
                 event.getChannel().sendFile(img).queue();
                 event.getMessage().delete().queue();

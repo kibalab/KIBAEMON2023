@@ -1,5 +1,6 @@
 package com.comduck.chatbot.discord.audiocore;
 
+import com.comduck.chatbot.discord.cmdprompt.CommandProcessor;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
@@ -60,7 +61,7 @@ public class CommandManager {
     public void helpCommand(GenericMessageEvent event) {
         String msg = "***임시 명령어 도움말***\r"+
 "```접두사 : '?' (명령어를 사용할때 가장앞에 반드시 포함되어있어야 합니다)\r"+
-"help : 명령어 도움말 입니다. [? 또는 hlp로 대체가능]\r"+
+"help : 명령어 도움말 입니다. [hlp로 대체가능]\r"+
 "Music\r"+
 "    play [Url또는Title] : 음악을 재생합니다.\r"+
 "    pause : 음악을 일시정지 합니다\r"+
@@ -344,18 +345,21 @@ public class CommandManager {
             //3. Embed메시지를 생성하여 출력
             List playelist = new ArrayList(scheduler.getQueue());
             String str = "";
+            long TotalDuration = player.getPlayingTrack().getDuration() - player.getPlayingTrack().getPosition();
             if (playelist.size() != 0) {
                 for (int i = 0; true; i++) {
                     if (playelist.size() == i) {
                         break;
                     }
                     AudioTrack t = (AudioTrack) playelist.get(i);
-                    str += String.format("%d. %s\n", i + 1, t.getInfo().title);
+                    str += String.format("%d. %s ``[%s]``\n", i + 1, t.getInfo().title, formatTime(t.getInfo().length));
+                    TotalDuration += t.getInfo().length;
                 }
             } else {
                 str = "None";
             }
             eb.addField("TrackList", str, false);
+            eb.setFooter(String.format("TotalDuration - %s", formatTime(TotalDuration)), null);
             event.getChannel().sendMessage(eb.build()).queue();
         }
     }
@@ -372,13 +376,13 @@ public class CommandManager {
                 MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
-                        ((MessageReceivedEvent) event).getAuthor().getName().toString()
+                        msgEvent.getAuthor().getName().toString()
                 ), false);
             } else if (event instanceof GenericMessageReactionEvent) {
                 GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
-                        ((GenericMessageReactionEvent) event).getUser().getName().toString()
+                        reactionEvent.getUser().getName().toString()
                 ), false);
             }
             event.getChannel().sendMessage(eb.build()).queue();
@@ -425,10 +429,10 @@ public class CommandManager {
 
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
-            event.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", ((MessageReceivedEvent) event).getAuthor().getName())).queue();
+            msgEvent.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", ((MessageReceivedEvent) event).getAuthor().getName())).queue();
         } else if (event instanceof GenericMessageReactionEvent) {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
-            event.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
+            reactionEvent.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
         }
 
     }
@@ -448,10 +452,10 @@ public class CommandManager {
 
         if (event instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
-            event.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((MessageReceivedEvent) event).getAuthor().getName())).queue();
+            msgEvent.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((MessageReceivedEvent) event).getAuthor().getName())).queue();
         } else if (event instanceof GenericMessageReactionEvent) {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
-            event.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
+            reactionEvent.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
         }
     }
 
