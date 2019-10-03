@@ -114,7 +114,7 @@ public class PlayerManager {
                 URL uploaderIconFile = null;
                 String videoId = track.getInfo().identifier;
                 try {
-                    canvasFile = new File("Image.png");
+                    canvasFile = new File("PlayerTemplet.png");
 
                     String id = (track.getInfo().uri).replace("https://","");
                     id = id.replace("watch?v=", "").split("/")[1];
