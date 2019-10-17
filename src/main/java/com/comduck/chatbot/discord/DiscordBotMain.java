@@ -16,6 +16,7 @@ import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.EmbedBuilder;
 
+import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -30,8 +31,10 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     }
 
     private void start() throws Exception {
+        ImageIO.scanForPlugins();
         commandManagerMap = new HashMap<>();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
+
         String token = "NjA2NDc1NzE4MzA1Nzc1NjM2.XULmjw.vYwYU3M816BsjuW-mXxXauGVVx4";
         builder.setToken(token);
 
@@ -217,7 +220,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         //커맨드 모음에 데이터 인풋
         boolean commandRun = commandInterface(event);
         if (!commandRun) {
-            //System.out.println( String.format( "{'Error': 'Unknown Command', 'Context': '%s'}", event.getMessage().getContentRaw() ) );
+            System.out.println( String.format( "{'Error': 'Unknown Command', 'Context': '%s'}", event.getMessage().getContentRaw() ) );
         }
     }
 
@@ -260,7 +263,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         }
         botCommands(event, msg);
         //명령어가 없을경우 false반환
-        return false;
+        return true;
     }
 
     /**
@@ -316,6 +319,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             //cmdRepeat(event);
         } else if (msg.startsWith("clear") || msg.startsWith("clr") || msg.startsWith("cls")) {
             commandManagerMap.get(event.getGuild().getId()).clearCommand(event);
+        } else if (msg.startsWith("papago")) {
+            //commandManagerMap.get(event.getGuild().getId()).papagoCommand(event, msg);
         }
     }
 

@@ -19,6 +19,7 @@ import org.jsoup.select.Elements;
 import java.awt.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Array;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -105,7 +106,7 @@ public class CommandManager {
         if(url.equals("")) {
             url = this.player.getPlayingTrack().getInfo().uri;
         } else if (!isURL(url) && !url.startsWith("ytsearch:")) {
-            LinkedHashMap<Integer, String> video = searchYoutube(url);
+            ArrayList<String> video = searchYoutube(url);
             url = video.get(0);
         }
 
@@ -511,21 +512,21 @@ public class CommandManager {
     }
 
     //유튜브 검색
-    private LinkedHashMap<Integer, String> searchYoutube(String title) {
+    private ArrayList<String> searchYoutube(String title) {
         //유튜브 검색 경로 지정, 빈 해쉬맵 생성
         String youtubeUrl = "https://www.youtube.com/results?search_query=";
-        LinkedHashMap<Integer, String> video = new LinkedHashMap<>();
+        ArrayList<String> video = new ArrayList<String>();
 
         //1. URL + title 로 검색하여 영상 제목을 전부 가져옴
         //2. video 해쉬맵에 하나씩 담아서 반환
         try {
             Document doc = Jsoup.connect(youtubeUrl+title).get();
             Elements titleE = doc.getElementsByTag("a").select("a[title]");
-            for(int i=0, j=0; titleE.size()> 1; i++) {
+            for(int i=0, j=0; titleE.size()> i; i++) {
                 Element data = titleE.get(i);
-                if( data.classNames().contains("yt-uix-tile-link") ) {
-                    //System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" +data.attr("href"));
-                    video.put(j, "https://www.youtube.com"+data.attr("href"));
+                if( data.classNames().contains("yt-uix-tile-link") && !data.attr("href").contains("http")) {
+                    System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" +data.attr("href"));
+                    video.add("https://www.youtube.com" + data.attr("href"));
                     j++;
                 }
             }
