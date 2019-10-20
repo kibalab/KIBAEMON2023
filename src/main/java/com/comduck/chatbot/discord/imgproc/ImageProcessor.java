@@ -55,9 +55,11 @@ public class ImageProcessor {
             boolean thumbIsSd = false;
             BufferedImage thum = null;
 
-            BufferedImage uicon = ImageIO.read(uploaderIconFile.openConnection().getInputStream());
-            if(uicon == null) { //가끔 이미지를 한번에 못가져 오는경우가 있어서 만듬
-                uicon = ImageIO.read(uploaderIconFile.openConnection().getInputStream());
+            BufferedImage uicon = null;
+            for(int i=0; i<5; i++) { // 최대 5번 시도
+                if (uicon == null) { // 가끔 이미지를 한번에 못가져 오는경우가 있어서 만듬
+                    uicon = ImageIO.read(uploaderIconFile.openConnection().getInputStream());
+                } else { break; }
             }
 
             URLConnection uc = requesterIconFile.openConnection();
