@@ -72,8 +72,8 @@ public class PlayerManager {
             Elements titleE = doc.getElementsByTag("a");
             for(int i=0; titleE.size()>i ; i++) {
                 Element data = titleE.get(i);
-                System.out.println("\n[" + i + "]TestParse: " + data.attr("id") + "\n" + data.className() + "\n" +data.attr("href"));
-                System.out.println(i + " " + data.text());
+                //System.out.println("\n[" + i + "]TestParse: " + data.attr("id") + "\n" + data.className() + "\n" +data.attr("href"));
+                //System.out.println(i + " " + data.text());
                 if(data.attr("href").contains("/channel/")) {
                     youtubechennal += "https://www.youtube.com" + data.attr("href");
                     doc2 = Jsoup.connect(youtubechennal).get();

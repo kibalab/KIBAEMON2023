@@ -97,8 +97,11 @@ public class CommandManager {
             Vch = ((GenericMessageReactionEvent) event).getMember().getVoiceState().getChannel();
         }
 
+
         AudioManager audiomng = event.getGuild().getAudioManager();
-        audiomng.openAudioConnection(Vch);
+        if (!audiomng.isConnected()) {
+            audiomng.openAudioConnection(Vch);
+        }
         PlayerManager manager = PlayerManager.getInstance();
 
         //1. 파라미터 없으면 현재 재생되고 있는 음액 재신청
@@ -525,7 +528,7 @@ public class CommandManager {
             for(int i=0, j=0; titleE.size()> i; i++) {
                 Element data = titleE.get(i);
                 if( data.classNames().contains("yt-uix-tile-link") && !data.attr("href").contains("http")) {
-                    System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" +data.attr("href"));
+                    //System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" +data.attr("href"));
                     video.add("https://www.youtube.com" + data.attr("href"));
                     j++;
                 }
