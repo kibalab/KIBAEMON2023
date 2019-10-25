@@ -181,3 +181,8 @@ hs_err_pid*
 
 *.iml
 .idea/
+
+target/
+
+# temp png files
+201*+*.png
