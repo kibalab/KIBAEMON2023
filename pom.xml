@@ -67,5 +67,12 @@
             <artifactId>java-youtube-downloader</artifactId>
             <version>1.0.2</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.sejda.webp-imageio/webp-imageio-sejda -->
+        <dependency>
+            <groupId>org.sejda.webp-imageio</groupId>
+            <artifactId>webp-imageio-sejda</artifactId>
+            <version>0.1.0</version>
+        </dependency>
     </dependencies>
 </project>
