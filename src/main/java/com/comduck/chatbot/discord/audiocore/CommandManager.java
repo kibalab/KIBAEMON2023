@@ -1,6 +1,6 @@
 package com.comduck.chatbot.discord.audiocore;
 
-import com.comduck.chatbot.discord.cmdprompt.CommandProcessor;
+import com.comduck.chatbot.discord.naverapi.Papago;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
@@ -19,7 +19,6 @@ import org.jsoup.select.Elements;
 import java.awt.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Array;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -470,6 +469,19 @@ public class CommandManager {
 
             msgEvent.getChannel().deleteMessageById(msg.getId()).queue(  );
         }
+    }
+
+    public void papagoCommand(GenericMessageEvent event, String msg) {
+        MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
+        Papago papago = new Papago();
+        String[] data = papago.manager(msg.replace("papago ", ""));
+        String result = data[0]; String sourceLang = data[1]; String targetLang = data[2];
+
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(new Color(0x1FFF2A));
+        eb.setAuthor("Papago", "https://papago.naver.com/", "https://papago.naver.com/static/img/papago_og.png");
+        eb.addField(String.format("[:flag_%s: -> :flag_%s:]", sourceLang, targetLang), result, false);
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
     // Long 타입 프레임을 String 타입 시간으로 환산

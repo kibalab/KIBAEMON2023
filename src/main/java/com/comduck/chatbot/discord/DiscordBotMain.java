@@ -228,7 +228,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         Message sendMsg = event.getMessage();
         String msg = ((Message) commandQueue.poll()).getContentDisplay();
         System.out.println(msg);
-        if (msg.startsWith("?play")) {
+        if (msg.startsWith("?play") && event.getAuthor().isBot()) {
             wait_reaction(sendMsg, "⏯");//pause
             wait_reaction(sendMsg, "⏹");//stop
             wait_reaction(sendMsg, "⏭");//skip
@@ -320,7 +320,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         } else if (msg.startsWith("clear") || msg.startsWith("clr") || msg.startsWith("cls")) {
             commandManagerMap.get(event.getGuild().getId()).clearCommand(event);
         } else if (msg.startsWith("papago")) {
-            //commandManagerMap.get(event.getGuild().getId()).papagoCommand(event, msg);
+            commandManagerMap.get(event.getGuild().getId()).papagoCommand(event, msg);
         }
     }
 

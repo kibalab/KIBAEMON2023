@@ -120,48 +120,49 @@ public class PlayerManager {
         //트랙 로드, 에러 관련 처리/이벤트
         playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
             public void trackLoaded(AudioTrack track) {
+                boolean isYoutube = trackUrl.contains("youtu");
+                if(isYoutube) {
+                    File canvasFile = null;
+                    URL requesterIconFile = null;
+                    URL uploaderIconFile = null;
+                    String videoId = track.getInfo().identifier;
+                    try {
+                        canvasFile = new File("PlayerTemplet.png");
 
-                File canvasFile = null;
-                URL requesterIconFile = null;
-                URL uploaderIconFile = null;
-                String videoId = track.getInfo().identifier;
-                try {
-                    canvasFile = new File("PlayerTemplet.png");
+                        String id = (track.getInfo().uri).replace("https://", "");
+                        id = id.replace("watch?v=", "").split("/")[1];
 
-                    String id = (track.getInfo().uri).replace("https://","");
-                    id = id.replace("watch?v=", "").split("/")[1];
+                        requesterIconFile = new URL(event.getAuthor().getAvatarUrl());
+                        uploaderIconFile = searchIcon(track.getInfo().identifier, track.getInfo().author);
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                    }
 
-                    requesterIconFile = new URL(event.getAuthor().getAvatarUrl());
-                    uploaderIconFile = searchIcon(track.getInfo().identifier, track.getInfo().author);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
+
+                    YoutubeVideo trackVideo = null;
+                    try {
+                        trackVideo = YoutubeDownloader.getVideo(track.getIdentifier());
+                    } catch (YoutubeException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    ImageProcessor imgProcessor = new ImageProcessor();
+                    File img = null;
+                    try {
+                        img = imgProcessor.processImage(trackVideo.details(), canvasFile, requesterIconFile, uploaderIconFile, event.getAuthor().getName());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    event.getChannel().sendFile(img).queue();
+                    event.getMessage().delete().queue();
+                } else {
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setColor(new Color(0x244aff));
+                    eb.addField(track.getInfo().title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getAuthor().getName()), false);
+                    event.getChannel().sendMessage(eb.build()).queue();
                 }
-
-
-                YoutubeVideo trackVideo = null;
-                try {
-                    trackVideo = YoutubeDownloader.getVideo(track.getIdentifier());
-                } catch (YoutubeException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                ImageProcessor imgProcessor = new ImageProcessor();
-                File img = null;
-                try {img = imgProcessor.processImage(trackVideo.details(), canvasFile, requesterIconFile, uploaderIconFile, event.getAuthor().getName());}
-                catch (Exception e){
-                    e.printStackTrace();
-                }
-
-                event.getChannel().sendFile(img).queue();
-                event.getMessage().delete().queue();
-
-                /*
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(new Color(0x244aff));
-                eb.addField(track.getInfo().title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getAuthor().getName()), false);
-                event.getChannel().sendMessage(eb.build()).queue();
-                */
 
                 play(musicManager, track);
             }
