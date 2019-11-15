@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.audiocore;
 
 import com.comduck.chatbot.discord.naverapi.Papago;
+import com.comduck.chatbot.discord.naverapi.Shopping;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
@@ -481,6 +482,13 @@ public class CommandManager {
         eb.setColor(new Color(0x1FFF2A));
         eb.setAuthor("Papago", "https://papago.naver.com/", "https://papago.naver.com/static/img/papago_og.png");
         eb.addField(String.format("[:flag_%s: -> :flag_%s:]", sourceLang, targetLang), result, false);
+        event.getChannel().sendMessage(eb.build()).queue();
+    }
+
+    public void shoppingCommand(GenericMessageEvent event, String msg) {
+        MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
+        Shopping shop = new Shopping();
+        EmbedBuilder eb = shop.manager(msg.replace("shopping ", "").replace("shop ", ""));
         event.getChannel().sendMessage(eb.build()).queue();
     }
 

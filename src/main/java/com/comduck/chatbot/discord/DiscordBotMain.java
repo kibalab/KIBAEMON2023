@@ -221,8 +221,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         boolean commandRun = commandInterface(event);
         if (!commandRun) {
             System.out.println( String.format( "{'Error': 'Unknown Command', 'Context': '%s'}", event.getMessage().getContentRaw() ) );
+            }
         }
-    }
 
     private boolean reactionInterface(MessageReceivedEvent event) {
         Message sendMsg = event.getMessage();
@@ -321,6 +321,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             commandManagerMap.get(event.getGuild().getId()).clearCommand(event);
         } else if (msg.startsWith("papago")) {
             commandManagerMap.get(event.getGuild().getId()).papagoCommand(event, msg);
+        } else if (msg.startsWith("shopping") || msg.startsWith("shop")) {
+            commandManagerMap.get(event.getGuild().getId()).shoppingCommand(event, msg);
         }
     }
 
