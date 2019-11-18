@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.audiocore;
 
 import com.comduck.chatbot.discord.imgproc.ImageProcessor;
+import com.comduck.chatbot.discord.imgproc.ImgprocTwo;
 import com.github.kiulian.downloader.YoutubeDownloader;
 import com.github.kiulian.downloader.YoutubeException;
 import com.github.kiulian.downloader.model.VideoDetails;
@@ -122,12 +123,14 @@ public class PlayerManager {
             public void trackLoaded(AudioTrack track) {
                 boolean isYoutube = trackUrl.contains("youtu");
                 if(isYoutube) {
-                    File canvasFile = null;
+                    File canvasFileFull = null;
+                    File canvasFileReduction = null;
                     URL requesterIconFile = null;
                     URL uploaderIconFile = null;
                     String videoId = track.getInfo().identifier;
                     try {
-                        canvasFile = new File("PlayerTemplet.png");
+                        canvasFileFull = new File("PlayerTempletF.png");
+                        //canvasFileReduction = new File("PlayerTempletR.png");
 
                         String id = (track.getInfo().uri).replace("https://", "");
                         id = id.replace("watch?v=", "").split("/")[1];
@@ -148,9 +151,12 @@ public class PlayerManager {
                         e.printStackTrace();
                     }
                     ImageProcessor imgProcessor = new ImageProcessor();
+                    ImgprocTwo imgprocTwo = new ImgprocTwo();
                     File img = null;
                     try {
-                        img = imgProcessor.processImage(trackVideo.details(), canvasFile, requesterIconFile, uploaderIconFile, event.getAuthor().getName());
+                        img = imgProcessor.processImage(trackVideo.details(), canvasFileFull, requesterIconFile, uploaderIconFile, event.getAuthor().getName());
+                        //img = imgprocTwo.processImage(trackVideo.details(), canvasFileReduction, requesterIconFile, uploaderIconFile, event.getAuthor().getName());
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
