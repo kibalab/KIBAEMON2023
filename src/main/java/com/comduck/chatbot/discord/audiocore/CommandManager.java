@@ -1,5 +1,6 @@
 package com.comduck.chatbot.discord.audiocore;
 
+import com.comduck.chatbot.discord.minigame.Roulette;
 import com.comduck.chatbot.discord.naverapi.Papago;
 import com.comduck.chatbot.discord.naverapi.Shopping;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -18,14 +19,17 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.awt.*;
+import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class CommandManager {
 
+    Roulette roulette = new Roulette();
 
     GuildMusicManager musicManager; // = manager.getGuildMusicManager(event.getGuild());
     AudioPlayer player; // = musicManager.player;
@@ -490,6 +494,22 @@ public class CommandManager {
         Shopping shop = new Shopping();
         EmbedBuilder eb = shop.manager(msg.replace("shopping ", "").replace("shop ", ""));
         event.getChannel().sendMessage(eb.build()).queue();
+    }
+
+    public void rouletteCommand(MessageReceivedEvent event, String msg) {
+        msg = msg.replace("roulette ", "").replace("rol ", "");
+        roulette.betting(event.getAuthor(), Integer.parseInt(msg));
+        String[] r = roulette.letRoulette(event.getAuthor());
+        int f = roulette.checkResult(event.getAuthor(), r);
+
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(new Color(0xCF00FF));
+        eb.setAuthor("Roulette");
+        DecimalFormat form = new DecimalFormat("###,###,###,###,###,###,###,###,###,###,###");
+        String rs = Arrays.toString(r).replaceAll("\\[", "").replaceAll("]", "");
+        eb.addField(String.format("[%s] - %dx", rs, f), String.format("현재 금액 : %s", form.format(roulette.getMoney(event.getAuthor()))), false);
+        event.getChannel().sendMessage(eb.build()).queue();
+
     }
 
     // Long 타입 프레임을 String 타입 시간으로 환산

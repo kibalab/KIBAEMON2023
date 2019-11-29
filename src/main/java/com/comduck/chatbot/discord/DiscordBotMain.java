@@ -9,7 +9,9 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.ShutdownEvent;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildReadyEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceDeafenEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceSuppressEvent;
 import net.dv8tion.jda.core.events.message.GenericMessageEvent;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
@@ -115,18 +117,19 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
         super.onGuildVoiceLeave(event);
 
-        if (event.getGuild().getAudioManager().getConnectedChannel() != null) {
-            return;
-        } else if (event.getChannelLeft() != null) {
-            return;
-        }
+        System.out.println(String.format(
+                "{'Type': 'LeaveVoice', 'Guild_Name': '%s#%s', 'VoiceChennal_Name': '%s#%s', 'User': '%s#%s'}",
+                event.getGuild().getName(), event.getGuild().getId(),
+                event.getChannelLeft().getName(), event.getChannelLeft().getId(),
+                event.getMember().getUser().getName(), event.getMember().getUser().getId()
+        ));
 
-
-        if (event.getChannelLeft().getMembers().size() <= 1) {
-            if(event.getGuild().getAudioManager().getConnectedChannel().getIdLong() == event.getChannelLeft().getIdLong()) {
+        if (event.getChannelLeft().getMembers().size() == 1) {
+            if(event.getGuild().getAudioManager().getConnectedChannel().getId().equals(event.getChannelLeft().getId())) {
                 event.getGuild().getAudioManager().closeAudioConnection();
             }
         }
+
     }
 
     /**
@@ -323,6 +326,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             commandManagerMap.get(event.getGuild().getId()).papagoCommand(event, msg);
         } else if (msg.startsWith("shopping") || msg.startsWith("shop")) {
             commandManagerMap.get(event.getGuild().getId()).shoppingCommand(event, msg);
+        } else if (msg.startsWith("roulette") || msg.startsWith("rol")) {
+            commandManagerMap.get(event.getGuild().getId()).rouletteCommand(event, msg);
         }
     }
 
