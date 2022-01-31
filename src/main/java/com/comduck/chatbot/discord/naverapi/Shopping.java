@@ -1,11 +1,10 @@
 package com.comduck.chatbot.discord.naverapi;
 
 
-import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.api.EmbedBuilder;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.awt.*;
 import java.io.UnsupportedEncodingException;
@@ -31,7 +30,7 @@ public class Shopping {
             data.put("display", "1");
             data.put("start", "1");
             data.put("sort", "sim");
-        } catch (UnsupportedEncodingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

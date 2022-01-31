@@ -2,26 +2,30 @@ package com.comduck.chatbot.discord;
 
 import com.comduck.chatbot.discord.audiocore.*;
 import com.sedmelluq.discord.lavaplayer.player.*;
-import net.dv8tion.jda.client.events.call.voice.CallVoiceLeaveEvent;
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.ShutdownEvent;
-import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
-import net.dv8tion.jda.core.events.guild.GuildReadyEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceDeafenEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceSuppressEvent;
-import net.dv8tion.jda.core.events.message.GenericMessageEvent;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.api.AccountType;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.Event;
+import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceDeafenEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceSuppressEvent;
+import net.dv8tion.jda.api.events.message.GenericMessageEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.EmbedBuilder;
 
+import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import java.awt.Color;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import java.sql.*;
 
 public class DiscordBotMain extends ListenerAdapter implements PostCommandListener {
 
@@ -37,21 +41,47 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         commandManagerMap = new HashMap<>();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 
-        String token = "NjA2NDc1NzE4MzA1Nzc1NjM2.XULmjw.vYwYU3M816BsjuW-mXxXauGVVx4";
+        String token = "NjA2NDc1NzE4MzA1Nzc1NjM2.XULmhw.NLdDLf8AUS7ehd94H2iX8wAbmJY";// "Njk1MTkzNTY0NzIzOTM3Mjky.XoWo_w.X2t7f56ENfj0D5Vtcxywl58c1pA";
         builder.setToken(token);
-
-        builder.addEventListener(this);
-        builder.buildAsync();
+        builder.setActivity(Activity.playing("<가동중> ?help"));
+        builder.addEventListeners(this);
+        builder.build();
     }
 
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         super.onGuildJoin(event);
+        PlayerManager manager = PlayerManager.getInstance();
+        GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
 
+        /*
+        나중에 이거로 고칠것.
+        GuildMusicManager musicManager = new GuildMusicManager();
+         */
+
+        AudioPlayer player = musicManager.player;
+        TrackScheduler scheduler = musicManager.scheduler;
+
+        CommandManager cmdManager = new CommandManager(musicManager, player, scheduler);
+        cmdManager.addPostCommandListener(this);
+
+        commandManagerMap.put(event.getGuild().getId(), cmdManager);
     }
 
     @Override
     public void onGuildReady(GuildReadyEvent event) {
+
+        CreateServerIndex(event);
+        String str = null;
+        str = event.getGuild().getName() + "[" + event.getGuild().getId() + "]" + " : ";
+        for(TextChannel c : event.getGuild().getTextChannels()) {
+            str += c.getName() + "[" + c.getId() + "]" + " : " + c.canTalk() + " : {";
+            for(Member m : c.getMembers()) {
+                str += m.getNickname() + "(" + m.getUser().getName() + "#" + m.getUser().getId() + ")";
+            }
+             str += "}\n";
+        }
+        System.out.println(str);
 
         PlayerManager manager = PlayerManager.getInstance();
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
@@ -68,6 +98,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         cmdManager.addPostCommandListener(this);
 
         commandManagerMap.put(event.getGuild().getId(), cmdManager);
+
         //onReadyMessage(event);
     }
 
@@ -84,7 +115,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                 eb.setTitle("KIBAEMON 준비완료!");
                 eb.setThumbnail("https://cdn.discordapp.com/attachments/452403281428217856/609441237228978254/KIBAEMON-LOGO.png");
                 SimpleDateFormat format2 = new SimpleDateFormat ( "yyyy년 MM월dd일");
-                Date time = new Date();
+                java.util.Date time = new java.util.Date();
                 eb.addField("기동일(오늘)",format2.format(time),true);
                 eb.addField("라이브러리", "JDA(JAVA)", true);
                 eb.addField("환경", String.format(
@@ -96,7 +127,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                         Runtime.getRuntime().availableProcessors(),
                         Runtime.getRuntime().freeMemory()
                 ), true);
-                eb.setFooter("KIBAEMON 2019 in JBot Project", null);
+                eb.setFooter("KIBAEMON 2019", null);
                 channel.sendMessage(eb.build()).queue();
             }
         }
@@ -125,9 +156,11 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         ));
 
         if (event.getChannelLeft().getMembers().size() == 1) {
-            if(event.getGuild().getAudioManager().getConnectedChannel().getId().equals(event.getChannelLeft().getId())) {
-                event.getGuild().getAudioManager().closeAudioConnection();
-            }
+            try {
+                if (event.getGuild().getAudioManager().getConnectedChannel().getId().equals(event.getChannelLeft().getId())) {
+                    event.getGuild().getAudioManager().closeAudioConnection();
+                }
+            } catch (Exception e) {  }
         }
 
     }
@@ -199,9 +232,68 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      *
      * @param event
      */
+
+    public final static String MSG_DATABASE = "log.db";
+    private static String Msg_logDataQuery = "INSERT INTO Message(Type, Guild_Name, Chennal_Name, Author, MessageID, Context, Date) VALUES(?, ?, ?, ?, ?, ?, strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime'));";
+    private static String Rct_logDataQuery = "INSERT INTO Reaction(Type, Guild_Name, Chennal_Name, Author, MessageID, Emote, Date) VALUES(?, ?, ?, ?, ?, ?, strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime'));";
+
+    //Class.forName("org.sqlite.JDBC"); 모듈이 있는지 검사
+    public void putMessageDB(GenericMessageEvent event) {
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
+
+            if(event instanceof MessageReceivedEvent) {
+                //"{'Type': 'Message#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Context': '%s'}"
+                MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
+                PreparedStatement preparedStatement = connection.prepareStatement(Msg_logDataQuery);
+                preparedStatement.setString(1, "Message");
+                preparedStatement.setString(2, msgEvent.getGuild().getName() + '#' + msgEvent.getGuild().getId());
+                preparedStatement.setString(3, msgEvent.getChannel().getName() + '#' + msgEvent.getChannel().getId());
+                preparedStatement.setString(4, msgEvent.getAuthor().getName() + '#' + msgEvent.getAuthor().getId());
+                preparedStatement.setString(5, msgEvent.getMessage().getId());
+                preparedStatement.setString(6, msgEvent.getMessage().getContentRaw());
+                preparedStatement.executeUpdate();
+            } else {
+                //"{'Type': 'Reaction', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}"
+                GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
+                PreparedStatement preparedStatement = connection.prepareStatement(Rct_logDataQuery);
+                preparedStatement.setString(1, "Reaction");
+                preparedStatement.setString(2, reactionEvent.getGuild().getName() + '#' + reactionEvent.getGuild().getId());
+                preparedStatement.setString(3, reactionEvent.getChannel().getName() + '#' + reactionEvent.getChannel().getId());
+                preparedStatement.setString(4, reactionEvent.getUser().getName() + '#' + reactionEvent.getUser().getId());
+                preparedStatement.setString(5, reactionEvent.getMessageId());
+                preparedStatement.setString(6, reactionEvent.getReactionEmote().toString());
+                preparedStatement.executeUpdate();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String SvSt_SettingDataQuery = "INSERT INTO ServerSetting(Name, ID, PlayDisplay, PlayVolume) VALUES(?, ?, ?, ?);";
+    /*
+    == 서버 세팅 ==
+    [1] 서버이름
+    [2] 서버아이디
+    [3] 재생표시 방법
+    [4] 현재서버 재생볼륨
+    ==============
+     */
+    public void CreateServerIndex(GuildReadyEvent event) {
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
+            Statement statement = connection.createStatement();
+            PreparedStatement preparedStatement = connection.prepareStatement(SvSt_SettingDataQuery);
+            preparedStatement.setString(1, event.getGuild().getName());
+            preparedStatement.setString(2, event.getGuild().getId());
+            preparedStatement.setString(3, "0");
+            preparedStatement.setString(4, "30");
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {  }
+    }
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-
         //로그 출력
         System.out.println(String.format(
                 "{'Type': 'Message#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'Context': '%s'}",
@@ -222,7 +314,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         //커맨드 모음에 데이터 인풋
         boolean commandRun = commandInterface(event);
-        if (!commandRun) {
+        if (commandRun) {
             System.out.println( String.format( "{'Error': 'Unknown Command', 'Context': '%s'}", event.getMessage().getContentRaw() ) );
             }
         }
@@ -231,15 +323,17 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         Message sendMsg = event.getMessage();
         String msg = ((Message) commandQueue.poll()).getContentDisplay();
         System.out.println(msg);
-        if (msg.startsWith("?play") && event.getAuthor().isBot()) {
-            wait_reaction(sendMsg, "⏯");//pause
-            wait_reaction(sendMsg, "⏹");//stop
-            wait_reaction(sendMsg, "⏭");//skip
-            wait_reaction(sendMsg, "\uD83C\uDFA6");//printURL
-            wait_reaction(sendMsg, "\uD83C\uDFB6");//tracklist
-            wait_reaction(sendMsg, "\uD83D\uDD00");//Shuffle
-            wait_reaction(sendMsg, "\uD83D\uDD02");//Repeat
-            return true;
+        if(event.getAuthor().isBot()) {
+            if (msg.startsWith("?play") || msg.startsWith("?tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("slist")) {
+                wait_reaction(sendMsg, "⏯");//pause
+                wait_reaction(sendMsg, "⏹");//stop
+                wait_reaction(sendMsg, "⏭");//skip
+                wait_reaction(sendMsg, "\uD83C\uDFA6");//printURL
+                wait_reaction(sendMsg, "\uD83C\uDFB6");//tracklist
+                wait_reaction(sendMsg, "\uD83D\uDD00");//Shuffle
+                wait_reaction(sendMsg, "\uD83D\uDD02");//Repeat
+                return true;
+            }
         }
         return false;
     }
@@ -252,19 +346,43 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      */
     private boolean commandInterface(MessageReceivedEvent event) {
         //접두사 여부 식별
+        if(event.getChannel().getId().contains("694734337647706123")) { // 우리집
+
+            event.getJDA().getGuildById("542727743909920798").getTextChannelById("542727744342196228").sendMessage(event.getMessage().getContentRaw()).queue();
+        }
+        if(event.getChannel().getId().contains("708914009385992194")) { // 가상시
+
+            event.getJDA().getGuildById("665080322085617665").getTextChannelById("665098737420337156").sendMessage(event.getMessage().getContentRaw()).queue();
+        }
         String msg = "";
+        if (event.getMessage().getEmotes().size() == 1 && event.getMessage().getContentRaw().startsWith("<") && event.getMessage().getContentRaw().endsWith(">")) { // && event.getMessage().getGuild().getIdLong() != 542727743909920798L
+            String emojiUrl = event.getMessage().getEmotes().get(0).getImageUrl();
+            User user  = event.getMessage().getAuthor();
+
+            event.getMessage().delete().queue();
+
+            EmbedBuilder eb = new EmbedBuilder();
+            eb.setAuthor(user.getName(), user.getAvatarUrl(), user.getAvatarUrl());
+            eb.setImage(emojiUrl);
+            eb.setColor(new Color(0x244aff));
+            event.getChannel().sendMessage(eb.build()).queue();
+            System.out.print("BigEmoji Pring OK");
+        }
         if (!event.getMessage().getContentRaw().startsWith("?")) {
             return false;
         } else {
             msg = event.getMessage().getContentRaw();
-            msg = msg.substring(1, msg.length());
         }
         if (event.getGuild().getName() == "Nerine force") {
             if (event.getChannel().getName() != "bot-command") {
                 return false;
             }
         }
-        botCommands(event, msg);
+        for(String cmd : msg.split("\\n")) {
+            cmd = cmd.substring(1, cmd.length());
+            botCommands(event, cmd);
+        }
+
         //명령어가 없을경우 false반환
         return true;
     }
@@ -282,9 +400,13 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         AudioPlayer player = musicManager.player;
         TrackScheduler scheduler = musicManager.scheduler;
 
+        putMessageDB(event);
+
         //커맨드 호출
         if (msg.startsWith("help") || msg.startsWith("hlp")) {
             commandManagerMap.get(event.getGuild().getId()).helpCommand(event);
+        }else if (msg.startsWith("run -n")) {
+            commandManagerMap.get(event.getGuild().getId()).noticeCommand(event);
         } else if (msg.startsWith("test")) {
             cmdTest(event);
         } else if (msg.startsWith("play")) {
@@ -321,14 +443,26 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             commandManagerMap.get(event.getGuild().getId()).repeatCommand(event);
             //cmdRepeat(event);
         } else if (msg.startsWith("clear") || msg.startsWith("clr") || msg.startsWith("cls")) {
-            commandManagerMap.get(event.getGuild().getId()).clearCommand(event);
+            commandManagerMap.get(event.getGuild().getId()).clearCommand(event, msg);
         } else if (msg.startsWith("papago")) {
             commandManagerMap.get(event.getGuild().getId()).papagoCommand(event, msg);
         } else if (msg.startsWith("shopping") || msg.startsWith("shop")) {
             commandManagerMap.get(event.getGuild().getId()).shoppingCommand(event, msg);
         } else if (msg.startsWith("roulette") || msg.startsWith("rol")) {
             commandManagerMap.get(event.getGuild().getId()).rouletteCommand(event, msg);
+        } else if (msg.startsWith("PlayingDisplay")) {
+            commandManagerMap.get(event.getGuild().getId()).PlayingDisplay(event, msg);
+        } else if (msg.startsWith("samsung")) {
+            commandManagerMap.get(event.getGuild().getId()).samsungCommand(event);
+        } else if (msg.startsWith("hangang")) {
+            commandManagerMap.get(event.getGuild().getId()).hangangCommand(event);
+        } else if(event.getMessage().getContentRaw().contains("인성문제")) {
+            event.getChannel().sendFile(new File("insong.png"), "insong.png").queue();
+        } else if(event.getMessage().getContentRaw().contains("임포스터")) {
+            event.getChannel().sendFile(new File("imposter.png"), "imposter.png").queue();
         }
+
+
     }
 
     //#region 명령어 함수
@@ -355,9 +489,14 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     @Override
     public void onPostCommand(GenericMessageEvent genericMessageEvent) {
-        MessageReceivedEvent msgEvent = (MessageReceivedEvent) genericMessageEvent;
-        System.out.println(String.format("CommandQueue Add data: %s", msgEvent.getMessage().getContentRaw()));
-        commandQueue.add(msgEvent.getMessage());
+        try {
+            MessageReceivedEvent msgEvent = (MessageReceivedEvent) genericMessageEvent;
+            System.out.println(String.format("CommandQueue Add data: %s", msgEvent.getMessage().getContentRaw()));
+            commandQueue.add(msgEvent.getMessage());
+        } catch (Exception e) {
+
+        }
+
     }
 
     //#endregion

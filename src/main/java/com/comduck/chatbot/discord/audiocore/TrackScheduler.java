@@ -38,6 +38,7 @@ public class TrackScheduler extends AudioEventAdapter {
             track.stop();
             queue.offer(track);
         }
+
     }
 
     //트랙리스트 큐 반환
@@ -49,7 +50,13 @@ public class TrackScheduler extends AudioEventAdapter {
     public void nextTrack() {
         // Start the next track, regardless of if something is already playing or not. In case queue was empty, we are
         // giving null to startTrack, which is a valid argument and will simply stop the player.
-        player.startTrack(queue.poll(), false);
+        try {
+            player.startTrack(queue.poll(), false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     //트랙이 끝났을 경우 발생함

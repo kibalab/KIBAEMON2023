@@ -1,7 +1,7 @@
 package com.comduck.chatbot.discord.imgproc;
 
-import com.github.kiulian.downloader.model.VideoDetails;
 import com.luciad.imageio.webp.WebPReadParam;
+import org.json.simple.JSONObject;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -17,6 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -32,40 +33,35 @@ public class ImageProcessor {
 
     }
 
-    private BufferedImage cropImage(BufferedImage src, Rectangle rect) {
-        System.out.println(src.getData().getBounds());
-        return src.getSubimage(rect.x, rect.y, rect.width, rect.height);
-    }
-
-    public File processImage(VideoDetails details, File canvasFile, URL requesterIconFile, URL uploaderIconFile, String requester) {
+    public File processImage(JSONObject details, File canvasFile, URL requesterIconFile, URL uploaderIconFile, String requester) {
         try {
 
-            String id = details.videoId();
-            String uploader = details.author();
-            String title = details.title();
-
-            System.out.println(details.thumbnails());
-            String thumbUrl = details.thumbnails().get(details.thumbnails().size()-1);
-
-
+            String id = (String) details.get("id");
+            String uploader = (String) details.get("author_name");
+            String title = (String) details.get("title");
+            String thumbUrl = (String) details.get("thumbnail_url");
 
 
             //Load Image
             BufferedImage image = ImageIO.read(canvasFile);
-            boolean thumbIsSd = false;
             BufferedImage thum = null;
-
             BufferedImage uicon = null;
+            boolean thumbIsSd = false;
+
+
             for(int i=0; i<5; i++) { // 최대 5번 시도
                 if (uicon == null) { // 가끔 이미지를 한번에 못가져 오는경우가 있어서 만듬
                     uicon = ImageIO.read(uploaderIconFile.openConnection().getInputStream());
                 } else { break; }
             }
 
+
             URLConnection uc = requesterIconFile.openConnection();
             uc.addRequestProperty("User-Agent",
                     "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)");
             BufferedImage ricon = ImageIO.read(uc.getInputStream());
+
+
 
             //그래픽 생성
             Graphics g = image.getGraphics();
@@ -84,7 +80,7 @@ public class ImageProcessor {
             //클립생성(마스크 모양 생성)
             g.setClip(new Ellipse2D.Float(24, 543, 82, 82));
             //클립에 이미지 그림
-            g.drawImage(uicon, 24, 543, 82, 82, null);
+            //g.drawImage(uicon, 24, 543, 82, 82, null);
 
             //Uploader Name TEXT
             //폰트 설정
@@ -98,105 +94,22 @@ public class ImageProcessor {
             g.drawImage(ricon, 600, 545, 80, 80, null);
 
 
-            if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "maxresdefault"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                } catch (IOException e) { }
+            String[] sizes = {"maxresdefault", "sddefault"};
+            String[] servers = {"i.ytimg", "i1.ytimg", "i2.ytimg", "i3.ytimg", "i4.ytimg", "img.youtube"};
 
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "maxresdefault").replace("i.ytimg", "i1.ytimg"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "maxresdefault").replace("i.ytimg", "i2.ytimg"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "maxresdefault").replace("i.ytimg", "i3.ytimg"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "maxresdefault").replace("i.ytimg", "i4.ytimg"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "maxresdefault").replace("i.ytimg", "img.youtube"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "sddefault"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                    thumbIsSd = true;
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "sddefault").replace("i.ytimg", "i1.ytimg"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                    thumbIsSd = true;
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "sddefault").replace("i.ytimg", "i2.ytimg"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                    thumbIsSd = true;
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "sddefault").replace("i.ytimg", "i3.ytimg"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                    thumbIsSd = true;
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "sddefault").replace("i.ytimg", "i4.ytimg"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                    thumbIsSd = true;
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", "sddefault").replace("i.ytimg", "img.youtube"));
-                    thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                    thumbIsSd = true;
-                } catch (IOException e) { }
-
-            } if(thum == null) {
-                try {
-                    File thumbnailFile = new File("./NotFound.png");
-                    thum = ImageIO.read(thumbnailFile);
-                } catch (IOException e) { e.printStackTrace(); }
-
+            for(String size : sizes) {
+                for(String server : servers) {
+                    try {
+                        URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", size).replace("i.ytimg", server));
+                        thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
+                    } catch (Exception e) { e.printStackTrace(); } if(thum != null) break;
+                } if(thum != null) break;
             }
 
-            //System.out.println(thumbUrl);
-
-
-            //섬네일 이미지 자름
-            if(thum != null && !thumbIsSd) {
-                thum = cropImage(thum, new Rectangle(30, 60, 1210, 469));
-            } if(thum != null && thumbIsSd) {
-                thum = cropImage(thum, new Rectangle(30, 123, 605, 234));
-            }
 
             //Thumnail Image
             g.setClip(new RoundRectangle2D.Float(0, 0, 1280, 469, 50, 50));
-            g.drawImage(thum, 0, 0, 1280, 469, null);
+            g.drawImage(thum, 0, -469/2, 1280, 1280/thum.getWidth() * thum.getHeight(), null);
 
 
             //Edit close
@@ -210,8 +123,6 @@ public class ImageProcessor {
             ImageIO.write(image, "png", outFile);
 
             return outFile;
-        } catch (IOException ex) {
-            ex.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }

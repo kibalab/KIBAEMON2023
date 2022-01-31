@@ -61,6 +61,8 @@ public class Papago {
             code = "kr";
         } else if(code.equals("zh") || code.equals("cn")){
             code = "cn";
+        } else if(code.equals("en")){
+            code = "us";
         }
         return code;
     }
