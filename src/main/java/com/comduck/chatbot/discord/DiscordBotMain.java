@@ -41,7 +41,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         commandManagerMap = new HashMap<>();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 
-        String token = "NjA2NDc1NzE4MzA1Nzc1NjM2.XULmhw.NLdDLf8AUS7ehd94H2iX8wAbmJY";// "Njk1MTkzNTY0NzIzOTM3Mjky.XoWo_w.X2t7f56ENfj0D5Vtcxywl58c1pA";
+        String token = "{Token Here}";
         builder.setToken(token);
         builder.setActivity(Activity.playing("<가동중> ?help"));
         builder.addEventListeners(this);
@@ -108,7 +108,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             //channelTrue = channel.getId().equals("607208059504427018"); // Nerine Force - bot_command
             //channelTrue = channel.getId().equals("424887201281605661"); // LucidLab - 명령어
 
-            if(channel.getId().equals("558886994676285443")) {
+            if(channel.getId().equals("--")) {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0x1BC3FF));
                 eb.setAuthor("Ready!",null,"https://cdn.discordapp.com/attachments/452403281428217856/609442329593643019/KIBAEMON-ICON.png"); //
@@ -192,6 +192,9 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      * @param event
      */
     private void onReactionBindCommand(GenericMessageReactionEvent event) {
+
+        if (!event.getUser().isBot()) return;
+
         //Pause
         if (event.getReactionEmote().getName().equals("⏯")) {
             commandManagerMap.get(event.getGuild().getId()).pauseCommand(event);
@@ -400,69 +403,67 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         AudioPlayer player = musicManager.player;
         TrackScheduler scheduler = musicManager.scheduler;
 
-        putMessageDB(event);
-
         //커맨드 호출
         if (msg.startsWith("help") || msg.startsWith("hlp")) {
-            commandManagerMap.get(event.getGuild().getId()).helpCommand(event);
+            GetChannelCommandManager(event).helpCommand(event);
         }else if (msg.startsWith("run -n")) {
-            commandManagerMap.get(event.getGuild().getId()).noticeCommand(event);
+            GetChannelCommandManager(event).noticeCommand(event);
         } else if (msg.startsWith("test")) {
             cmdTest(event);
         } else if (msg.startsWith("play")) {
-            commandManagerMap.get(event.getGuild().getId()).playCommand(event, msg);
+            GetChannelCommandManager(event).playCommand(event, msg);
             //cmdPlay(event, msg);
         } else if (msg.startsWith("pause")) {
-            commandManagerMap.get(event.getGuild().getId()).pauseCommand(event);
+            GetChannelCommandManager(event).pauseCommand(event);
             //cmdPause(event);
         } else if (msg.startsWith("join")) {
-            commandManagerMap.get(event.getGuild().getId()).joinCommand(event, msg);
+            GetChannelCommandManager(event).joinCommand(event, msg);
             //cmdJoin(event);
         } else if (msg.startsWith("leave") || msg.startsWith("out")) {
-            commandManagerMap.get(event.getGuild().getId()).leaveCommand(event);
+            GetChannelCommandManager(event).leaveCommand(event);
             //cmdLeave(event);
         } else if (msg.startsWith("stop")) {
-            commandManagerMap.get(event.getGuild().getId()).stopCommand(event);
+            GetChannelCommandManager(event).stopCommand(event);
             //cmdStop(event);
         } else if (msg.startsWith("skip") || msg.startsWith("next")) {
-            commandManagerMap.get(event.getGuild().getId()).skipCommand(event);
+            GetChannelCommandManager(event).skipCommand(event);
             //cmdSkip(event);
         } else if (msg.startsWith("volume") || msg.startsWith("vol")) {
-            commandManagerMap.get(event.getGuild().getId()).volumeCommand(event, msg);
+            GetChannelCommandManager(event).volumeCommand(event, msg);
             //cmdVolume(event, msg);
         } else if (msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("slist")) {
-            commandManagerMap.get(event.getGuild().getId()).tracklistCommand(event);
+            GetChannelCommandManager(event).tracklistCommand(event);
             //cmdTrackList(event);
         } else if (msg.startsWith("goto")) {
-            commandManagerMap.get(event.getGuild().getId()).gotoCommand(event, msg);
+            GetChannelCommandManager(event).gotoCommand(event, msg);
             //cmdGoTo(event, msg);
         } else if (msg.startsWith("shuffle") || msg.startsWith("mix") || msg.startsWith("sf")) {
-            commandManagerMap.get(event.getGuild().getId()).shuffleCommand(event);
+            GetChannelCommandManager(event).shuffleCommand(event);
             //cmdShuffle(event, msg);
         } else if (msg.startsWith("repeat") || msg.startsWith("replay") || msg.startsWith("rp")) {
-            commandManagerMap.get(event.getGuild().getId()).repeatCommand(event);
+            GetChannelCommandManager(event).repeatCommand(event);
             //cmdRepeat(event);
         } else if (msg.startsWith("clear") || msg.startsWith("clr") || msg.startsWith("cls")) {
-            commandManagerMap.get(event.getGuild().getId()).clearCommand(event, msg);
+            GetChannelCommandManager(event).clearCommand(event, msg);
         } else if (msg.startsWith("papago")) {
-            commandManagerMap.get(event.getGuild().getId()).papagoCommand(event, msg);
+            GetChannelCommandManager(event).papagoCommand(event, msg);
         } else if (msg.startsWith("shopping") || msg.startsWith("shop")) {
-            commandManagerMap.get(event.getGuild().getId()).shoppingCommand(event, msg);
+            GetChannelCommandManager(event).shoppingCommand(event, msg);
         } else if (msg.startsWith("roulette") || msg.startsWith("rol")) {
-            commandManagerMap.get(event.getGuild().getId()).rouletteCommand(event, msg);
+            GetChannelCommandManager(event).rouletteCommand(event, msg);
         } else if (msg.startsWith("PlayingDisplay")) {
-            commandManagerMap.get(event.getGuild().getId()).PlayingDisplay(event, msg);
+            GetChannelCommandManager(event).PlayingDisplay(event, msg);
         } else if (msg.startsWith("samsung")) {
-            commandManagerMap.get(event.getGuild().getId()).samsungCommand(event);
+            GetChannelCommandManager(event).samsungCommand(event);
         } else if (msg.startsWith("hangang")) {
-            commandManagerMap.get(event.getGuild().getId()).hangangCommand(event);
-        } else if(event.getMessage().getContentRaw().contains("인성문제")) {
-            event.getChannel().sendFile(new File("insong.png"), "insong.png").queue();
-        } else if(event.getMessage().getContentRaw().contains("임포스터")) {
-            event.getChannel().sendFile(new File("imposter.png"), "imposter.png").queue();
+            GetChannelCommandManager(event).hangangCommand(event);
         }
+    }
 
+    public CommandManager GetChannelCommandManager(MessageReceivedEvent event) {
+        putMessageDB(event);
 
+        return commandManagerMap.get(event.getGuild().getId());
     }
 
     //#region 명령어 함수

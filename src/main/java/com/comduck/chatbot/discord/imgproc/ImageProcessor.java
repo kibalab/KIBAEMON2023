@@ -68,13 +68,24 @@ public class ImageProcessor {
             Graphics2D g2d = (Graphics2D) g;
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
+            g.setFont(Font.createFont(Font.TRUETYPE_FONT, new File("NotoSansCJKkr-Medium.otf")));
+
             //Requster Name TEXT
             g.setFont(g.getFont().deriveFont(43f));
-            g.drawString(requester, 695, 613);
+            g.drawString(requester, 695, 615);
 
             //Video Title TEXT
             g.setFont(g.getFont().deriveFont(54f));
+            //Title Text Shadow
+            Color origin = g.getColor();
+            g.setColor(Color.BLACK);
+            g.drawString(title, 23, 528);
+            g.setColor(origin);
+            //Title Text Body
             g.drawString(title, 20, 525);
+
+
+
 
             //Uploader Profile Image
             //클립생성(마스크 모양 생성)
@@ -87,7 +98,7 @@ public class ImageProcessor {
             g.setFont(g.getFont().deriveFont(43f));
             //문자열 그림
             g.setClip(new Rectangle(120, 570, 440, 80));
-            g.drawString(uploader, 120, 613);
+            g.drawString(uploader, 120, 615);
 
             //Requester Profile Image
             g.setClip(new Ellipse2D.Float(600, 545, 80, 80));

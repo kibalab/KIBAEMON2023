@@ -75,19 +75,9 @@ public class PlayerManager {
         //2. video 해쉬맵에 하나씩 담아서 반환
         try {
             doc2 = Jsoup.connect(youtubechennal).get();
-            System.out.println(doc2.body());
 
             Element imageE = doc2.body().select("link[rel^=image_]").first();
             return new URL(imageE.attr("href"));
-            /*
-            for(int i=0; imageE.size()>i ; i++) {
-                Element data = imageE.get(i);
-                System.out.println("\n[" + i + "]TestParse: " + data.text() + "\n" + data.className() + "\n" +data.attr("src"));
-                if( data.attr("src").startsWith("https://yt3.ggpht.com/") ) {
-                    System.out.println(data.attr("src"));
-                    return new URL(data.attr("src"));
-                }
-            }*/
         } catch (Exception e) {
             e.printStackTrace();
         }
