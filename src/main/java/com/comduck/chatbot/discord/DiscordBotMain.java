@@ -193,8 +193,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      */
     private void onReactionBindCommand(GenericMessageReactionEvent event) {
 
-        if (!event.getUser().isBot()) return;
-
         //Pause
         if (event.getReactionEmote().getName().equals("⏯")) {
             commandManagerMap.get(event.getGuild().getId()).pauseCommand(event);
