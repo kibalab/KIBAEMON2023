@@ -116,11 +116,13 @@ public class PlayerManager {
                         System.out.println("Working Directory = " + path);
 
                         trackVideo = yp.getVideo(track.getIdentifier());
-                        canvasFileFull = new File("PlayerTempletF.png");
+                        canvasFileFull = new File("PlayerTempletF2.png");
                         canvasFileReduction = new File("PlayerTempletR.png");
                         requesterIconFile = new URL(event.getAuthor().getAvatarUrl());
                         uploaderIconFile = searchIcon(trackVideo.get("author_url").toString());
                         String id = (trackInfo.uri).replace("https://", "");
+
+                        System.out.println(trackVideo.toJSONString());
 
                         id = id.replace("watch?v=", "").split("/")[1];
 
@@ -128,11 +130,11 @@ public class PlayerManager {
                         Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
                         PreparedStatement preparedStatement = connection.prepareStatement(String.format(query, event.getGuild().getId()));
                         int playingDisplay = preparedStatement.executeQuery().getInt("PlayDisplay");
-                        System.out.println(playingDisplay);
+
                         preparedStatement.close();
                         //loadingMsg.editMessage("> 이미지 생성중...").queue();
                         if (playingDisplay == 0) {
-                            img = imgProcessor.processImage(trackVideo, canvasFileFull, requesterIconFile, uploaderIconFile, event.getAuthor().getName());
+                            img = imgProcessor.processImage(trackVideo, canvasFileFull, requesterIconFile, uploaderIconFile, event.getAuthor().getName(), track.getDuration());
                             //loadingMsg.delete().queue();
                             event.getChannel().sendFile(img).queue();
                             event.getMessage().delete().queue();

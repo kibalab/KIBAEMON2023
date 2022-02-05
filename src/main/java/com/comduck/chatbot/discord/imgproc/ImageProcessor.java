@@ -8,18 +8,24 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.FileImageInputStream;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 public class ImageProcessor {
 
@@ -33,13 +39,14 @@ public class ImageProcessor {
 
     }
 
-    public File processImage(JSONObject details, File canvasFile, URL requesterIconFile, URL uploaderIconFile, String requester) {
+    public File processImage(JSONObject details, File canvasFile, URL requesterIconFile, URL uploaderIconFile, String requester, long x_duration) {
         try {
 
             String id = (String) details.get("id");
             String uploader = (String) details.get("author_name");
             String title = (String) details.get("title");
             String thumbUrl = (String) details.get("thumbnail_url");
+            Date duration = new Date(x_duration);
 
 
             //Load Image
@@ -61,48 +68,57 @@ public class ImageProcessor {
                     "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)");
             BufferedImage ricon = ImageIO.read(uc.getInputStream());
 
+            Font SansMedium = Font.createFont(Font.TRUETYPE_FONT, new File("NotoSansCJKkr-Medium.otf"));
+            Font SansBold = Font.createFont(Font.TRUETYPE_FONT, new File("NotoSansCJKkr-Bold.otf"));
 
 
             //그래픽 생성
             Graphics g = image.getGraphics();
             Graphics2D g2d = (Graphics2D) g;
-            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            g.setFont(Font.createFont(Font.TRUETYPE_FONT, new File("NotoSansCJKkr-Medium.otf")));
+            g2d.setFont(SansMedium);
 
             //Requster Name TEXT
-            g.setFont(g.getFont().deriveFont(43f));
-            g.drawString(requester, 695, 615);
+            g2d.setFont(g.getFont().deriveFont(43f));
+            g2d.drawString(requester, 788, 636);
 
             //Video Title TEXT
-            g.setFont(g.getFont().deriveFont(54f));
+            g2d.setFont(SansBold);
+            g2d.setFont(g.getFont().deriveFont(52f));
             //Title Text Shadow
             Color origin = g.getColor();
-            g.setColor(Color.BLACK);
-            g.drawString(title, 23, 528);
-            g.setColor(origin);
+            g2d.setColor(Color.BLACK);
+            g2d.drawString(title, 21, 552);
+            g2d.setColor(origin);
             //Title Text Body
-            g.drawString(title, 20, 525);
+            g2d.drawString(title, 18, 552);
 
-
+            //Duration Text
+            SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+            formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+            g2d.setFont(g.getFont().deriveFont(20f));
+            g2d.drawString(formatter.format(duration), 34, 489);
 
 
             //Uploader Profile Image
+            g2d.setFont(SansMedium);
             //클립생성(마스크 모양 생성)
-            g.setClip(new Ellipse2D.Float(24, 543, 82, 82));
+            g2d.setClip(new Ellipse2D.Float(26, 569, 82, 82));
             //클립에 이미지 그림
-            //g.drawImage(uicon, 24, 543, 82, 82, null);
+            g.drawImage(uicon, 26, 569, 82, 82, null);
 
             //Uploader Name TEXT
             //폰트 설정
-            g.setFont(g.getFont().deriveFont(43f));
+            g2d.setFont(g.getFont().deriveFont(43f));
             //문자열 그림
-            g.setClip(new Rectangle(120, 570, 440, 80));
-            g.drawString(uploader, 120, 615);
+            g2d.setClip(new Rectangle(116, 556, 440, 120));
+            g2d.drawString(uploader, 116, 636);
 
             //Requester Profile Image
-            g.setClip(new Ellipse2D.Float(600, 545, 80, 80));
-            g.drawImage(ricon, 600, 545, 80, 80, null);
+            g2d.setClip(new Ellipse2D.Float(693, 569, 79.13f, 79.13f));
+            g2d.drawImage(ricon, 693, 569, 79, 79, null);
 
 
             String[] sizes = {"maxresdefault", "sddefault"};
@@ -110,17 +126,23 @@ public class ImageProcessor {
 
             for(String size : sizes) {
                 for(String server : servers) {
+                    URL thumbnailFile = null;
                     try {
-                        URL thumbnailFile = new URL(thumbUrl.replace("hqdefault", size).replace("i.ytimg", server));
+                        thumbnailFile = new URL(thumbUrl.replace("hqdefault", size).replace("i.ytimg", server));
                         thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                    } catch (Exception e) { e.printStackTrace(); } if(thum != null) break;
+                        System.out.println("[ImageProcessor] Succeeded Load Image - " + thumbnailFile.toString());
+                    } catch (Exception e) {
+                        System.out.println("[ImageProcessor] Failed Load Image - " + thumbnailFile.toString());
+                    }
+                    if(thum != null) break;
                 } if(thum != null) break;
             }
 
 
             //Thumnail Image
-            g.setClip(new RoundRectangle2D.Float(0, 0, 1280, 469, 50, 50));
-            g.drawImage(thum, 0, -469/2, 1280, 1280/thum.getWidth() * thum.getHeight(), null);
+            g2d.setClip(new RoundRectangle2D.Float(11, 12, 1260, 446, 90, 90));
+            //g2d.setPaint(new TexturePaint(thum, new Rectangle2D.Double(11, 12, 1260, 446)));
+            g2d.drawImage(thum, 0, 0, thum.getWidth(), thum.getHeight(),null);
 
 
             //Edit close
@@ -131,6 +153,8 @@ public class ImageProcessor {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssZ");
             File outFile = new File(String.format("%s.png", dateFormat.format(new Date())));
 
+            //image = blur(image);
+
             ImageIO.write(image, "png", outFile);
 
             return outFile;
@@ -138,5 +162,44 @@ public class ImageProcessor {
             e.printStackTrace();
         }
         return canvasFile;
+    }
+
+    public BufferedImage blur(BufferedImage target) {
+        // TODO Auto-generated method stub
+
+        int radius = 3;
+        int size = radius * 2 + 1;
+
+        float[] data = new float[size * size];
+
+        float sigma = radius / 3.0f;
+        float twoSigmaSquare = 2.0f * sigma * sigma;
+        float sigmaRoot = (float) Math.sqrt(twoSigmaSquare * Math.PI);
+        float total = 0.0f;
+
+        for (int i = -radius; i <= radius; i++) {
+            float distance = i * i;
+            int index = i + radius;
+            data[index] = (float) Math.exp(-distance / twoSigmaSquare) / sigmaRoot;
+            total += data[index];
+        }
+
+        for (int i = 0; i < data.length; i++) {
+            data[i] /= total;
+        }
+        Kernel kernel = new Kernel(1, size, data);
+
+        ConvolveOp convolveOp = new ConvolveOp(kernel,ConvolveOp.EDGE_NO_OP,null);
+
+        target = convolveOp.filter(target, null);
+
+        kernel = new Kernel(size, 1, data);
+
+        convolveOp = new ConvolveOp(kernel,ConvolveOp.EDGE_NO_OP,null);
+
+        target = convolveOp.filter(target, null);
+
+        return target;
+
     }
 }
