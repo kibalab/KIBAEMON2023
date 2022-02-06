@@ -7,6 +7,8 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.FileImageInputStream;
 import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
@@ -55,11 +57,16 @@ public class ImageProcessor {
             BufferedImage uicon = null;
             boolean thumbIsSd = false;
 
-
-            for(int i=0; i<5; i++) { // 최대 5번 시도
-                if (uicon == null) { // 가끔 이미지를 한번에 못가져 오는경우가 있어서 만듬
-                    uicon = ImageIO.read(uploaderIconFile.openConnection().getInputStream());
-                } else { break; }
+            try {
+                for (int i = 0; i < 5; i++) { // 최대 5번 시도
+                    if (uicon == null) { // 가끔 이미지를 한번에 못가져 오는경우가 있어서 만듬
+                        uicon = ImageIO.read(uploaderIconFile.openConnection().getInputStream());
+                    } else {
+                        break;
+                    }
+                }
+            }catch (Exception e){
+                System.out.println("[ImageProcessor] Failed Read Uploader Profile Image");
             }
 
 
@@ -101,13 +108,14 @@ public class ImageProcessor {
             g2d.setFont(g.getFont().deriveFont(20f));
             g2d.drawString(formatter.format(duration), 34, 489);
 
+            DrawTags(g2d, new String[]{"오래와", "응애", "키바다."});
 
             //Uploader Profile Image
             g2d.setFont(SansMedium);
             //클립생성(마스크 모양 생성)
             g2d.setClip(new Ellipse2D.Float(26, 569, 82, 82));
             //클립에 이미지 그림
-            g.drawImage(uicon, 26, 569, 82, 82, null);
+            if (uicon != null) g.drawImage(uicon, 26, 569, 82, 82, null);
 
             //Uploader Name TEXT
             //폰트 설정
@@ -118,7 +126,7 @@ public class ImageProcessor {
 
             //Requester Profile Image
             g2d.setClip(new Ellipse2D.Float(693, 569, 79.13f, 79.13f));
-            g2d.drawImage(ricon, 693, 569, 79, 79, null);
+            if (ricon != null) g2d.drawImage(ricon, 693, 569, 79, 79, null);
 
 
             String[] sizes = {"maxresdefault", "sddefault"};
@@ -142,8 +150,7 @@ public class ImageProcessor {
             //Thumnail Image
             g2d.setClip(new RoundRectangle2D.Float(11, 12, 1260, 446, 90, 90));
             //g2d.setPaint(new TexturePaint(thum, new Rectangle2D.Double(11, 12, 1260, 446)));
-            g2d.drawImage(thum, 0, 0, thum.getWidth(), thum.getHeight(),null);
-
+            if (thum != null) g2d.drawImage(thum, 0, 0, thum.getWidth(), thum.getHeight(),null);
 
             //Edit close
             g2d.dispose();
@@ -162,6 +169,38 @@ public class ImageProcessor {
             e.printStackTrace();
         }
         return canvasFile;
+    }
+
+    public Graphics2D DrawTags(Graphics2D g2d, String[] tags){
+        BufferedImage Tag_L = null, Tag_M = null, Tag_R = null;
+       try {
+           Tag_L = ImageIO.read(new File("Tag_L.png"));
+           Tag_M = ImageIO.read(new File("Tag_M.png"));
+           Tag_R = ImageIO.read(new File("Tag_R.png"));
+       }catch (Exception e){
+           System.out.println("[ImageProcessor] Can not load Tag Sprite");
+       }
+
+        int tag_posX = 129;
+        int padding = 7;
+        for(int i = 0; i < tags.length ; i++){
+            g2d.drawImage(Tag_L, tag_posX, 438, Tag_L.getWidth(), Tag_L.getHeight(),null);
+            tag_posX += Tag_L.getWidth();
+            int middle_size = (int)(CalculateStringWidth(g2d, tags[i]));
+            g2d.drawImage(Tag_M, tag_posX, 438, middle_size, Tag_M.getHeight(),null);
+
+            g2d.drawString(tags[i], tag_posX, 490);
+
+            tag_posX += middle_size;
+            g2d.drawImage(Tag_R, tag_posX, 438, Tag_R.getWidth(), Tag_R.getHeight(),null);
+            tag_posX += padding;
+        }
+        return g2d;
+    }
+
+    public float CalculateStringWidth(Graphics2D g2d, String text){
+        FontRenderContext frc = new FontRenderContext(new AffineTransform(), true, true);
+        return (float)(g2d.getFont().getStringBounds(text, frc).getWidth());
     }
 
     public BufferedImage blur(BufferedImage target) {

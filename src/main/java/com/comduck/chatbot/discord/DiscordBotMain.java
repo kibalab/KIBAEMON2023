@@ -1,27 +1,28 @@
 package com.comduck.chatbot.discord;
 
 import com.comduck.chatbot.discord.audiocore.*;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.ShutdownEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceDeafenEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceSuppressEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.EmbedBuilder;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
-import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import java.awt.Color;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -41,7 +42,10 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         commandManagerMap = new HashMap<>();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 
-        String token = "{Token Here}";
+        JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader(new File("Bots.json"))));
+
+        String token = (String)bots.get("Test1");
+        
         builder.setToken(token);
         builder.setActivity(Activity.playing("<가동중> ?help"));
         builder.addEventListeners(this);
