@@ -64,7 +64,7 @@ public class CommandManager {
 
     Roulette roulette = new Roulette();
 
-    GuildMusicManager musicManager; // = manager.getGuildMusicManager(event.getGuild());
+    public GuildMusicManager musicManager; // = manager.getGuildMusicManager(event.getGuild());
     AudioPlayer player; // = musicManager.player;
     TrackScheduler scheduler; // = musicManager.scheduler;
 

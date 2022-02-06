@@ -45,7 +45,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader(new File("Bots.json"))));
 
         String token = (String)bots.get("Test1");
-        
+
         builder.setToken(token);
         builder.setActivity(Activity.playing("<가동중> ?help"));
         builder.addEventListeners(this);
@@ -312,7 +312,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         if (event.getAuthor().isBot()) {
             if (commandQueue.size() >= 1) {
-                System.out.println(true);
                 reactionInterface(event);
             }
         }
@@ -327,7 +326,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     private boolean reactionInterface(MessageReceivedEvent event) {
         Message sendMsg = event.getMessage();
         String msg = ((Message) commandQueue.poll()).getContentDisplay();
-        System.out.println(msg);
+
         if(event.getAuthor().isBot()) {
             if (msg.startsWith("?play") || msg.startsWith("?tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("slist")) {
                 wait_reaction(sendMsg, "⏯");//pause
@@ -337,10 +336,22 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                 wait_reaction(sendMsg, "\uD83C\uDFB6");//tracklist
                 wait_reaction(sendMsg, "\uD83D\uDD00");//Shuffle
                 wait_reaction(sendMsg, "\uD83D\uDD02");//Repeat
+                System.out.println("[DiscordBotMain] Set Reaction controls");
+                ClearLastMessageReaction(event);
+                commandManagerMap.get(event.getGuild().getId()).musicManager.lastPlayMessage = sendMsg;
+                System.out.println("[DiscordBotMain] Update Last message");
                 return true;
             }
         }
         return false;
+    }
+
+    private void ClearLastMessageReaction(MessageReceivedEvent event){
+        Message last = commandManagerMap.get(event.getGuild().getId()).musicManager.lastPlayMessage;
+        if(last != null) {
+            last.clearReactions().queue();
+            System.out.println("[DiscordBotMain] Remove Last message reactions");
+        }
     }
 
     /**

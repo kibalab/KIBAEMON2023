@@ -2,6 +2,7 @@ package com.comduck.chatbot.discord.audiocore;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import net.dv8tion.jda.api.entities.Message;
 
 /**
  * Holder for both the player and a track scheduler for one guild.
@@ -15,6 +16,8 @@ public class GuildMusicManager {
      * Track scheduler for the player.
      */
     public final TrackScheduler scheduler;
+
+    public Message lastPlayMessage = null;
 
     /**
      * Creates a player and a track scheduler.

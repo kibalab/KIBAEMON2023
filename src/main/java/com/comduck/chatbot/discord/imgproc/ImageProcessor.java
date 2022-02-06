@@ -41,7 +41,7 @@ public class ImageProcessor {
 
     }
 
-    public File processImage(JSONObject details, File canvasFile, URL requesterIconFile, URL uploaderIconFile, String requester, long x_duration) {
+    public File processImage(JSONObject details, File canvasFile, URL requesterIconFile, URL uploaderIconFile, String requester, long x_duration, String[] tags) {
         try {
 
             String id = (String) details.get("id");
@@ -49,7 +49,6 @@ public class ImageProcessor {
             String title = (String) details.get("title");
             String thumbUrl = (String) details.get("thumbnail_url");
             Date duration = new Date(x_duration);
-
 
             //Load Image
             BufferedImage image = ImageIO.read(canvasFile);
@@ -108,7 +107,7 @@ public class ImageProcessor {
             g2d.setFont(g.getFont().deriveFont(20f));
             g2d.drawString(formatter.format(duration), 34, 489);
 
-            DrawTags(g2d, new String[]{"오래와", "응애", "키바다."});
+            DrawTags(g2d, tags);
 
             //Uploader Profile Image
             g2d.setFont(SansMedium);

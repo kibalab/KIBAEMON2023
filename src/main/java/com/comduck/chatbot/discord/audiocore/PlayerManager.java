@@ -1,10 +1,13 @@
 package com.comduck.chatbot.discord.audiocore;
 
+import com.github.kiulian.downloader.YoutubeDownloader;
+import com.github.kiulian.downloader.model.YoutubeVideo;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.json.simple.JSONObject;
 import com.comduck.chatbot.discord.imgproc.ImageProcessor;
 import com.comduck.chatbot.discord.imgproc.ImgprocTwo;
@@ -35,10 +38,10 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PlayerManager {
     private static PlayerManager INSTANCE;
@@ -82,7 +85,27 @@ public class PlayerManager {
             e.printStackTrace();
         }
         return null;
-}
+    }
+
+    private String[] GetVideoTags(String videoIdentifier) {
+
+        List<String> tags = new ArrayList<String>();
+        try {
+            YoutubeDownloader yd = new YoutubeDownloader();
+            YoutubeVideo video = yd.getVideo(videoIdentifier);
+            String dsc = video.details().description();
+
+            Pattern p = Pattern.compile("(#(\\S)*)");
+            Matcher m = p.matcher(dsc);
+
+            while (m.find()) {
+                tags.add(m.group());
+            }
+        }catch (Exception e) {
+            System.out.println("[PlayerManager] Failed Load Tag list");
+        }
+        return tags.toArray(new String[tags.size()]);
+    }
 
     private void loadAndPlay_Msg(MessageReceivedEvent event, String trackUrl) {
 
@@ -104,8 +127,8 @@ public class PlayerManager {
                     URL requesterIconFile = null;
                     URL uploaderIconFile = null;
                     JSONObject trackVideo = null;
+                    String[] tags;
 
-                    String videoId = trackInfo.identifier;
                     ImageProcessor imgProcessor = new ImageProcessor();
                     ImgprocTwo imgprocTwo = new ImgprocTwo();
 
@@ -120,35 +143,39 @@ public class PlayerManager {
                         canvasFileReduction = new File("PlayerTempletR.png");
                         requesterIconFile = new URL(event.getAuthor().getAvatarUrl());
                         uploaderIconFile = searchIcon(trackVideo.get("author_url").toString());
-                        String id = (trackInfo.uri).replace("https://", "");
 
-                        System.out.println(trackVideo.toJSONString());
+                        tags = GetVideoTags(trackInfo.identifier);
+                        for (int i = 0; i< tags.length ; i++){
 
-                        id = id.replace("watch?v=", "").split("/")[1];
+                            System.out.println(tags[i]);
+                        }
 
                         String query = "SELECT * FROM ServerSetting WHERE id=%s";
                         Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
                         PreparedStatement preparedStatement = connection.prepareStatement(String.format(query, event.getGuild().getId()));
                         int playingDisplay = preparedStatement.executeQuery().getInt("PlayDisplay");
 
+                        MessageAction action = null;
+
                         preparedStatement.close();
                         //loadingMsg.editMessage("> 이미지 생성중...").queue();
                         if (playingDisplay == 0) {
-                            img = imgProcessor.processImage(trackVideo, canvasFileFull, requesterIconFile, uploaderIconFile, event.getAuthor().getName(), track.getDuration());
+                            img = imgProcessor.processImage(trackVideo, canvasFileFull, requesterIconFile, uploaderIconFile, event.getAuthor().getName(), track.getDuration(), tags);
                             //loadingMsg.delete().queue();
-                            event.getChannel().sendFile(img).queue();
-                            event.getMessage().delete().queue();
+                            action = event.getChannel().sendFile(img);
                         } else if (playingDisplay == 1) {
                             img = imgprocTwo.processImage(trackVideo, canvasFileReduction, requesterIconFile, uploaderIconFile, event.getAuthor().getName());
                             //loadingMsg.delete().queue();
-                            event.getChannel().sendFile(img).queue();
-                            event.getMessage().delete().queue();
+                            action = event.getChannel().sendFile(img);
                         } else {
                             EmbedBuilder eb = new EmbedBuilder();
                             eb.setColor(new Color(0x244aff));
                             eb.addField(trackInfo.title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getAuthor().getName()), false);
-                            event.getChannel().sendMessage(eb.build()).queue();
+                            action = event.getChannel().sendMessage(eb.build());
                         }
+
+                        action.queue();
+                        event.getMessage().delete().queue();
 
                     } catch (Exception e) {
                         e.printStackTrace();
