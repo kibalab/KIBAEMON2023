@@ -109,7 +109,7 @@ public class CommandManager {
 "    stop : 대기열을 초기화 합니다.\r"+
 "    skip : 다음곡으로 넘어갑니다. [next로 대체가능]\r"+
 "    volume [0과 100사이값] : 음량을 조절합니다. [vol로 대체가능]\r"+
-"    tracklist : 대기열을 출력합니다. [songlist, tlist, slist로 대체가능]\r"+
+"    tracklist : 대기열을 출력합니다. [songlist, tlist, slist, queue, q로 대체가능]\r"+
 "    goto [시간 00:00] : 현재곡의 재생을 지정한 시간으로 이동합니다.\r"+
 "    shuffle : 대기열을 무작위로 섞습니다. [mix, sf로 대체가능]\r"+
 "    repeat : 현재 재생중인 곡을 다시 대기열에 추가합니다. [replay, rp로 대체가능]\r"+

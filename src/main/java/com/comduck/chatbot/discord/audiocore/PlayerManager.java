@@ -136,7 +136,7 @@ public class PlayerManager {
 
                     try {
                         String path = System.getProperty("user.dir");
-                        System.out.println("Working Directory = " + path);
+                        System.out.println("[PlayerManager] Working Directory : " + path);
 
                         trackVideo = yp.getVideo(track.getIdentifier());
                         canvasFileFull = new File("PlayerTempletF2.png");
@@ -145,10 +145,6 @@ public class PlayerManager {
                         uploaderIconFile = searchIcon(trackVideo.get("author_url").toString());
 
                         tags = GetVideoTags(trackInfo.identifier);
-                        for (int i = 0; i< tags.length ; i++){
-
-                            System.out.println(tags[i]);
-                        }
 
                         String query = "SELECT * FROM ServerSetting WHERE id=%s";
                         Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");

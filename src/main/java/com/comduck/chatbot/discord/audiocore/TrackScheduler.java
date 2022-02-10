@@ -33,7 +33,7 @@ public class TrackScheduler extends AudioEventAdapter {
         // Calling startTrack with the noInterrupt set to true will start the track only if nothing is currently playing. If
         // something is playing, it returns false and does nothing. In that case the player was already playing so this
         // track goes to the queue instead.
-        System.out.println("Do Play - " + track.getInfo().title);
+        System.out.println("[TrackScheduler] Do Play : " + track.getInfo().title);
         if (!player.startTrack(track, true)) {
             track.stop();
             queue.offer(track);

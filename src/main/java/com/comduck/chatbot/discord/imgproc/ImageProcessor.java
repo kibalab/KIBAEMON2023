@@ -15,6 +15,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
+import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +40,7 @@ public class ImageProcessor {
 
    public ImageProcessor() {
 
-    }
+   }
 
     public File processImage(JSONObject details, File canvasFile, URL requesterIconFile, URL uploaderIconFile, String requester, long x_duration, String[] tags) {
         try {
@@ -92,14 +93,18 @@ public class ImageProcessor {
 
             //Video Title TEXT
             g2d.setFont(SansBold);
-            g2d.setFont(g.getFont().deriveFont(52f));
+            g2d.setFont(g2d.getFont().deriveFont(52f));
+            float title_width = CalculateStringWidth(g2d, title);
+            float title_height = CalculateStringHeight(g2d, title);
+            if(title_width > 1230) g2d.setFont(g2d.getFont().deriveFont((1230 / title_width ) * 52f));
+            float fit_Upper = title_width / CalculateStringHeight(g2d, title) / 4;
             //Title Text Shadow
-            Color origin = g.getColor();
+            Color origin = g2d.getColor();
             g2d.setColor(Color.BLACK);
-            g2d.drawString(title, 21, 552);
+            g2d.drawString(title, 21, 552 - fit_Upper);
             g2d.setColor(origin);
             //Title Text Body
-            g2d.drawString(title, 18, 552);
+            g2d.drawString(title, 18, 552 - fit_Upper);
 
             //Duration Text
             SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
@@ -148,8 +153,12 @@ public class ImageProcessor {
 
             //Thumnail Image
             g2d.setClip(new RoundRectangle2D.Float(11, 12, 1260, 446, 90, 90));
+
+            System.out.println("[ImageProcessor] Tumbnail Size :" + thum.getWidth() + "/" + thum.getHeight());
+            float sizeFit = Math.round(1260.0f/thum.getWidth() * 10) / 10;
+            System.out.println("[ImageProcessor] Tumbnail Size ratio :" + sizeFit);
             //g2d.setPaint(new TexturePaint(thum, new Rectangle2D.Double(11, 12, 1260, 446)));
-            if (thum != null) g2d.drawImage(thum, 0, 0, thum.getWidth(), thum.getHeight(),null);
+            if (thum != null) g2d.drawImage(thum, 0, 0, (int)(thum.getWidth() * sizeFit), (int)(thum.getHeight() * sizeFit),null);
 
             //Edit close
             g2d.dispose();
@@ -171,6 +180,7 @@ public class ImageProcessor {
     }
 
     public Graphics2D DrawTags(Graphics2D g2d, String[] tags){
+
         BufferedImage Tag_L = null, Tag_M = null, Tag_R = null;
        try {
            Tag_L = ImageIO.read(new File("Tag_L.png"));
@@ -183,13 +193,25 @@ public class ImageProcessor {
         int tag_posX = 129;
         int padding = 7;
         for(int i = 0; i < tags.length ; i++){
+            int middle_size = (int)(CalculateStringWidth(g2d, tags[i]));
+
+            if(tag_posX + Tag_L.getWidth() + middle_size + Tag_R.getWidth() > 1150){
+                middle_size = (int)(CalculateStringWidth(g2d, "..."));
+
+                g2d.drawImage(Tag_L, tag_posX, 438, Tag_L.getWidth(), Tag_L.getHeight(),null);
+                tag_posX += Tag_L.getWidth();
+                g2d.drawImage(Tag_M, tag_posX, 438, middle_size, Tag_M.getHeight(),null);
+                g2d.drawString("...", tag_posX, 490);
+                tag_posX += middle_size;
+                g2d.drawImage(Tag_R, tag_posX, 438, Tag_R.getWidth(), Tag_R.getHeight(),null);
+                break;
+            }
+
+
             g2d.drawImage(Tag_L, tag_posX, 438, Tag_L.getWidth(), Tag_L.getHeight(),null);
             tag_posX += Tag_L.getWidth();
-            int middle_size = (int)(CalculateStringWidth(g2d, tags[i]));
             g2d.drawImage(Tag_M, tag_posX, 438, middle_size, Tag_M.getHeight(),null);
-
             g2d.drawString(tags[i], tag_posX, 490);
-
             tag_posX += middle_size;
             g2d.drawImage(Tag_R, tag_posX, 438, Tag_R.getWidth(), Tag_R.getHeight(),null);
             tag_posX += padding;
@@ -200,6 +222,10 @@ public class ImageProcessor {
     public float CalculateStringWidth(Graphics2D g2d, String text){
         FontRenderContext frc = new FontRenderContext(new AffineTransform(), true, true);
         return (float)(g2d.getFont().getStringBounds(text, frc).getWidth());
+    }
+    public float CalculateStringHeight(Graphics2D g2d, String text){
+        FontRenderContext frc = new FontRenderContext(new AffineTransform(), true, true);
+        return (float)(g2d.getFont().getStringBounds(text, frc).getHeight());
     }
 
     public BufferedImage blur(BufferedImage target) {
@@ -239,5 +265,15 @@ public class ImageProcessor {
 
         return target;
 
+    }
+}
+
+class Pixel {
+    public float R, G, B, A;
+
+    public Pixel(float r, float g, float b, float a) {
+        this.R = r;
+        this.G = g;
+        this.B = b;
     }
 }

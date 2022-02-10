@@ -328,7 +328,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         String msg = ((Message) commandQueue.poll()).getContentDisplay();
 
         if(event.getAuthor().isBot()) {
-            if (msg.startsWith("?play") || msg.startsWith("?tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("slist")) {
+            if (msg.startsWith("?play") || msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("tl") || msg.startsWith("slist") || msg.startsWith("queue") || msg.startsWith("q")) {
                 wait_reaction(sendMsg, "⏯");//pause
                 wait_reaction(sendMsg, "⏹");//stop
                 wait_reaction(sendMsg, "⏭");//skip
@@ -444,7 +444,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         } else if (msg.startsWith("volume") || msg.startsWith("vol")) {
             GetChannelCommandManager(event).volumeCommand(event, msg);
             //cmdVolume(event, msg);
-        } else if (msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("slist")) {
+        } else if (msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("tl") || msg.startsWith("slist") || msg.startsWith("queue") || msg.startsWith("q")) {
             GetChannelCommandManager(event).tracklistCommand(event);
             //cmdTrackList(event);
         } else if (msg.startsWith("goto")) {
@@ -505,7 +505,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     public void onPostCommand(GenericMessageEvent genericMessageEvent) {
         try {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) genericMessageEvent;
-            System.out.println(String.format("CommandQueue Add data: %s", msgEvent.getMessage().getContentRaw()));
+            System.out.println(String.format("[DiscordBotMain] CommandQueue Add data: %s", msgEvent.getMessage().getContentRaw()));
             commandQueue.add(msgEvent.getMessage());
         } catch (Exception e) {
 
