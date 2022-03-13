@@ -728,6 +728,40 @@ public class CommandManager {
 
     }
 
+    public void ClipCommand(GenericMessageEvent event, String msg){
+        msg = msg.replace("clip ", "");
+
+        VoiceChannel Vch = null;
+        PlayerManager manager = PlayerManager.getInstance();
+        AudioManager audiomng = event.getGuild().getAudioManager();
+        String url = msg.replaceFirst("play", "").replace(" ", "");
+
+        // GenericMessageEvent 종속 메소드 분리
+        if (event instanceof MessageReceivedEvent) {
+            MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
+            Vch = ((MessageReceivedEvent) event).getMember().getVoiceState().getChannel();
+        } else {
+            GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
+            Vch = ((GenericMessageReactionEvent) event).getMember().getVoiceState().getChannel();
+        }
+
+        if (!audiomng.isConnected()) {
+            audiomng.openAudioConnection(Vch);
+        }
+
+
+        File clip = new File( "AudioClips/" + msg + ".mp3");
+        if(clip.exists()){
+            System.out.println("[CommandManager] Play Clip : " + clip.getAbsolutePath());
+            raisePostCommand(event);
+            PlayerManager playerManager = PlayerManager.getInstance();
+            playerManager.loadAndPlay(event, clip.getAbsolutePath());
+            playerManager.getGuildMusicManager(event.getGuild()).player.setVolume(globalVolume * 2);
+
+            event.getChannel().sendMessage("> " + msg + " 시작!").queue();
+        }
+    }
+
     private static String SvSt_SettingDataQuery = "UPDATE ServerSetting SET %s='%s' WHERE id=%s;";
     /*
     == 서버 세팅 ==

@@ -44,7 +44,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader(new File("Bots.json"))));
 
-        String token = (String)bots.get("Test1");
+        String token = (String)bots.get("JAVA");
 
         builder.setToken(token);
         builder.setActivity(Activity.playing("<가동중> ?help"));
@@ -470,6 +470,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             GetChannelCommandManager(event).samsungCommand(event);
         } else if (msg.startsWith("hangang")) {
             GetChannelCommandManager(event).hangangCommand(event);
+        } else if (msg.startsWith("clip")) {
+            GetChannelCommandManager(event).ClipCommand(event, msg);
         }
     }
 
