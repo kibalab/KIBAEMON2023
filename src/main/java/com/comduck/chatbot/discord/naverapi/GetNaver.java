@@ -27,6 +27,8 @@ public class GetNaver {
             }
         }
         String r = getData(apiURL, postParams);
+
+        System.out.println(r);
         return r;
     }
 

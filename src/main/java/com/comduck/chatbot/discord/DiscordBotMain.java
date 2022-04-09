@@ -13,8 +13,11 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.EmbedBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -34,22 +37,45 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     HashMap<String, CommandManager> commandManagerMap;
 
     public static void main(String[] args) throws Exception {
-        new DiscordBotMain().start();
+        StartArgumentCommand(args);
     }
 
-    private void start() throws Exception {
+    private void start(String bot) throws Exception {
         ImageIO.scanForPlugins();
         commandManagerMap = new HashMap<>();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 
         JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader(new File("Bots.json"))));
 
-        String token = (String)bots.get("JAVA");
+        String token = (String)bots.get(bot);
 
         builder.setToken(token);
         builder.setActivity(Activity.playing("<가동중> ?help"));
         builder.addEventListeners(this);
         builder.build();
+    }
+
+    public static void StartArgumentCommand(String[] Arg) throws Exception {
+
+        if(Arg[0].startsWith("-r") || Arg[0].startsWith("--run") ) {
+            new DiscordBotMain().start(Arg[1]);
+        } else if(Arg[0].startsWith("-b") || Arg[0].startsWith("--bots") ){
+            JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader(new File("Bots.json"))));
+            Iterator<String> keys = bots.keySet().iterator();
+            System.out.println("[ Bots.js List ]");
+            int i = 1;
+            while(keys.hasNext()) {
+                String key = keys.next();
+                System.out.println(String.format("%d. %s : %s", i, key, bots.get(key)));
+                i++;
+            }
+        } else {
+            System.out.println("[ KIBATION2019-JAVA ]");
+            System.out.println("[ K13A_Laboratories ]\n");
+            System.out.println("-r  --run   {BotName}   : Login with Token in Bots.json.");
+            System.out.println("-h  --help      : Print out help.");
+            System.out.println("-b  --bot      : Output the bot list in Bots.json.");
+        }
     }
 
     @Override
@@ -232,6 +258,29 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         }
     }
 
+    @Override
+    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
+        if (!event.getUser().isBot()) {
+            if (event.getReactionEmote().getName().equals("⭐")) {
+                String Url = commandManagerMap.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().uri;
+                String Title = commandManagerMap.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().title;
+
+                AddFavoriteVideo(event, Url, Title);
+            }
+        }
+    }
+
+    @Override
+    public void onMessageReactionRemove(@NotNull MessageReactionRemoveEvent event) {
+        if (!event.getUser().isBot()) {
+            if (event.getReactionEmote().getName().equals("⭐")) {
+                String Url = commandManagerMap.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().uri;
+
+                DeleteFavoriteVideo(event, Url);
+            }
+        }
+    }
+
     /**
      * 메시지 수신 이벤트
      *
@@ -297,6 +346,42 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         } catch (Exception e) {  }
     }
 
+    private static String Rct_FavoriteAddQuery = "INSERT INTO FavoriteVideo(Title, Url, Server, UserID) VALUES(?, ?, ?, ?);";
+    private static String Rct_FavoriteDeleQuery = "DELETE FROM FavoriteVideo WHERE Url=? AND Server=?;";
+
+    public void AddFavoriteVideo(GenericMessageReactionEvent event, String Url, String Title){
+        event.getChannel().sendMessage(String.format("> 현재곡 즐겨찾기 추가 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
+
+            PreparedStatement preparedStatement = connection.prepareStatement(Rct_FavoriteAddQuery);
+            preparedStatement.setString(1, Title);
+            preparedStatement.setString(2, Url);
+            preparedStatement.setString(3, event.getGuild().getId());
+            preparedStatement.setString(4, event.getUserId());
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void DeleteFavoriteVideo(GenericMessageReactionEvent event, String Url){
+        event.getChannel().sendMessage(String.format("> 현재곡 즐겨찾기 제거 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
+
+            PreparedStatement preparedStatement = connection.prepareStatement(Rct_FavoriteDeleQuery);
+
+            preparedStatement.setString(1, Url);
+            preparedStatement.setString(2, event.getGuild().getId());
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         //로그 출력
@@ -325,9 +410,11 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     private boolean reactionInterface(MessageReceivedEvent event) {
         Message sendMsg = event.getMessage();
-        String msg = ((Message) commandQueue.poll()).getContentDisplay();
 
-        if(event.getAuthor().isBot()) {
+        if(event.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong()) {
+
+            String msg = ((Message) commandQueue.poll()).getContentDisplay();
+            System.out.println("[DiscordBotMain] Check Remoteable Command Message");
             if (msg.startsWith("?play") || msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("tl") || msg.startsWith("slist") || msg.startsWith("queue") || msg.startsWith("q")) {
                 wait_reaction(sendMsg, "⏯");//pause
                 wait_reaction(sendMsg, "⏹");//stop
@@ -336,7 +423,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                 wait_reaction(sendMsg, "\uD83C\uDFB6");//tracklist
                 wait_reaction(sendMsg, "\uD83D\uDD00");//Shuffle
                 wait_reaction(sendMsg, "\uD83D\uDD02");//Repeat
-                System.out.println("[DiscordBotMain] Set Reaction controls");
+                wait_reaction(sendMsg, "⭐");
+                System.out.println("[DiscordBotMain] OnEnd Create Reaction Remote");
                 ClearLastMessageReaction(event);
                 commandManagerMap.get(event.getGuild().getId()).musicManager.lastPlayMessage = sendMsg;
                 System.out.println("[DiscordBotMain] Update Last message");
@@ -371,7 +459,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             event.getJDA().getGuildById("665080322085617665").getTextChannelById("665098737420337156").sendMessage(event.getMessage().getContentRaw()).queue();
         }
         String msg = "";
-        if (event.getMessage().getEmotes().size() == 1 && event.getMessage().getContentRaw().startsWith("<") && event.getMessage().getContentRaw().endsWith(">")) { // && event.getMessage().getGuild().getIdLong() != 542727743909920798L
+        if (event.getMessage().getEmotes().size() == 1 && event.getMessage().getContentRaw().startsWith("<") && event.getMessage().getContentRaw().endsWith(">") && event.getMessage().getGuild().getIdLong() != 102788723690700800L) { // 542727743909920798L
             String emojiUrl = event.getMessage().getEmotes().get(0).getImageUrl();
             User user  = event.getMessage().getAuthor();
 
@@ -472,6 +560,10 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             GetChannelCommandManager(event).hangangCommand(event);
         } else if (msg.startsWith("clip")) {
             GetChannelCommandManager(event).ClipCommand(event, msg);
+        } else if (msg.startsWith("favorite")) {
+            GetChannelCommandManager(event).favoriteCommand(event, msg);
+        } else if (msg.startsWith("favorite")) {
+            GetChannelCommandManager(event).ChangeFavKeyCommand(event, msg);
         }
     }
 
@@ -501,6 +593,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     //미완성
     private void wait_reaction(Message msg, String emote) {
         msg.addReaction(emote).queue();
+        System.out.println(String.format("[DiscordBotMain] Set Reaction : %s to %s", emote, msg.getId()));
     }
 
     @Override

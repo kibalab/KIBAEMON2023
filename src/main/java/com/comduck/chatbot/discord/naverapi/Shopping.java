@@ -27,7 +27,7 @@ public class Shopping {
             System.out.println(str);
             text = URLEncoder.encode(str, "UTF-8");
             data.put("query", text);
-            data.put("display", "1");
+            data.put("display", "100");
             data.put("start", "1");
             data.put("sort", "sim");
         } catch (Exception e) {
@@ -38,7 +38,12 @@ public class Shopping {
         String result = get.get(apiURL, data);
 
 
-        return BuildEmbed(jsonGetMessage(result));
+        try {
+            return BuildEmbed(jsonGetMessage(result));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private JSONArray jsonGetMessage(String str) {
@@ -53,7 +58,7 @@ public class Shopping {
         return null;
     }
 
-    private EmbedBuilder BuildEmbed(JSONArray data) {
+    private EmbedBuilder BuildEmbed(JSONArray data) throws UnsupportedEncodingException {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(new Color(0x1FFF2A));
         JSONParser p = new JSONParser();
@@ -62,18 +67,39 @@ public class Shopping {
             eb.setAuthor("네이버쇼핑 내 검색 결과가 없습니다.", "https://shopping.naver.com/", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEyTRrEubfpkk2mYj8FIbNuDg8ktxkcrLoI-7Rb4SpsUtMrSvs&s");
             eb.addField("Notice", "정확한 검색어 인지 확인하시고 다시 검색해 주세요.", false);
         }
-        for(int i=0; i<data.size(); i++) {
-            JSONObject jsonData = (JSONObject) data.get(i);
-            String title = jsonData.get("title").toString().replace("<b>", "").replace("</b>", "");
-            String img = jsonData.get("image").toString();
-            String link = jsonData.get("link").toString();
-            String lowPrice = jsonData.get("lprice").toString();
-            String highPrice = jsonData.get("hprice").toString();
+        JSONObject jsonData = (JSONObject) data.get(0);
+        String title = jsonData.get("title").toString().replace("<b>", "").replace("</b>", "");
+        String img = jsonData.get("image").toString();
+        String link = jsonData.get("link").toString();
+        String lowPrice = jsonData.get("lprice").toString();
+        int highPrice = 0;
 
-            eb.setImage(img);
-            eb.setAuthor(title, link, "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEyTRrEubfpkk2mYj8FIbNuDg8ktxkcrLoI-7Rb4SpsUtMrSvs&s");
-            eb.addField("Price", String.format("%s ~ %s", f.format(Integer.parseInt(lowPrice)), f.format(Integer.parseInt(highPrice))), false);
+        for(int i=0; i<data.size(); i++) {
+            jsonData = (JSONObject) data.get(i);
+            int price = Integer.parseInt(jsonData.get("lprice").toString());
+            if(highPrice < price){
+                highPrice = price;
+            }
         }
+
+        System.out.println(String.format("[Shopping] Find Price %s~%s", lowPrice, highPrice));
+
+        String price = String.format("%s ~ %s", lowPrice, f.format(highPrice));
+
+        eb.setImage(img);
+        eb.setAuthor(title, link, "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSEyTRrEubfpkk2mYj8FIbNuDg8ktxkcrLoI-7Rb4SpsUtMrSvs&s");
+        eb.addField("Price", price, false);
         return eb;
     }
 }
+
+
+
+
+
+
+
+
+
+
+

@@ -48,13 +48,11 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ShortBuffer;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -113,7 +111,10 @@ public class CommandManager {
 "    goto [시간 00:00] : 현재곡의 재생을 지정한 시간으로 이동합니다.\r"+
 "    shuffle : 대기열을 무작위로 섞습니다. [mix, sf로 대체가능]\r"+
 "    repeat : 현재 재생중인 곡을 다시 대기열에 추가합니다. [replay, rp로 대체가능]\r"+
-"    clear : 텍스트채널의 문자 50개씩 삭제합니다.\r"+
+"    clear : 텍스트채널의 문자 50개씩 삭제합니다.\r" +
+"Favorite\n" +
+"    favorite [Key] : 설정한 별명으로 즐겨찾기의 음악을 재생합니다." +
+"    change [Key] [New Key] : 즐겨찾기 곡의 별명을 변경합니다"+
 "Utility\r"+
 "    papago [언어] [텍스트] : 파파고 엔진으로 번역합니다.\r"+
 "    shopping [제품이름] : 네이버 쇼핑에서 상품을 검색합니다. [shop로 대체가능]\r"+
@@ -124,6 +125,48 @@ public class CommandManager {
 "제작 : KIBA#4466\r";
         event.getChannel().sendFile(new File("play_help.png")).queue();
         event.getChannel().sendMessage(msg).queue();
+    }
+
+
+    private static String Msg_loadFavoriteQuery = "SELECT * FROM FavoriteVideo WHERE Server=? AND Key=?;";
+
+
+    public void favoriteCommand(MessageReceivedEvent event, String msg) {
+        msg = msg.replace("favorite", "");
+        String Key = msg;
+
+        event.getChannel().sendMessage(String.format("> 즐겨찾기 재생 ``%s`` ``%s``", Key, event.getAuthor().getName())).queue();
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
+            PreparedStatement preparedStatement = connection.prepareStatement(Msg_loadFavoriteQuery);
+            preparedStatement.setString(1, event.getGuild().getId());
+            preparedStatement.setString(2, Key);
+            ResultSet result = preparedStatement.executeQuery();
+            result.next();
+            playCommand(event, result.getString("Url"));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String msg_ChangeKeyQuery = "UPDATE ServerSetting SET Key='?' WHERE Key=?;";
+
+    public void ChangeFavKeyCommand(MessageReceivedEvent event, String msg) {
+        msg = msg.replace("favorite", "");
+        String[] arg = msg.split(" ");
+        String Key = arg[0];
+        String newKey = arg[1];
+
+        event.getChannel().sendMessage(String.format("> 즐겨찾기 별명 변경 ``%s -> %s`` ``%s``", Key, newKey, event.getAuthor().getName())).queue();
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
+            PreparedStatement preparedStatement = connection.prepareStatement(msg_ChangeKeyQuery);
+            preparedStatement.setString(1, newKey);
+            preparedStatement.setString(2, Key);
+            preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void playCommand(GenericMessageEvent event, String msg) {
@@ -618,16 +661,16 @@ public class CommandManager {
     }
 
     public void noticeCommand(MessageReceivedEvent event) {
-        long[] chennals = {415133850079985677L, 542727744342196228L, 437280272182935562L, 607208059504427018L, 608664567928717322L, 637071354671136779L, 653562725913460738L, 660120286057725962L, 708730014492917820L};
+        long[] chennals = {925404580538372096L, 102788723690700800L, 542727744342196228L, 736496579166601268L, 785124985059934222L, 753087278083080303L};
         for(long c : chennals) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0x1BC3FF));
             eb.setAuthor("Notice",null,"https://cdn.discordapp.com/attachments/452403281428217856/609442329593643019/KIBAEMON-ICON.png");
-            eb.setTitle("(전체공지) KIBAEMON MUSIC, 업데이트 안내");
+            eb.setTitle("(전체공지) KIBAEMON JAVA, 업데이트 안내");
             eb.setThumbnail("https://cdn.discordapp.com/attachments/452403281428217856/609441237228978254/KIBAEMON-LOGO.png");
             SimpleDateFormat format2 = new SimpleDateFormat ( "yyyy년 MM월dd일");
             Date time = new Date();
-            eb.addField("업데이트 내용","봇 업데이트, 메시지 입출력 메커니즘 변경, 재생이 멋대로 스킵되던 버그 수정",true);
+            eb.addField("업데이트 내용","엔터프라이즈급 데이터서버에서 24시간 가동하게 되었습니다.\n서버 이관에 따라 일부기능을 점검하고 있습니다.",true);
             eb.addField("기동일(오늘)",format2.format(time),true);
             eb.addField("라이브러리", "JDA(JAVA) v4.1.1_146", true);
             eb.addField("환경", String.format(
@@ -639,7 +682,7 @@ public class CommandManager {
                     Runtime.getRuntime().availableProcessors(),
                     Runtime.getRuntime().freeMemory()
             ), true);
-            eb.setFooter("KIBAEMON 2020.5 - K13A_ Laboratories", null);
+            eb.setFooter("KIBAEMON 2022.3 - K13A_ Labs", null);
             event.getJDA().getTextChannelById(c).sendMessage(eb.build()).queue();
         }
     }
