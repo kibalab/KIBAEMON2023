@@ -187,3 +187,4 @@ target/
 
 # temp png files
 201*+*.png
+*.png
