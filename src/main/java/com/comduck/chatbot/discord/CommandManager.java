@@ -128,42 +128,44 @@ public class CommandManager {
     }
 
 
-    private static String Msg_loadFavoriteQuery = "SELECT * FROM FavoriteVideo WHERE Server=? AND Key=?;";
+    private static String Msg_loadFavoriteQuery = "SELECT * FROM FavoriteVideo WHERE Server=%s AND Key=\"%s\";";
 
 
     public void favoriteCommand(MessageReceivedEvent event, String msg) {
         msg = msg.replace("favorite", "");
-        String Key = msg;
+        String Key = msg.replaceAll(" ", "");
 
         event.getChannel().sendMessage(String.format("> 즐겨찾기 재생 ``%s`` ``%s``", Key, event.getAuthor().getName())).queue();
         try {
             Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
-            PreparedStatement preparedStatement = connection.prepareStatement(Msg_loadFavoriteQuery);
-            preparedStatement.setString(1, event.getGuild().getId());
-            preparedStatement.setString(2, Key);
-            ResultSet result = preparedStatement.executeQuery();
-            result.next();
-            playCommand(event, result.getString("Url"));
+            Statement st = connection.createStatement();
+            String instanceQuery = String.format(Msg_loadFavoriteQuery, event.getGuild().getId(), Key);
+            ResultSet result = st.executeQuery(instanceQuery);
+
+            while ( result.next() )
+            {
+                playCommand(event, result.getString(2));
+            }
+            st.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    private static String msg_ChangeKeyQuery = "UPDATE ServerSetting SET Key='?' WHERE Key=?;";
+    private static String msg_ChangeKeyQuery = "UPDATE FavoriteVideo SET Key=\"%s\" WHERE Key=\"%s\";";
 
     public void ChangeFavKeyCommand(MessageReceivedEvent event, String msg) {
         msg = msg.replace("favorite", "");
         String[] arg = msg.split(" ");
-        String Key = arg[0];
-        String newKey = arg[1];
+        String Key = arg[1];
+        String newKey = arg[2];
 
         event.getChannel().sendMessage(String.format("> 즐겨찾기 별명 변경 ``%s -> %s`` ``%s``", Key, newKey, event.getAuthor().getName())).queue();
         try {
             Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
-            PreparedStatement preparedStatement = connection.prepareStatement(msg_ChangeKeyQuery);
-            preparedStatement.setString(1, newKey);
-            preparedStatement.setString(2, Key);
-            preparedStatement.executeQuery();
+            PreparedStatement preparedStatement = connection.prepareStatement(String.format(msg_ChangeKeyQuery, newKey, Key));
+            preparedStatement.executeUpdate();
+            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }

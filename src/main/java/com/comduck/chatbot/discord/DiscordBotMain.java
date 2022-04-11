@@ -307,6 +307,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                 preparedStatement.setString(5, msgEvent.getMessage().getId());
                 preparedStatement.setString(6, msgEvent.getMessage().getContentRaw());
                 preparedStatement.executeUpdate();
+                connection.close();
             } else {
                 //"{'Type': 'Reaction', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}"
                 GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
@@ -318,6 +319,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                 preparedStatement.setString(5, reactionEvent.getMessageId());
                 preparedStatement.setString(6, reactionEvent.getReactionEmote().toString());
                 preparedStatement.executeUpdate();
+                connection.close();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -346,11 +348,13 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         } catch (Exception e) {  }
     }
 
-    private static String Rct_FavoriteAddQuery = "INSERT INTO FavoriteVideo(Title, Url, Server, UserID) VALUES(?, ?, ?, ?);";
+    private static String Rct_FavoriteAddQuery = "INSERT INTO FavoriteVideo(Title, Url, Server, UserID, Key) VALUES(?, ?, ?, ?, ?);";
     private static String Rct_FavoriteDeleQuery = "DELETE FROM FavoriteVideo WHERE Url=? AND Server=?;";
 
     public void AddFavoriteVideo(GenericMessageReactionEvent event, String Url, String Title){
-        event.getChannel().sendMessage(String.format("> 현재곡 즐겨찾기 추가 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
+        int Key = (int)(Math.random() * 10000);
+
+        event.getChannel().sendMessage(String.format("> 현재곡 즐겨찾기 추가 ``%d`` ``%s``", Key, ((GenericMessageReactionEvent) event).getUser().getName())).queue();
         try {
             Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
 
@@ -359,6 +363,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             preparedStatement.setString(2, Url);
             preparedStatement.setString(3, event.getGuild().getId());
             preparedStatement.setString(4, event.getUserId());
+            preparedStatement.setInt(5, Key);
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
@@ -562,7 +567,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             GetChannelCommandManager(event).ClipCommand(event, msg);
         } else if (msg.startsWith("favorite")) {
             GetChannelCommandManager(event).favoriteCommand(event, msg);
-        } else if (msg.startsWith("favorite")) {
+        } else if (msg.startsWith("change")) {
             GetChannelCommandManager(event).ChangeFavKeyCommand(event, msg);
         }
     }
