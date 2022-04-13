@@ -113,8 +113,8 @@ public class CommandManager {
 "    repeat : 현재 재생중인 곡을 다시 대기열에 추가합니다. [replay, rp로 대체가능]\r"+
 "    clear : 텍스트채널의 문자 50개씩 삭제합니다.\r" +
 "Favorite\n" +
-"    favorite [Key] : 설정한 별명으로 즐겨찾기의 음악을 재생합니다." +
-"    change [Key] [New Key] : 즐겨찾기 곡의 별명을 변경합니다"+
+"    favorite [Key] : 설정한 별명으로 즐겨찾기의 음악을 재생합니다.\r" +
+"    change [Key] [New Key] : 즐겨찾기 곡의 별명을 변경합니다\r"+
 "Utility\r"+
 "    papago [언어] [텍스트] : 파파고 엔진으로 번역합니다.\r"+
 "    shopping [제품이름] : 네이버 쇼핑에서 상품을 검색합니다. [shop로 대체가능]\r"+
