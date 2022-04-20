@@ -1,12 +1,17 @@
 package com.comduck.chatbot.discord.audiocore;
 
+import com.comduck.chatbot.discord.audiocore.enums.Platform;
+import com.comduck.chatbot.discord.audiocore.enums.VideoStyle;
 import com.github.kiulian.downloader.YoutubeDownloader;
 import com.github.kiulian.downloader.model.YoutubeVideo;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.json.simple.JSONObject;
 import com.comduck.chatbot.discord.imgproc.ImageProcessor;
@@ -19,7 +24,6 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -27,12 +31,9 @@ import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;
@@ -107,7 +108,7 @@ public class PlayerManager {
         return tags.toArray(new String[tags.size()]);
     }
 
-    private void loadAndPlay_Msg(MessageReceivedEvent event, String trackUrl) {
+    private void loadAndPlay_Msg(MessageReceivedEvent event, String trackUrl, Platform platform, VideoStyle videoStyle) {
 
         final GuildMusicManager musicManager = getGuildMusicManager(event.getGuild());
 
@@ -144,10 +145,18 @@ public class PlayerManager {
                     //loadingMsg.delete().queue();
                     event.getChannel().sendMessage(eb.build()).queue();
                 }
-                play(musicManager, track);
+
                 YoutubeAudioSourceManager pm = new YoutubeAudioSourceManager();
                 playerManager.registerSourceManager(pm);
+                playerManager.registerSourceManager(new BandcampAudioSourceManager());
+                playerManager.registerSourceManager(new VimeoAudioSourceManager());
+                playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
+                playerManager.registerSourceManager(new BeamAudioSourceManager());
+                playerManager.registerSourceManager(new HttpAudioSourceManager());
+                playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
 
+
+                play(musicManager, track);
             }
 
             public MessageAction BuildPlayingMessage(AudioTrack track, AudioTrackInfo trackInfo, int TypeID) throws MalformedURLException {
@@ -220,14 +229,14 @@ public class PlayerManager {
             public void noMatches() {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0xff3e3e));
-                eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getAuthor().getName()), false);
+                eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n ``No Matches`` ``%s``", event.getAuthor().getName()), false);
                 event.getChannel().sendMessage(eb.build()).queue();
             }
 
             public void loadFailed(FriendlyException e) {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0xff3e3e));
-                eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getAuthor().getName()), false);
+                eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n ``LoadFailed`` ``%s``", event.getAuthor().getName()), false);
                 event.getChannel().sendMessage(eb.build()).queue();
                 event.getChannel().sendMessage("> " + e.toString()).queue();
             }
@@ -295,7 +304,7 @@ public class PlayerManager {
  */
 public void loadAndPlay(final GenericMessageEvent event, final String trackUrl) {
     if (event instanceof MessageReceivedEvent) {
-        loadAndPlay_Msg((MessageReceivedEvent)event, trackUrl);
+        loadAndPlay_Msg((MessageReceivedEvent)event, trackUrl, Platform.Other, VideoStyle.Default);
     } else if (event instanceof GenericMessageReactionEvent) {
         loadAndPlay_Reaction((GenericMessageReactionEvent)event, trackUrl); // 삭제 예정
     }
