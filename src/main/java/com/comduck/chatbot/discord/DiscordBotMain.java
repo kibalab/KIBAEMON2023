@@ -1,7 +1,6 @@
 package com.comduck.chatbot.discord;
 
 import com.comduck.chatbot.discord.audiocore.*;
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDABuilder;

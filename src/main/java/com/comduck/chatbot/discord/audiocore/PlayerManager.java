@@ -114,68 +114,28 @@ public class PlayerManager {
         //트랙 로드, 에러 관련 처리/이벤트
         playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
             public void trackLoaded(AudioTrack track) {
-                //RestAction<Message> loadingMsgAction = event.getChannel().sendMessage("> " + track.getInfo().title + " 불러오는중...");
-                //Message loadingMsg = loadingMsgAction.complete();
-
-
                 boolean isYoutube = trackUrl.contains("youtu");
                 AudioTrackInfo trackInfo = track.getInfo();
+
                 if(isYoutube) {
-                    File img = null;
-                    File canvasFileFull = null;
-                    File canvasFileReduction = null;
-                    URL requesterIconFile = null;
-                    URL uploaderIconFile = null;
-                    JSONObject trackVideo = null;
-                    String[] tags;
-
-                    ImageProcessor imgProcessor = new ImageProcessor();
-                    ImgprocTwo imgprocTwo = new ImgprocTwo();
-
-                    YoutubeParse yp = new YoutubeParse();
 
                     try {
-                        String path = System.getProperty("user.dir");
-                        System.out.println("[PlayerManager] Working Directory : " + path);
-
-                        trackVideo = yp.getVideo(track.getIdentifier());
-                        canvasFileFull = new File("PlayerTempletF2.png");
-                        canvasFileReduction = new File("PlayerTempletR.png");
-                        requesterIconFile = new URL(event.getAuthor().getAvatarUrl());
-                        uploaderIconFile = searchIcon(trackVideo.get("author_url").toString());
-
-                        tags = GetVideoTags(trackInfo.identifier);
-
+                        //Get ServerSetting
                         String query = "SELECT * FROM ServerSetting WHERE id=%s";
                         Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
                         PreparedStatement preparedStatement = connection.prepareStatement(String.format(query, event.getGuild().getId()));
-                        int playingDisplay = preparedStatement.executeQuery().getInt("PlayDisplay");
-
-                        MessageAction action = null;
-
+                        int ImageTypeID = preparedStatement.executeQuery().getInt("PlayDisplay");
                         preparedStatement.close();
-                        //loadingMsg.editMessage("> 이미지 생성중...").queue();
-                        if (playingDisplay == 0) {
-                            img = imgProcessor.processImage(trackVideo, canvasFileFull, requesterIconFile, uploaderIconFile, event.getAuthor().getName(), track.getDuration(), tags);
-                            //loadingMsg.delete().queue();
-                            action = event.getChannel().sendFile(img);
-                        } else if (playingDisplay == 1) {
-                            img = imgprocTwo.processImage(trackVideo, canvasFileReduction, requesterIconFile, uploaderIconFile, event.getAuthor().getName());
-                            //loadingMsg.delete().queue();
-                            action = event.getChannel().sendFile(img);
-                        } else {
-                            EmbedBuilder eb = new EmbedBuilder();
-                            eb.setColor(new Color(0x244aff));
-                            eb.addField(trackInfo.title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getAuthor().getName()), false);
-                            action = event.getChannel().sendMessage(eb.build());
-                        }
 
+                        MessageAction action = BuildPlayingMessage(track, trackInfo, ImageTypeID);
+
+                        //Switch Message
                         action.queue();
                         event.getMessage().delete().queue();
 
                     } catch (Exception e) {
                         e.printStackTrace();
-                        //event.getChannel().sendFile(new File("AuthERROR.png")).queue();
+                        event.getChannel().sendFile(new File("AuthERROR.png")).queue();
                     }
                 } else {
                     EmbedBuilder eb = new EmbedBuilder();
@@ -188,6 +148,49 @@ public class PlayerManager {
                 YoutubeAudioSourceManager pm = new YoutubeAudioSourceManager();
                 playerManager.registerSourceManager(pm);
 
+            }
+
+            public MessageAction BuildPlayingMessage(AudioTrack track, AudioTrackInfo trackInfo, int TypeID) throws MalformedURLException {
+                File img = null;
+                File canvasFileFull = null;
+                File canvasFileReduction = null;
+                URL requesterIconFile = null;
+                URL uploaderIconFile = null;
+                JSONObject trackVideo = null;
+                String[] tags = null;
+                MessageAction action = null;
+
+                ImageProcessor imgProcessor = new ImageProcessor();
+                ImgprocTwo imgprocTwo = new ImgprocTwo();
+
+                YoutubeParse yp = new YoutubeParse();
+
+                tags = GetVideoTags(trackInfo.identifier);
+
+                String path = System.getProperty("user.dir");
+                System.out.println("[PlayerManager] Working Directory : " + path);
+
+                trackVideo = yp.getVideo(track.getIdentifier());
+                canvasFileFull = new File("PlayerTempletF2.png");
+                canvasFileReduction = new File("PlayerTempletR.png");
+                requesterIconFile = new URL(event.getAuthor().getAvatarUrl());
+                uploaderIconFile = searchIcon(trackVideo.get("author_url").toString());
+
+                if (TypeID == 0) {
+                    img = imgProcessor.processImage(trackVideo, canvasFileFull, requesterIconFile, uploaderIconFile, event.getAuthor().getName(), track.getDuration(), tags);
+                    //loadingMsg.delete().queue();
+                    action = event.getChannel().sendFile(img);
+                } else if (TypeID == 1) {
+                    img = imgprocTwo.processImage(trackVideo, canvasFileReduction, requesterIconFile, uploaderIconFile, event.getAuthor().getName());
+                    //loadingMsg.delete().queue();
+                    action = event.getChannel().sendFile(img);
+                } else {
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.setColor(new Color(0x244aff));
+                    eb.addField(trackInfo.title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getAuthor().getName()), false);
+                    action = event.getChannel().sendMessage(eb.build());
+                }
+                return action;
             }
 
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
