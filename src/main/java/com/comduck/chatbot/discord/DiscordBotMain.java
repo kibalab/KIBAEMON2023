@@ -135,7 +135,34 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        Twitter.AddObserver(event.getJDA(), "939107434788704267", "kjh030529");
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", new String[]{
+                "kjh030529",
+                "key_official",
+                "primadoll_pr",
+                "visualantena",
+                "DiVe_staff",
+                "GenBar_"
+        }, 60000);
+
+        Twitter.AddObserver(event.getJDA(), "958690109316796416", new String[]{ // 우리집 비주얼아츠
+                "key_official",
+                "primadoll_pr",
+                "visualantena",
+        }, 5000);
+
+        Twitter.AddObserver(event.getJDA(), "995657839148290130", new String[]{ // 배칠수꽃배달 쿠라-알리미
+                "DiVe_staff",
+                "GenBar_"
+        }, 60000);
+
+        /*
+
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "key_official", 5000);
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "primadoll_pr", 5000);
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "visualantena", 5000);
+
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "DiVe_staff", 60000);
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "GenBar_", 60000);*/
     }
 
     public void onReadyMessage(GuildReadyEvent event) {
