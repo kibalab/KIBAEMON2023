@@ -1,10 +1,13 @@
 package com.comduck.chatbot.discord;
 
+import com.comduck.chatbot.discord.Twitter.Twitter;
 import com.comduck.chatbot.discord.audiocore.*;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
@@ -22,7 +25,6 @@ import org.json.simple.parser.JSONParser;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
@@ -131,7 +133,15 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         //onReadyMessage(event);
     }
 
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "kjh030529");
+    }
+
     public void onReadyMessage(GuildReadyEvent event) {
+
+
+
         for(TextChannel channel : event.getGuild().getTextChannels()) {
             boolean channelTrue = false;
             //channelTrue = channel.getId().equals("607208059504427018"); // Nerine Force - bot_command
