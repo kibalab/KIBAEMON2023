@@ -40,17 +40,28 @@ public class Observer {
                 while(true) {
                     if(CheckNewPost())
                     {
+
                         TweetList result = twitterClient.searchTweets("(from:"+targetID+")",
                                 AdditionalParameters.builder().recursiveCall(false).maxResults(10).build());
 
+                        if(result.getData().get(0).getText().startsWith("RT ")) continue;
+
                         EmbedBuilder eb = new EmbedBuilder();
                         eb.setColor(new Color(0x1BC3FF));
-                        if(result.getData().get(0).getUser().getUrl() != "") eb.setAuthor( result.getData().get(0).getUser().getDisplayedName(), result.getData().get(0).getUser().getUrl(), result.getData().get(0).getUser().getProfileImageUrl());
-                        else eb.setAuthor( result.getData().get(0).getUser().getDisplayedName(), null, result.getData().get(0).getUser().getProfileImageUrl());
+                        eb.setAuthor( result.getData().get(0).getUser().getDisplayedName(), "https://twitter.com/" + result.getData().get(0).getUser().getName() + "/status/" + result.getData().get(0).getId(), result.getData().get(0).getUser().getProfileImageUrl());
 
                         eb.addField("내용", result.getData().get(0).getText(),true);
-                        if(result.getData().get(0).getMedia().size() > 0)
-                            eb.setImage(result.getData().get(0).getMedia().get(0).getUrl());
+
+                        /*
+
+                        for(int i = 0; i< result.getData().get(0).getMedia().size(); i++)
+                        {
+                            eb.addField("이미지", result.getData().get(0).getMedia().get(i).getMediaUrl(),true);
+                            eb.setImage(result.getData().get(0).getMedia().get(i).getMediaUrl());
+                        }
+                        //이미지 지원안함
+                         */
+
                         eb.setFooter("KIBAEMON 2022", null);
                         bot.getTextChannelById(Channel).sendMessage(eb.build()).queue();
                     }
