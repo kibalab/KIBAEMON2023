@@ -1,11 +1,13 @@
 package com.comduck.chatbot.discord;
 
+import com.comduck.chatbot.discord.Twitter.Twitter;
 import com.comduck.chatbot.discord.audiocore.*;
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
@@ -23,7 +25,6 @@ import org.json.simple.parser.JSONParser;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
@@ -132,7 +133,42 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         //onReadyMessage(event);
     }
 
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", new String[]{
+                "kjh030529",
+                "key_official",
+                "primadoll_pr",
+                "visualantena",
+                "DiVe_staff",
+                "GenBar_"
+        }, 60000);
+
+        Twitter.AddObserver(event.getJDA(), "958690109316796416", new String[]{ // 우리집 비주얼아츠
+                "key_official",
+                "primadoll_pr",
+                "visualantena",
+        }, 5000);
+
+        Twitter.AddObserver(event.getJDA(), "995657839148290130", new String[]{ // 배칠수꽃배달 쿠라-알리미
+                "DiVe_staff",
+                "GenBar_"
+        }, 60000);
+
+        /*
+
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "key_official", 5000);
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "primadoll_pr", 5000);
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "visualantena", 5000);
+
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "DiVe_staff", 60000);
+        Twitter.AddObserver(event.getJDA(), "939107434788704267", "GenBar_", 60000);*/
+    }
+
     public void onReadyMessage(GuildReadyEvent event) {
+
+
+
         for(TextChannel channel : event.getGuild().getTextChannels()) {
             boolean channelTrue = false;
             //channelTrue = channel.getId().equals("607208059504427018"); // Nerine Force - bot_command
