@@ -807,6 +807,21 @@ public class CommandManager {
         }
     }
 
+    public void twitterCommand(GenericMessageEvent event, String msg)
+    {
+        if(event.getGuild().getIdLong() == 814906163111526412L || event.getGuild().getIdLong() == 1139237196902178881L)
+        {
+            Pattern pattern = Pattern.compile("(https?://)(www\\.)?(twitter.com|x.com)(/\\S*)\\b");
+            Matcher matcher = pattern.matcher(msg);
+
+            StringBuffer sb = new StringBuffer();
+            while (matcher.find()) {
+                String replacedString = matcher.group(1) + "fxtwitter.com" + matcher.group(4);
+                event.getChannel().sendMessage(replacedString).queue();
+            }
+        }
+    }
+
     private static String SvSt_SettingDataQuery = "UPDATE ServerSetting SET %s='%s' WHERE id=%s;";
     /*
     == 서버 세팅 ==

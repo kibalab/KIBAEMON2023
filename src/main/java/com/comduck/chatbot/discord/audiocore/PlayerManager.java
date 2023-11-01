@@ -180,7 +180,7 @@ public class PlayerManager {
                 System.out.println("[PlayerManager] Working Directory : " + path);
 
                 trackVideo = yp.getVideo(track.getIdentifier());
-                canvasFileFull = new File("PlayerTempletF2.png");
+                canvasFileFull = new File("PlayerTempletF3.png");
                 canvasFileReduction = new File("PlayerTempletR.png");
                 requesterIconFile = new URL(event.getAuthor().getAvatarUrl());
                 uploaderIconFile = searchIcon(trackVideo.get("author_url").toString());

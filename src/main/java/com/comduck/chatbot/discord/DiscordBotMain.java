@@ -1,6 +1,5 @@
 package com.comduck.chatbot.discord;
 
-import com.comduck.chatbot.discord.Twitter.Twitter;
 import com.comduck.chatbot.discord.audiocore.*;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import net.dv8tion.jda.api.AccountType;
@@ -135,34 +134,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        Twitter.AddObserver(event.getJDA(), "939107434788704267", new String[]{
-                "kjh030529",
-                "key_official",
-                "primadoll_pr",
-                "visualantena",
-                "DiVe_staff",
-                "GenBar_"
-        }, 60000);
 
-        Twitter.AddObserver(event.getJDA(), "958690109316796416", new String[]{ // 우리집 비주얼아츠
-                "key_official",
-                "primadoll_pr",
-                "visualantena",
-        }, 5000);
-
-        Twitter.AddObserver(event.getJDA(), "995657839148290130", new String[]{ // 배칠수꽃배달 쿠라-알리미
-                "DiVe_staff",
-                "GenBar_"
-        }, 60000);
-
-        /*
-
-        Twitter.AddObserver(event.getJDA(), "939107434788704267", "key_official", 5000);
-        Twitter.AddObserver(event.getJDA(), "939107434788704267", "primadoll_pr", 5000);
-        Twitter.AddObserver(event.getJDA(), "939107434788704267", "visualantena", 5000);
-
-        Twitter.AddObserver(event.getJDA(), "939107434788704267", "DiVe_staff", 60000);
-        Twitter.AddObserver(event.getJDA(), "939107434788704267", "GenBar_", 60000);*/
     }
 
     public void onReadyMessage(GuildReadyEvent event) {
@@ -513,11 +485,15 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             event.getChannel().sendMessage(eb.build()).queue();
             System.out.print("BigEmoji Pring OK");
         }
+
+        msg = event.getMessage().getContentRaw();
+
+        GetChannelCommandManager(event).twitterCommand(event, msg);
+
         if (!event.getMessage().getContentRaw().startsWith("?")) {
             return false;
-        } else {
-            msg = event.getMessage().getContentRaw();
         }
+
         if (event.getGuild().getName() == "Nerine force") {
             if (event.getChannel().getName() != "bot-command") {
                 return false;
@@ -605,6 +581,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             GetChannelCommandManager(event).favoriteCommand(event, msg);
         } else if (msg.startsWith("change")) {
             GetChannelCommandManager(event).ChangeFavKeyCommand(event, msg);
+        } else if (msg.startsWith("samsung")) {
+            GetChannelCommandManager(event).samsungCommand(event);
         }
     }
 
