@@ -41,6 +41,9 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     }
 
     private void start(String bot) throws Exception {
+        ResourceManager.loadAll();
+        com.comduck.chatbot.discord.commands.CommandManager.LoadAllCommands();
+
         ImageIO.scanForPlugins();
         commandManagerMap = new HashMap<>();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
@@ -301,6 +304,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     //Class.forName("org.sqlite.JDBC"); 모듈이 있는지 검사
     public void putMessageDB(GenericMessageEvent event) {
+        /*
         try {
             Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
 
@@ -332,6 +336,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         } catch (Exception e) {
             e.printStackTrace();
         }
+        */
     }
 
     private static String SvSt_SettingDataQuery = "INSERT INTO ServerSetting(Name, ID, PlayDisplay, PlayVolume) VALUES(?, ?, ?, ?);";
@@ -520,6 +525,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
         AudioPlayer player = musicManager.player;
         TrackScheduler scheduler = musicManager.scheduler;
+
+        com.comduck.chatbot.discord.commands.CommandManager.ExcuteMessageCommend(msg.split(" ")[0], event, msg);
 
         //커맨드 호출
         if (msg.startsWith("help") || msg.startsWith("hlp")) {
