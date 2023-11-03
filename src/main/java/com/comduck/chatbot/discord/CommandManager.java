@@ -10,7 +10,11 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import org.reflections.Reflections;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 
 public class CommandManager {
@@ -34,7 +38,7 @@ public class CommandManager {
         Instances.put(guild.getId(), new BotInstance(musicManager, player, scheduler));
     }
 
-    static public void LoadAllCommands() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    static public void LoadAllCommands() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, MalformedURLException {
         Reflections reflections = new Reflections(CommandPackage);
         Set<Class<? extends Command>> classes = reflections.getSubTypesOf(Command.class);
 

@@ -14,11 +14,13 @@ public class ResourceManager {
 
     static public void loadAll()
     {
+        /*
         System.out.println("[ Resources List ]");
         for (final File file: ResourcesPath.listFiles()) {
             _resources.put(file.getName(), file);
             System.out.println(file.getName());
         }
+        */
     }
 
     static public File getResources(String name) {

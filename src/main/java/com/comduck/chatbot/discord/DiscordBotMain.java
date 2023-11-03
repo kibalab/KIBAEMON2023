@@ -20,6 +20,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.reflections.Reflections;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -39,6 +40,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     }
 
     private void start(String bot) throws Exception {
+
         ResourceManager.loadAll();
         CommandManager.LoadAllCommands();
         ProcessorManager.LoadAllCommands();
