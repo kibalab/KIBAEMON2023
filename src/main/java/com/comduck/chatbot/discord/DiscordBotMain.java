@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord;
 
 import com.comduck.chatbot.discord.audiocore.*;
+import com.comduck.chatbot.discord.commands.CommandManager;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDABuilder;
@@ -34,7 +35,7 @@ import java.sql.*;
 public class DiscordBotMain extends ListenerAdapter implements PostCommandListener {
 
     Queue commandQueue = new LinkedList<GenericMessageEvent>();
-    HashMap<String, CommandManager> commandManagerMap;
+    HashMap<String, OLD_CommandManager> commandManagerMap;
 
     public static void main(String[] args) throws Exception {
         StartArgumentCommand(args);
@@ -42,7 +43,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     private void start(String bot) throws Exception {
         ResourceManager.loadAll();
-        com.comduck.chatbot.discord.commands.CommandManager.LoadAllCommands();
+        CommandManager.LoadAllCommands();
 
         ImageIO.scanForPlugins();
         commandManagerMap = new HashMap<>();
@@ -84,21 +85,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         super.onGuildJoin(event);
-        PlayerManager manager = PlayerManager.getInstance();
-        GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
-
-        /*
-        나중에 이거로 고칠것.
-        GuildMusicManager musicManager = new GuildMusicManager();
-         */
-
-        AudioPlayer player = musicManager.player;
-        TrackScheduler scheduler = musicManager.scheduler;
-
-        CommandManager cmdManager = new CommandManager(musicManager, player, scheduler);
-        cmdManager.addPostCommandListener(this);
-
-        commandManagerMap.put(event.getGuild().getId(), cmdManager);
+        CommandManager.CreateInstance(event.getGuild());
     }
 
     @Override
@@ -116,23 +103,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         }
         System.out.println(str);
 
-        PlayerManager manager = PlayerManager.getInstance();
-        GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
-
-        /*
-        나중에 이거로 고칠것.
-        GuildMusicManager musicManager = new GuildMusicManager();
-         */
-
-        AudioPlayer player = musicManager.player;
-        TrackScheduler scheduler = musicManager.scheduler;
-
-        CommandManager cmdManager = new CommandManager(musicManager, player, scheduler);
-        cmdManager.addPostCommandListener(this);
-
-        commandManagerMap.put(event.getGuild().getId(), cmdManager);
-
-        //onReadyMessage(event);
+        CommandManager.CreateInstance(event.getGuild());
     }
 
     @Override
@@ -179,8 +150,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     public void onShutdown(ShutdownEvent event) {
         super.onShutdown(event);
 
-        for (CommandManager cmdManager : commandManagerMap.values()) {
-            cmdManager.removePostCommandListener(this);
+        for (BotInstance instance: CommandManager.Instances.values()) {
+            instance.removePostCommandListener(this);
         }
     }
 
@@ -236,15 +207,15 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         //Pause
         if (event.getReactionEmote().getName().equals("⏯")) {
-            commandManagerMap.get(event.getGuild().getId()).pauseCommand(event);
+            CommandManager.ExcuteMessageCommend("pause", event, "");
         }
         //Stop
         if (event.getReactionEmote().getName().equals("⏹")) {
-            commandManagerMap.get(event.getGuild().getId()).stopCommand(event);
+            CommandManager.ExcuteMessageCommend("stop", event, "");
         }
         //Skip
         if (event.getReactionEmote().getName().equals("⏭")) {
-            commandManagerMap.get(event.getGuild().getId()).skipCommand(event);
+            CommandManager.ExcuteMessageCommend("skip", event, "");
         }
         //printURL
         if (event.getReactionEmote().getName().equals("🎦")) {
@@ -257,15 +228,15 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         }
         //TrackList
         if (event.getReactionEmote().getName().equals("\uD83C\uDFB6")) {
-            commandManagerMap.get(event.getGuild().getId()).tracklistCommand(event);
+            CommandManager.ExcuteMessageCommend("tracklist", event, "");
         }
         //Shuffle TrackList
         if (event.getReactionEmote().getName().equals("\uD83D\uDD00")) {
-            commandManagerMap.get(event.getGuild().getId()).shuffleCommand(event);
+            CommandManager.ExcuteMessageCommend("shuffle", event, "");
         }
         //Repeat
         if (event.getReactionEmote().getName().equals("\uD83D\uDD02")) {
-            commandManagerMap.get(event.getGuild().getId()).repeatCommand(event);
+            CommandManager.ExcuteMessageCommend("repeat", event, "");
         }
     }
 
@@ -273,8 +244,8 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
         if (!event.getUser().isBot()) {
             if (event.getReactionEmote().getName().equals("⭐")) {
-                String Url = commandManagerMap.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().uri;
-                String Title = commandManagerMap.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().title;
+                String Url = CommandManager.Instances.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().uri;
+                String Title = CommandManager.Instances.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().title;
 
                 AddFavoriteVideo(event, Url, Title);
             }
@@ -285,7 +256,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     public void onMessageReactionRemove(@NotNull MessageReactionRemoveEvent event) {
         if (!event.getUser().isBot()) {
             if (event.getReactionEmote().getName().equals("⭐")) {
-                String Url = commandManagerMap.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().uri;
+                String Url = CommandManager.Instances.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().uri;
 
                 DeleteFavoriteVideo(event, Url);
             }
@@ -444,7 +415,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                 wait_reaction(sendMsg, "⭐");
                 System.out.println("[DiscordBotMain] OnEnd Create Reaction Remote");
                 ClearLastMessageReaction(event);
-                commandManagerMap.get(event.getGuild().getId()).musicManager.lastPlayMessage = sendMsg;
+                CommandManager.Instances.get(event.getGuild().getId()).musicManager.lastPlayMessage = sendMsg;
                 System.out.println("[DiscordBotMain] Update Last message");
                 return true;
             }
@@ -453,7 +424,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     }
 
     private void ClearLastMessageReaction(MessageReceivedEvent event){
-        Message last = commandManagerMap.get(event.getGuild().getId()).musicManager.lastPlayMessage;
+        Message last = CommandManager.Instances.get(event.getGuild().getId()).musicManager.lastPlayMessage;
         if(last != null) {
             last.clearReactions().queue();
             System.out.println("[DiscordBotMain] Remove Last message reactions");
@@ -493,7 +464,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         msg = event.getMessage().getContentRaw();
 
-        GetChannelCommandManager(event).twitterCommand(event, msg);
+        //GetChannelCommandManager(event).twitterCommand(event, msg);
 
         if (!event.getMessage().getContentRaw().startsWith("?")) {
             return false;
@@ -521,35 +492,23 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      */
     private void botCommands(final MessageReceivedEvent event, String msg) {
 
-        PlayerManager manager = PlayerManager.getInstance();
-        GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
-        AudioPlayer player = musicManager.player;
-        TrackScheduler scheduler = musicManager.scheduler;
+        String cmd = msg.split(" ")[0];
+        CommandManager.ExcuteMessageCommend(cmd, event, msg);
 
-        com.comduck.chatbot.discord.commands.CommandManager.ExcuteMessageCommend(msg.split(" ")[0], event, msg);
+
+        /*
 
         //커맨드 호출
         if (msg.startsWith("help") || msg.startsWith("hlp")) {
             GetChannelCommandManager(event).helpCommand(event);
         }else if (msg.startsWith("run -n")) {
             GetChannelCommandManager(event).noticeCommand(event);
-        } else if (msg.startsWith("test")) {
-            cmdTest(event);
-        } else if (msg.startsWith("play")) {
-            GetChannelCommandManager(event).playCommand(event, msg);
-            //cmdPlay(event, msg);
-        } else if (msg.startsWith("pause")) {
-            GetChannelCommandManager(event).pauseCommand(event);
-            //cmdPause(event);
         } else if (msg.startsWith("join")) {
             GetChannelCommandManager(event).joinCommand(event, msg);
             //cmdJoin(event);
         } else if (msg.startsWith("leave") || msg.startsWith("out")) {
             GetChannelCommandManager(event).leaveCommand(event);
             //cmdLeave(event);
-        } else if (msg.startsWith("stop")) {
-            GetChannelCommandManager(event).stopCommand(event);
-            //cmdStop(event);
         } else if (msg.startsWith("skip") || msg.startsWith("next")) {
             GetChannelCommandManager(event).skipCommand(event);
             //cmdSkip(event);
@@ -591,30 +550,15 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         } else if (msg.startsWith("samsung")) {
             GetChannelCommandManager(event).samsungCommand(event);
         }
+
+         */
     }
 
-    public CommandManager GetChannelCommandManager(MessageReceivedEvent event) {
+    public OLD_CommandManager GetChannelCommandManager(MessageReceivedEvent event) {
         putMessageDB(event);
 
         return commandManagerMap.get(event.getGuild().getId());
     }
-
-    //#region 명령어 함수
-    //명령어 함수////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //유일하게 메인에 남은 명령어 ( 테스트용 )
-    private boolean cmdTest(MessageReceivedEvent event) {
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setTitle("OK", null);
-        eb.setColor(new Color(0x244aff));
-        eb.addField("Test Embed", "이 Embed 메시지는 다용도 테스트 메시지 입니다.", false);
-        event.getChannel().sendMessage(eb.build()).queue();
-        Message sendMsg = event.getMessage();
-        wait_reaction(sendMsg, "⏹");
-        return true;
-    }
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //미완성
     private void wait_reaction(Message msg, String emote) {
