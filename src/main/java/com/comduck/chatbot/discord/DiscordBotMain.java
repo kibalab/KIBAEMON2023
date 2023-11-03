@@ -1,12 +1,10 @@
 package com.comduck.chatbot.discord;
 
 import com.comduck.chatbot.discord.audiocore.*;
-import com.comduck.chatbot.discord.commands.CommandManager;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
@@ -35,7 +33,6 @@ import java.sql.*;
 public class DiscordBotMain extends ListenerAdapter implements PostCommandListener {
 
     Queue commandQueue = new LinkedList<GenericMessageEvent>();
-    HashMap<String, OLD_CommandManager> commandManagerMap;
 
     public static void main(String[] args) throws Exception {
         StartArgumentCommand(args);
@@ -44,9 +41,9 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     private void start(String bot) throws Exception {
         ResourceManager.loadAll();
         CommandManager.LoadAllCommands();
+        ProcessorManager.LoadAllCommands();
 
         ImageIO.scanForPlugins();
-        commandManagerMap = new HashMap<>();
         JDABuilder builder = new JDABuilder(AccountType.BOT);
 
         JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader(new File("Bots.json"))));
@@ -438,43 +435,14 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      * @return
      */
     private boolean commandInterface(MessageReceivedEvent event) {
-        //접두사 여부 식별
-        if(event.getChannel().getId().contains("694734337647706123")) { // 우리집
-
-            event.getJDA().getGuildById("542727743909920798").getTextChannelById("542727744342196228").sendMessage(event.getMessage().getContentRaw()).queue();
-        }
-        if(event.getChannel().getId().contains("708914009385992194")) { // 가상시
-
-            event.getJDA().getGuildById("665080322085617665").getTextChannelById("665098737420337156").sendMessage(event.getMessage().getContentRaw()).queue();
-        }
         String msg = "";
-        if (event.getMessage().getEmotes().size() == 1 && event.getMessage().getContentRaw().startsWith("<") && event.getMessage().getContentRaw().endsWith(">") && event.getMessage().getGuild().getIdLong() != 102788723690700800L) { // 542727743909920798L
-            String emojiUrl = event.getMessage().getEmotes().get(0).getImageUrl();
-            User user  = event.getMessage().getAuthor();
-
-            event.getMessage().delete().queue();
-
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setAuthor(user.getName(), user.getAvatarUrl(), user.getAvatarUrl());
-            eb.setImage(emojiUrl);
-            eb.setColor(new Color(0x244aff));
-            event.getChannel().sendMessage(eb.build()).queue();
-            System.out.print("BigEmoji Pring OK");
-        }
 
         msg = event.getMessage().getContentRaw();
 
-        //GetChannelCommandManager(event).twitterCommand(event, msg);
+        ProcessorManager.ExcuteMessageProcessor(event, msg);
 
-        if (!event.getMessage().getContentRaw().startsWith("?")) {
-            return false;
-        }
+        if (!msg.startsWith("?")) return false;
 
-        if (event.getGuild().getName() == "Nerine force") {
-            if (event.getChannel().getName() != "bot-command") {
-                return false;
-            }
-        }
         for(String cmd : msg.split("\\n")) {
             cmd = cmd.substring(1, cmd.length());
             botCommands(event, cmd);
@@ -494,70 +462,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         String cmd = msg.split(" ")[0];
         CommandManager.ExcuteMessageCommend(cmd, event, msg);
-
-
-        /*
-
-        //커맨드 호출
-        if (msg.startsWith("help") || msg.startsWith("hlp")) {
-            GetChannelCommandManager(event).helpCommand(event);
-        }else if (msg.startsWith("run -n")) {
-            GetChannelCommandManager(event).noticeCommand(event);
-        } else if (msg.startsWith("join")) {
-            GetChannelCommandManager(event).joinCommand(event, msg);
-            //cmdJoin(event);
-        } else if (msg.startsWith("leave") || msg.startsWith("out")) {
-            GetChannelCommandManager(event).leaveCommand(event);
-            //cmdLeave(event);
-        } else if (msg.startsWith("skip") || msg.startsWith("next")) {
-            GetChannelCommandManager(event).skipCommand(event);
-            //cmdSkip(event);
-        } else if (msg.startsWith("volume") || msg.startsWith("vol")) {
-            GetChannelCommandManager(event).volumeCommand(event, msg);
-            //cmdVolume(event, msg);
-        } else if (msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("tl") || msg.startsWith("slist") || msg.startsWith("queue") || msg.startsWith("q")) {
-            GetChannelCommandManager(event).tracklistCommand(event);
-            //cmdTrackList(event);
-        } else if (msg.startsWith("goto")) {
-            GetChannelCommandManager(event).gotoCommand(event, msg);
-            //cmdGoTo(event, msg);
-        } else if (msg.startsWith("shuffle") || msg.startsWith("mix") || msg.startsWith("sf")) {
-            GetChannelCommandManager(event).shuffleCommand(event);
-            //cmdShuffle(event, msg);
-        } else if (msg.startsWith("repeat") || msg.startsWith("replay") || msg.startsWith("rp")) {
-            GetChannelCommandManager(event).repeatCommand(event);
-            //cmdRepeat(event);
-        } else if (msg.startsWith("clear") || msg.startsWith("clr") || msg.startsWith("cls")) {
-            GetChannelCommandManager(event).clearCommand(event, msg);
-        } else if (msg.startsWith("papago")) {
-            GetChannelCommandManager(event).papagoCommand(event, msg);
-        } else if (msg.startsWith("shopping") || msg.startsWith("shop")) {
-            GetChannelCommandManager(event).shoppingCommand(event, msg);
-        } else if (msg.startsWith("roulette") || msg.startsWith("rol")) {
-            GetChannelCommandManager(event).rouletteCommand(event, msg);
-        } else if (msg.startsWith("PlayingDisplay")) {
-            GetChannelCommandManager(event).PlayingDisplay(event, msg);
-        } else if (msg.startsWith("samsung")) {
-            GetChannelCommandManager(event).samsungCommand(event);
-        } else if (msg.startsWith("hangang")) {
-            GetChannelCommandManager(event).hangangCommand(event);
-        } else if (msg.startsWith("clip")) {
-            GetChannelCommandManager(event).ClipCommand(event, msg);
-        } else if (msg.startsWith("favorite")) {
-            GetChannelCommandManager(event).favoriteCommand(event, msg);
-        } else if (msg.startsWith("change")) {
-            GetChannelCommandManager(event).ChangeFavKeyCommand(event, msg);
-        } else if (msg.startsWith("samsung")) {
-            GetChannelCommandManager(event).samsungCommand(event);
-        }
-
-         */
-    }
-
-    public OLD_CommandManager GetChannelCommandManager(MessageReceivedEvent event) {
-        putMessageDB(event);
-
-        return commandManagerMap.get(event.getGuild().getId());
     }
 
     //미완성
