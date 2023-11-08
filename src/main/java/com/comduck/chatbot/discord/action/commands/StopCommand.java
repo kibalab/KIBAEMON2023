@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 public class StopCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         GenericMessageEvent genEvent = (GenericMessageEvent) e;
 
         //재생되고 있는 트랙이 있는지 확인

@@ -14,7 +14,7 @@ import java.awt.*;
 public class TestCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("OK", null);

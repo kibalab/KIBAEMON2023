@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 public class PauseCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         if (!instance.player.isPaused()) {
             instance.player.setPaused(true);
         } else {

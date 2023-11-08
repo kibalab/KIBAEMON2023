@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 public class TracklistCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent event, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent event, String msg, boolean isAdd) {
         GenericMessageEvent genEvent = (GenericMessageEvent) event;
 
         //재생되고 있는 트랙이 있는지 확인

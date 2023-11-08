@@ -1,3 +1,4 @@
 Manifest-Version: 1.0
 Main-Class: com.comduck.chatbot.discord.DiscordBotMain
+Import-Package: org.mariadb.jdbc
 

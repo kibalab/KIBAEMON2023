@@ -16,7 +16,7 @@ import java.io.File;
 public class ClipCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         MessageReceivedEvent event = (MessageReceivedEvent) e;
 
         msg = msg.replace("clip ", "");

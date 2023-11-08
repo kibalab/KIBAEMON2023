@@ -16,7 +16,7 @@ import java.awt.*;
 public class GotoCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         GenericMessageEvent genEvent = (GenericMessageEvent) e;
 
         msg = msg.replaceFirst("goto ", "");

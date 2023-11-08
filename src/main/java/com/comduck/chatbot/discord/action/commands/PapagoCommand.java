@@ -15,7 +15,7 @@ import java.awt.*;
 public class PapagoCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         GenericMessageEvent event = (GenericMessageEvent) e;
 
         MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;

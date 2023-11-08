@@ -16,7 +16,7 @@ import java.awt.*;
 public class JoinCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent event, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent event, String msg, boolean isAdd) {
         GenericMessageEvent genEvent = (GenericMessageEvent) event;
 
         String VchID = msg.replaceFirst("join", "").replace(" ", "");

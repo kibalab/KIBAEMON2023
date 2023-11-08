@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 public class PlayingDisplayCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         MessageReceivedEvent event = (MessageReceivedEvent) e;
 
         msg = msg.replaceFirst("PlayingDisplay ", "");

@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 @Permission(guildId = "814906163111526412") // 배칠수
 @Permission(guildId = "1169720331292905562") // Bot Test
+@Permission(guildId = "873927976197173249") // 오카부
 public class TwitterProcessor implements Processor {
 
     @Override

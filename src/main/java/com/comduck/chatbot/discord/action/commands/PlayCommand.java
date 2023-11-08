@@ -23,7 +23,7 @@ import java.util.List;
 public class PlayCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         GenericMessageEvent genEvent = (GenericMessageEvent) e;
 
         VoiceChannel Vch = null;

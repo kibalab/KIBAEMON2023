@@ -18,7 +18,7 @@ public class RouletteCommand implements Command {
     static Roulette roulette = new Roulette();
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         MessageReceivedEvent event = (MessageReceivedEvent) e;
 
         msg = msg.replace("roulette ", "").replace("rol ", "");

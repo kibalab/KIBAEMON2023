@@ -41,7 +41,6 @@ public class ProcessorManager {
                         if(perm.userId().equals(((MessageReceivedEvent) event).getAuthor().getId()) || perm.userId().isEmpty())
                             excutable |= true;
 
-            System.out.println(excutable);
             if(excutable) p.OnProcess(event, msg);
         }
     }

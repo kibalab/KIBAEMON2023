@@ -12,7 +12,7 @@ import java.io.File;
 public class HelpCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         GenericMessageEvent event = (GenericMessageEvent) e;
 
         String helpmsg = "***임시 명령어 도움말***\r"+

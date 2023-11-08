@@ -14,7 +14,7 @@ public class FavoriteCommand implements Command {
     private static String Msg_loadFavoriteQuery = "SELECT * FROM FavoriteVideo WHERE Server=%s AND Key=\"%s\";";
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         MessageReceivedEvent event = (MessageReceivedEvent) e;
 
         msg = msg.replace("favorite", "");

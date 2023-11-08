@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.reflections.Reflections;
+import org.mariadb.jdbc.*;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -192,9 +193,20 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                 event.getMessageId(),
                 event.getReactionEmote().toString()
         ));
+
         if (!event.getUser().isBot()) {
             onReactionBindCommand(event);
         }
+    }
+
+    @Override
+    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
+        CommandManager.ExcuteReactionCommend(event.getReactionEmote(), event, true);
+    }
+
+    @Override
+    public void onMessageReactionRemove(@NotNull MessageReactionRemoveEvent event) {
+        CommandManager.ExcuteReactionCommend(event.getReactionEmote(), event, false);
     }
 
     /**
@@ -236,29 +248,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         //Repeat
         if (event.getReactionEmote().getName().equals("\uD83D\uDD02")) {
             CommandManager.ExcuteMessageCommend("repeat", event, "");
-        }
-    }
-
-    @Override
-    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        if (!event.getUser().isBot()) {
-            if (event.getReactionEmote().getName().equals("⭐")) {
-                String Url = CommandManager.Instances.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().uri;
-                String Title = CommandManager.Instances.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().title;
-
-                AddFavoriteVideo(event, Url, Title);
-            }
-        }
-    }
-
-    @Override
-    public void onMessageReactionRemove(@NotNull MessageReactionRemoveEvent event) {
-        if (!event.getUser().isBot()) {
-            if (event.getReactionEmote().getName().equals("⭐")) {
-                String Url = CommandManager.Instances.get(event.getGuild().getId()).player.getPlayingTrack().getInfo().uri;
-
-                DeleteFavoriteVideo(event, Url);
-            }
         }
     }
 
@@ -329,45 +318,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             preparedStatement.setString(4, "30");
             preparedStatement.executeUpdate();
         } catch (Exception e) {  }
-    }
-
-    private static String Rct_FavoriteAddQuery = "INSERT INTO FavoriteVideo(Title, Url, Server, UserID, Key) VALUES(?, ?, ?, ?, ?);";
-    private static String Rct_FavoriteDeleQuery = "DELETE FROM FavoriteVideo WHERE Url=? AND Server=?;";
-
-    public void AddFavoriteVideo(GenericMessageReactionEvent event, String Url, String Title){
-        int Key = (int)(Math.random() * 10000);
-
-        event.getChannel().sendMessage(String.format("> 현재곡 즐겨찾기 추가 ``%d`` ``%s``", Key, ((GenericMessageReactionEvent) event).getUser().getName())).queue();
-        try {
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
-
-            PreparedStatement preparedStatement = connection.prepareStatement(Rct_FavoriteAddQuery);
-            preparedStatement.setString(1, Title);
-            preparedStatement.setString(2, Url);
-            preparedStatement.setString(3, event.getGuild().getId());
-            preparedStatement.setString(4, event.getUserId());
-            preparedStatement.setInt(5, Key);
-            preparedStatement.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void DeleteFavoriteVideo(GenericMessageReactionEvent event, String Url){
-        event.getChannel().sendMessage(String.format("> 현재곡 즐겨찾기 제거 ``%s``", ((GenericMessageReactionEvent) event).getUser().getName())).queue();
-        try {
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
-
-            PreparedStatement preparedStatement = connection.prepareStatement(Rct_FavoriteDeleQuery);
-
-            preparedStatement.setString(1, Url);
-            preparedStatement.setString(2, event.getGuild().getId());
-            preparedStatement.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
