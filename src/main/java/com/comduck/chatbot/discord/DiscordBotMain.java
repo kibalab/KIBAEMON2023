@@ -22,6 +22,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.reflections.Reflections;
 import org.mariadb.jdbc.*;
+import se.michaelthelin.spotify.SpotifyApi;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -33,6 +34,7 @@ import java.util.*;
 import java.sql.*;
 
 public class DiscordBotMain extends ListenerAdapter implements PostCommandListener {
+    static public SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId("ee42dee9338d44b5a1dba476c5e75055").setClientSecret("da310a9627714fdfa2869742ed022986").build();
 
     Queue commandQueue = new LinkedList<GenericMessageEvent>();
 
@@ -70,7 +72,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             int i = 1;
             while(keys.hasNext()) {
                 String key = keys.next();
-                System.out.println(String.format("%d. %s : %s", i, key, bots.get(key)));
+                System.out.printf("%d. %s : %s%n", i, key, bots.get(key));
                 i++;
             }
         } else {
@@ -85,13 +87,11 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         super.onGuildJoin(event);
-        CommandManager.CreateInstance(event.getGuild());
+        new BotInstance(event.getGuild(), spotifyApi);
     }
 
     @Override
     public void onGuildReady(GuildReadyEvent event) {
-
-        CreateServerIndex(event);
         String str = null;
         str = event.getGuild().getName() + "[" + event.getGuild().getId() + "]" + " : ";
         for(TextChannel c : event.getGuild().getTextChannels()) {
@@ -103,7 +103,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         }
         System.out.println(str);
 
-        CommandManager.CreateInstance(event.getGuild());
+        new BotInstance(event.getGuild(), spotifyApi);
     }
 
     @Override
@@ -149,10 +149,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     @Override
     public void onShutdown(ShutdownEvent event) {
         super.onShutdown(event);
-
-        for (BotInstance instance: CommandManager.Instances.values()) {
-            instance.removePostCommandListener(this);
-        }
     }
 
 
@@ -160,12 +156,12 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
         super.onGuildVoiceLeave(event);
 
-        System.out.println(String.format(
-                "{'Type': 'LeaveVoice', 'Guild_Name': '%s#%s', 'VoiceChennal_Name': '%s#%s', 'User': '%s#%s'}",
+        System.out.printf(
+                "{'Type': 'LeaveVoice', 'Guild_Name': '%s#%s', 'VoiceChennal_Name': '%s#%s', 'User': '%s#%s'}%n",
                 event.getGuild().getName(), event.getGuild().getId(),
                 event.getChannelLeft().getName(), event.getChannelLeft().getId(),
                 event.getMember().getUser().getName(), event.getMember().getUser().getId()
-        ));
+        );
 
         if (event.getChannelLeft().getMembers().size() == 1) {
             try {
@@ -185,14 +181,14 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     @Override
     public void onGenericMessageReaction(GenericMessageReactionEvent event) {
         super.onGenericMessageReaction(event);
-        System.out.println(String.format(
-                "{'Type': 'Reaction', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}",
+        System.out.printf(
+                "{'Type': 'Reaction', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}%n",
                 event.getGuild().getName(), event.getGuild().getId(),
                 event.getChannel().getName(), event.getChannel().getId(),
                 event.getUser().getName(), event.getUser().getId(),
                 event.getMessageId(),
-                event.getReactionEmote().toString()
-        ));
+                event.getReactionEmote()
+        );
 
         if (!event.getUser().isBot()) {
             onReactionBindCommand(event);
@@ -256,81 +252,17 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      *
      * @param event
      */
-
-    public final static String MSG_DATABASE = "log.db";
-    private static String Msg_logDataQuery = "INSERT INTO Message(Type, Guild_Name, Chennal_Name, Author, MessageID, Context, Date) VALUES(?, ?, ?, ?, ?, ?, strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime'));";
-    private static String Rct_logDataQuery = "INSERT INTO Reaction(Type, Guild_Name, Chennal_Name, Author, MessageID, Emote, Date) VALUES(?, ?, ?, ?, ?, ?, strftime('%Y-%m-%d %H:%M:%f', 'now', 'localtime'));";
-
-    //Class.forName("org.sqlite.JDBC"); 모듈이 있는지 검사
-    public void putMessageDB(GenericMessageEvent event) {
-        /*
-        try {
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
-
-            if(event instanceof MessageReceivedEvent) {
-                //"{'Type': 'Message#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Context': '%s'}"
-                MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
-                PreparedStatement preparedStatement = connection.prepareStatement(Msg_logDataQuery);
-                preparedStatement.setString(1, "Message");
-                preparedStatement.setString(2, msgEvent.getGuild().getName() + '#' + msgEvent.getGuild().getId());
-                preparedStatement.setString(3, msgEvent.getChannel().getName() + '#' + msgEvent.getChannel().getId());
-                preparedStatement.setString(4, msgEvent.getAuthor().getName() + '#' + msgEvent.getAuthor().getId());
-                preparedStatement.setString(5, msgEvent.getMessage().getId());
-                preparedStatement.setString(6, msgEvent.getMessage().getContentRaw());
-                preparedStatement.executeUpdate();
-                connection.close();
-            } else {
-                //"{'Type': 'Reaction', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}"
-                GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
-                PreparedStatement preparedStatement = connection.prepareStatement(Rct_logDataQuery);
-                preparedStatement.setString(1, "Reaction");
-                preparedStatement.setString(2, reactionEvent.getGuild().getName() + '#' + reactionEvent.getGuild().getId());
-                preparedStatement.setString(3, reactionEvent.getChannel().getName() + '#' + reactionEvent.getChannel().getId());
-                preparedStatement.setString(4, reactionEvent.getUser().getName() + '#' + reactionEvent.getUser().getId());
-                preparedStatement.setString(5, reactionEvent.getMessageId());
-                preparedStatement.setString(6, reactionEvent.getReactionEmote().toString());
-                preparedStatement.executeUpdate();
-                connection.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        */
-    }
-
-    private static String SvSt_SettingDataQuery = "INSERT INTO ServerSetting(Name, ID, PlayDisplay, PlayVolume) VALUES(?, ?, ?, ?);";
-    /*
-    == 서버 세팅 ==
-    [1] 서버이름
-    [2] 서버아이디
-    [3] 재생표시 방법
-    [4] 현재서버 재생볼륨
-    ==============
-     */
-    public void CreateServerIndex(GuildReadyEvent event) {
-        try {
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:log.db");
-            Statement statement = connection.createStatement();
-            PreparedStatement preparedStatement = connection.prepareStatement(SvSt_SettingDataQuery);
-            preparedStatement.setString(1, event.getGuild().getName());
-            preparedStatement.setString(2, event.getGuild().getId());
-            preparedStatement.setString(3, "0");
-            preparedStatement.setString(4, "30");
-            preparedStatement.executeUpdate();
-        } catch (Exception e) {  }
-    }
-
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         //로그 출력
-        System.out.println(String.format(
-                "{'Type': 'Message#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'Context': '%s'}",
+        System.out.printf(
+                "{'Type': 'Message#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'Context': '%s'}%n",
                 event.getMessage().getId(),
                 event.getGuild().getName(), event.getGuild().getId(),
                 event.getChannel().getName(), event.getChannel().getId(),
                 event.getAuthor().getName(), event.getAuthor().getId(),
                 event.getMessage().getContentRaw()
-        ));
+        );
         //System.out.println("[Log] " + event.getGuild().getName() + event.getAuthor().getName().getName() + " : " + event.getMessage().getContentDisplay());
 
         if (event.getAuthor().isBot()) {
@@ -342,7 +274,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         //커맨드 모음에 데이터 인풋
         boolean commandRun = commandInterface(event);
         if (commandRun) {
-            System.out.println( String.format( "{'Error': 'Unknown Command', 'Context': '%s'}", event.getMessage().getContentRaw() ) );
+            System.out.printf("{'Error': 'Unknown Command', 'Context': '%s'}%n", event.getMessage().getContentRaw() );
             }
         }
 
@@ -364,7 +296,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                 wait_reaction(sendMsg, "⭐");
                 System.out.println("[DiscordBotMain] OnEnd Create Reaction Remote");
                 ClearLastMessageReaction(event);
-                CommandManager.Instances.get(event.getGuild().getId()).musicManager.lastPlayMessage = sendMsg;
+                BotInstance.getInstance(event.getGuild().getId()).musicManager.lastPlayMessage = sendMsg;
                 System.out.println("[DiscordBotMain] Update Last message");
                 return true;
             }
@@ -373,7 +305,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     }
 
     private void ClearLastMessageReaction(MessageReceivedEvent event){
-        Message last = CommandManager.Instances.get(event.getGuild().getId()).musicManager.lastPlayMessage;
+        Message last = BotInstance.getInstance(event.getGuild().getId()).musicManager.lastPlayMessage;
         if(last != null) {
             last.clearReactions().queue();
             System.out.println("[DiscordBotMain] Remove Last message reactions");
@@ -396,7 +328,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         if (!msg.startsWith("?")) return false;
 
         for(String cmd : msg.split("\\n")) {
-            cmd = cmd.substring(1, cmd.length());
+            cmd = cmd.substring(1);
             botCommands(event, cmd);
         }
 
@@ -419,14 +351,14 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     //미완성
     private void wait_reaction(Message msg, String emote) {
         msg.addReaction(emote).queue();
-        System.out.println(String.format("[DiscordBotMain] Set Reaction : %s to %s", emote, msg.getId()));
+        System.out.printf("[DiscordBotMain] Set Reaction : %s to %s%n", emote, msg.getId());
     }
 
     @Override
     public void onPostCommand(GenericMessageEvent genericMessageEvent) {
         try {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) genericMessageEvent;
-            System.out.println(String.format("[DiscordBotMain] CommandQueue Add data: %s", msgEvent.getMessage().getContentRaw()));
+            System.out.printf("[DiscordBotMain] CommandQueue Add data: %s%n", msgEvent.getMessage().getContentRaw());
             commandQueue.add(msgEvent.getMessage());
         } catch (Exception e) {
 

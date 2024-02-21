@@ -7,8 +7,8 @@ import java.lang.annotation.RetentionPolicy;
 @Repeatable(Permissions.class)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Permission {
-    public String guildId() default "";
-    public String channelId() default "";
-    public String userId() default "";
+    String guildId() default "";
+    String channelId() default "";
+    String userId() default "";
 }
 

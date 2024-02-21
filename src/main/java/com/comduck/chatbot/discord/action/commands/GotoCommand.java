@@ -29,17 +29,16 @@ public class GotoCommand implements Command {
                 MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
-                        msgEvent.getAuthor().getName().toString()
+                        msgEvent.getAuthor().getName()
                 ), false);
             } else if (e instanceof GenericMessageReactionEvent) {
                 GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
-                        reactionEvent.getUser().getName().toString()
+                        reactionEvent.getUser().getName()
                 ), false);
             }
             genEvent.getChannel().sendMessage(eb.build()).queue();
-            return;
         } else { //비어있지 않으면
 
             //파라미터(시간 문자열)를 프레임단위로 환산하여 Position에 넣음

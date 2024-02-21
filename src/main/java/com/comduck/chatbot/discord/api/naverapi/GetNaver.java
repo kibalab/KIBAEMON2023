@@ -9,8 +9,8 @@ import java.net.URLEncoder;
 import java.util.LinkedHashMap;
 
 public class GetNaver {
-    private String APIclientId;//애플리케이션 클라이언트 아이디값";
-    private String APIclientSecret;//애플리케이션 클라이언트 시크릿값";
+    private final String APIclientId;//애플리케이션 클라이언트 아이디값";
+    private final String APIclientSecret;//애플리케이션 클라이언트 시크릿값";
 
     public GetNaver() {
         this.APIclientId = "aEDY5kTcPgBZelyX9f9W";//애플리케이션 클라이언트 아이디값";

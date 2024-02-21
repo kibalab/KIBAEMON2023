@@ -12,11 +12,7 @@ public class PauseCommand implements Command {
 
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
-        if (!instance.player.isPaused()) {
-            instance.player.setPaused(true);
-        } else {
-            instance.player.setPaused(false);
-        }
+        instance.player.setPaused(!instance.player.isPaused());
 
 
         if (e instanceof MessageReceivedEvent) {

@@ -9,7 +9,7 @@ public class ResourceManager {
 
     static public File ResourcesPath = new File("./src/main/resources");
 
-    static private HashMap<String, File> _resources = new HashMap<String, File>();
+    static private final HashMap<String, File> _resources = new HashMap<String, File>();
 
 
     static public void loadAll()

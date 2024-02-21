@@ -82,7 +82,7 @@ public class Shopping {
             }
         }
 
-        System.out.println(String.format("[Shopping] Find Price %s~%s", lowPrice, highPrice));
+        System.out.printf("[Shopping] Find Price %s~%s%n", lowPrice, highPrice);
 
         String price = String.format("%s ~ %s", lowPrice, f.format(highPrice));
 

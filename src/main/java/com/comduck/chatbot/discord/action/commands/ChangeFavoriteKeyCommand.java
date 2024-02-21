@@ -14,7 +14,7 @@ import java.sql.SQLException;
 @MessageCommand(name = {"change"})
 public class ChangeFavoriteKeyCommand implements Command {
 
-    private static String msg_ChangeKeyQuery = "UPDATE FavoriteVideo SET Key=\"%s\" WHERE Key=\"%s\";";
+    private static final String msg_ChangeKeyQuery = "UPDATE FavoriteVideo SET Key=\"%s\" WHERE Key=\"%s\";";
 
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {

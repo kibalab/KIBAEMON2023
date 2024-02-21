@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -65,7 +66,7 @@ public class post {
                 }
             }
 
-            OutputStreamWriter outStream = new OutputStreamWriter(http.getOutputStream(), "UTF-8");
+            OutputStreamWriter outStream = new OutputStreamWriter(http.getOutputStream(), StandardCharsets.UTF_8);
             PrintWriter writer = new PrintWriter(outStream);
             writer.write(buffer.toString());
             writer.flush();
@@ -80,7 +81,7 @@ public class post {
             //--------------------------
             //   서버에서 전송받기
             //--------------------------
-            InputStreamReader tmp = new InputStreamReader(http.getInputStream(), "UTF-8");
+            InputStreamReader tmp = new InputStreamReader(http.getInputStream(), StandardCharsets.UTF_8);
             BufferedReader reader = new BufferedReader(tmp);
             StringBuilder builder = new StringBuilder();
             String str;

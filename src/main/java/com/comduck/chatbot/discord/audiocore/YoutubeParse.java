@@ -9,6 +9,7 @@ import org.jsoup.select.Elements;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class YoutubeParse {
 
@@ -31,7 +32,7 @@ public class YoutubeParse {
 
         try {
             InputStream is = new URL(src).openStream();
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             String jsonText = readAll(rd);
             JSONObject j = (JSONObject) new JSONParser().parse(jsonText);
             j.put("id", id);

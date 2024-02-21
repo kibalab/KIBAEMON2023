@@ -39,7 +39,7 @@ public class ProcessorManager {
                 if(perm.guildId().equals(event.getGuild().getId()) || perm.guildId().isEmpty())
                     if(perm.channelId().equals(event.getChannel().getId()) || perm.channelId().isEmpty())
                         if(perm.userId().equals(((MessageReceivedEvent) event).getAuthor().getId()) || perm.userId().isEmpty())
-                            excutable |= true;
+                            excutable = true;
 
             if(excutable) p.OnProcess(event, msg);
         }

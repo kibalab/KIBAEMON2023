@@ -31,7 +31,7 @@ public class SkipCommand implements Command {
                 eb.setColor(new Color(0xff6624));
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
-                        ((MessageReceivedEvent) e).getAuthor().getName().toString()
+                        ((MessageReceivedEvent) e).getAuthor().getName()
                 ), false);
                 genEvent.getChannel().sendMessage(eb.build()).queue();
             } else {
@@ -48,7 +48,7 @@ public class SkipCommand implements Command {
                 eb.setColor(new Color(0xff6624));
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
-                        ((GenericMessageReactionEvent) e).getUser().getName().toString()
+                        ((GenericMessageReactionEvent) e).getUser().getName()
                 ), false);
                 genEvent.getChannel().sendMessage(eb.build()).queue();
             } else {
