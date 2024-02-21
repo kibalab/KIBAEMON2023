@@ -51,7 +51,7 @@ public class JoinCommand implements Command {
             eb.addField("오류 Error", String.format(
                     "%s 에 입장할수 없습니다.\n``%s``",
                     Vch.getName(),
-                    ((MessageReceivedEvent) event).getAuthor().getName().toString()
+                    ((MessageReceivedEvent) event).getAuthor().getName()
             ), false);
             genEvent.getChannel().sendMessage(eb.build()).queue();
 

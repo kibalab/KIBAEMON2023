@@ -13,7 +13,7 @@ public class Roulette {
     }
 
     public void betting(User user, int m) {
-        if (!userMoney.keySet().contains(user)) {
+        if (!userMoney.containsKey(user)) {
             userMoney.put(user, 5000000);
         }
         if (m > 10000) {

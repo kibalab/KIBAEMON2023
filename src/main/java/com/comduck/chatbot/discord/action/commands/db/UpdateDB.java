@@ -9,7 +9,7 @@ import java.sql.PreparedStatement;
 public class UpdateDB {
 
 
-    static private String SvSt_SettingDataQuery = "UPDATE ServerSetting SET %s='%s' WHERE id=%s;";
+    static private final String SvSt_SettingDataQuery = "UPDATE ServerSetting SET %s='%s' WHERE id=%s;";
     /*
     == 서버 세팅 ==
     [1] 서버이름

@@ -1,5 +1,6 @@
-package com.comduck.chatbot.discord.imgproc;
+package com.comduck.chatbot.discord.audiocore.imgproc;
 
+import net.dv8tion.jda.api.entities.User;
 import org.json.simple.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -18,19 +19,20 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public class ImageProcessor {
+public class YoutubePlayingImageProcessor {
 
     // 예시 코드
     // ImageProcessor processor = new ImageProcessor();
     // File outFile = processor.processImage(new File("testImage.png"), new File("testThum.png"), new File("iconTest.png"));
     // outFile 전송 후 파일 삭제
     // outFile.delete();
+    final File canvasFile = new File("PlayerTempletF3.png");
 
-   public ImageProcessor() {
+   public YoutubePlayingImageProcessor() {
 
    }
 
-    public File processImage(JSONObject details, File canvasFile, URL requesterIconFile, URL uploaderIconFile, String requester, long x_duration, String[] tags) {
+    public File processImage(JSONObject details, User user, URL uploaderIconFile, long x_duration, String[] tags) {
         try {
 
             String id = (String) details.get("id");
@@ -58,7 +60,7 @@ public class ImageProcessor {
             }
 
 
-            URLConnection uc = requesterIconFile.openConnection();
+            URLConnection uc = new URL(user.getAvatarUrl()).openConnection();
             uc.addRequestProperty("User-Agent",
                     "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)");
             BufferedImage ricon = ImageIO.read(uc.getInputStream());
@@ -77,7 +79,7 @@ public class ImageProcessor {
 
             //Requster Name TEXT
             g2d.setFont(g.getFont().deriveFont(43f));
-            g2d.drawString(requester, 788, 636);
+            g2d.drawString(user.getName(), 788, 636);
 
             //Video Title TEXT
             g2d.setFont(SansBold);

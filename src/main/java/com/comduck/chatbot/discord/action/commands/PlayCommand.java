@@ -14,6 +14,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,13 +25,15 @@ import java.util.List;
 public class PlayCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) throws MalformedURLException {
         GenericMessageEvent genEvent = (GenericMessageEvent) e;
 
         VoiceChannel Vch = null;
         PlayerManager manager = PlayerManager.getInstance();
         AudioManager audiomng = genEvent.getGuild().getAudioManager();
         String url = msg.replaceFirst("play", "").replace(" ", "");
+        URL link = new URL(url);
+        String host = link.getHost();
 
         // GenericMessageEvent 종속 메소드 분리
         if (e instanceof MessageReceivedEvent) {
@@ -63,17 +67,11 @@ public class PlayCommand implements Command {
             }
             return;
         }else {
-            System.out.println(url);
+            //음악 재생
+            manager.loadAndPlay(genEvent, url);
+            manager.getGuildMusicManager(genEvent.getGuild()).player.setVolume(instance.globalVolume);
             if (WebUtil.isURL(url)) {
-                //음악 재생
-                manager.loadAndPlay(genEvent, url);
-                manager.getGuildMusicManager(genEvent.getGuild()).player.setVolume(instance.globalVolume);
-            } else {
-                ArrayList<String> video = WebUtil.searchYoutube(url);
-                url = video.get(0);
-                //음악 재생
-                manager.loadAndPlay(genEvent, url);
-                manager.getGuildMusicManager(genEvent.getGuild()).player.setVolume(instance.globalVolume);
+
             }
         }
         //커맨드 실행 기록 이벤트 발생

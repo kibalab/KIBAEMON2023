@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import org.reflections.Reflections;
+import se.michaelthelin.spotify.SpotifyApi;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -23,21 +24,6 @@ public class CommandManager {
 
     static public HashMap<String, Command> commands = new HashMap<>();
     static public HashMap<String, Command> reactions = new HashMap<>();
-
-    static public HashMap<String, BotInstance> Instances = new HashMap<>();
-
-    static public void CreateInstance(Guild guild) {
-
-        System.out.println("[ Guild : "+guild.getName()+"]");
-
-        PlayerManager manager = PlayerManager.getInstance();
-        GuildMusicManager musicManager = manager.getGuildMusicManager(guild);
-
-        AudioPlayer player = musicManager.player;
-        TrackScheduler scheduler = musicManager.scheduler;
-
-        Instances.put(guild.getId(), new BotInstance(musicManager, player, scheduler));
-    }
 
     static public void LoadAllCommands() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, MalformedURLException {
         Reflections reflections = new Reflections(CommandPackage);
@@ -83,8 +69,8 @@ public class CommandManager {
     static public void ExcuteMessageCommend(String command, GenericMessageEvent event, String msg)
     {
         try {
-            commands.get(command).OnCommand(Instances.get(event.getGuild().getId()), event, msg, true);
-            commands.get(command).OnPostCommand(Instances.get(event.getGuild().getId()), event);
+            commands.get(command).OnCommand(BotInstance.getInstance(event.getGuild().getId()), event, msg, true);
+            commands.get(command).OnPostCommand(BotInstance.getInstance(event.getGuild().getId()), event);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -93,8 +79,8 @@ public class CommandManager {
     static public void ExcuteReactionCommend(MessageReaction.ReactionEmote reaction, GenericMessageEvent event, boolean isAdd)
     {
         try {
-            reactions.get(reaction.getEmoji()).OnCommand(Instances.get(event.getGuild().getId()), event, "", isAdd);
-            reactions.get(reaction.getEmoji()).OnPostCommand(Instances.get(event.getGuild().getId()), event);
+            reactions.get(reaction.getEmoji()).OnCommand(BotInstance.getInstance(event.getGuild().getId()), event, "", isAdd);
+            reactions.get(reaction.getEmoji()).OnPostCommand(BotInstance.getInstance(event.getGuild().getId()), event);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

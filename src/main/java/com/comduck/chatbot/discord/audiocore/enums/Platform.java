@@ -4,5 +4,6 @@ public enum Platform {
     http,
     Youtube,
     Soundcloud,
+    Spotify,
     Other
 }

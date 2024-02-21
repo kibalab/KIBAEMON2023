@@ -36,13 +36,13 @@ public class TracklistCommand implements Command {
                 MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
-                        ((MessageReceivedEvent) event).getAuthor().getName().toString()
+                        ((MessageReceivedEvent) event).getAuthor().getName()
                 ), false);
             } else if (event instanceof GenericMessageReactionEvent) {
                 GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
-                        ((GenericMessageReactionEvent) event).getUser().getName().toString()
+                        ((GenericMessageReactionEvent) event).getUser().getName()
                 ), false);
             }
             genEvent.getChannel().sendMessage(eb.build()).queue();

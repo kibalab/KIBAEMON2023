@@ -1,4 +1,4 @@
-package com.comduck.chatbot.discord.imgproc;
+package com.comduck.chatbot.discord.audiocore.imgproc;
 
 import org.json.simple.JSONObject;
 
