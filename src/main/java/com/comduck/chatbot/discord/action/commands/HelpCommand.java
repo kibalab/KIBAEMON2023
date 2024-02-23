@@ -5,6 +5,7 @@ import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
 
 import java.io.File;
 
@@ -43,7 +44,7 @@ public class HelpCommand implements Command {
                 "    samsung : 현재 삼성전자 주식을 확인합니다. (한강온도표시도 포함)\r"+
                 "```\r"+
                 "제작 : KIBA#4466\r";
-        event.getChannel().sendFile(new File("play_help.png")).queue();
+        event.getChannel().sendFiles(FileUpload.fromData(new File("play_help.png"))).queue();
         event.getChannel().sendMessage(helpmsg).queue();
     }
 

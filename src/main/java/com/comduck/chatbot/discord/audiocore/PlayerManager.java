@@ -8,12 +8,18 @@ import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManag
 import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeSearchProvider;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.hc.core5.http.ParseException;
 import org.json.simple.JSONObject;
 import com.comduck.chatbot.discord.audiocore.imgproc.YoutubePlayingImageProcessor;
@@ -57,7 +63,6 @@ public class PlayerManager {
         this.playerManager.registerSourceManager(pm);
         this.playerManager.registerSourceManager(new BandcampAudioSourceManager());
         this.playerManager.registerSourceManager(new VimeoAudioSourceManager());
-        this.playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         this.playerManager.registerSourceManager(new BeamAudioSourceManager());
         this.playerManager.registerSourceManager(new HttpAudioSourceManager());
         this.playerManager.registerSourceManager(SoundCloudAudioSourceManager.builder().build());
@@ -117,7 +122,7 @@ public class PlayerManager {
                 {
                     case Youtube:
                         try {
-                            MessageAction action = BuildPlayingMessage(track, trackInfo);
+                            MessageCreateAction action = BuildPlayingMessage(track, trackInfo);
 
                             //Switch Message
                             action.queue();
@@ -125,12 +130,12 @@ public class PlayerManager {
 
                         } catch (Exception e) {
                             e.printStackTrace();
-                            event.getChannel().sendFile(new File("AuthERROR.png")).queue();
+                            event.getChannel().sendFiles(FileUpload.fromData(new File("AuthERROR.png"))).queue();
                         }
                         break;
                     case Spotify:
                         try {
-                            MessageAction action = BuildPlayingMessage(track, trackInfo);
+                            MessageCreateAction action = BuildPlayingMessage(track, trackInfo);
 
                             //Switch Message
                             action.queue();
@@ -138,7 +143,7 @@ public class PlayerManager {
 
                         } catch (Exception e) {
                             e.printStackTrace();
-                            event.getChannel().sendFile(new File("AuthERROR.png")).queue();
+                            event.getChannel().sendFiles(FileUpload.fromData(new File("AuthERROR.png"))).queue();
                         }
                         break;
                     default:
@@ -146,7 +151,7 @@ public class PlayerManager {
                         eb.setColor(new Color(0x244aff));
                         eb.addField(trackInfo.title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getAuthor().getName()), false);
                         //loadingMsg.delete().queue();
-                        event.getChannel().sendMessage(eb.build()).queue();
+                        event.getChannel().sendMessageEmbeds(eb.build()).queue();
                         break;
 
                 }
@@ -155,7 +160,7 @@ public class PlayerManager {
                 play(musicManager, track);
             }
 
-            public MessageAction BuildPlayingMessage(AudioTrack track, AudioTrackInfo trackInfo) throws IOException, ParseException, SpotifyWebApiException {
+            public MessageCreateAction BuildPlayingMessage(AudioTrack track, AudioTrackInfo trackInfo) throws IOException, ParseException, SpotifyWebApiException {
                 File img = null;
                 File canvasFileFull = null;
                 File canvasFileReduction = null;
@@ -163,7 +168,7 @@ public class PlayerManager {
                 URL uploaderIconFile = null;
                 JSONObject trackVideo = null;
                 String[] tags = null;
-                MessageAction action = null;
+                MessageCreateAction action = null;
 
                 ImgprocTwo imgprocTwo = new ImgprocTwo();
 
@@ -186,20 +191,28 @@ public class PlayerManager {
                         YoutubePlayingImageProcessor youtubePlayingImageProcessor = new YoutubePlayingImageProcessor();
                         img = youtubePlayingImageProcessor.processImage(trackVideo, event.getAuthor(),uploaderIconFile, track.getDuration(), tags);
                         //loadingMsg.delete().queue();
-                        action = event.getChannel().sendFile(img);
+                        action = event.getChannel().sendFiles(FileUpload.fromData(img));
                         break;
                     case Spotify:
                         SpotifyPlayingImageProcessor spotifyPlayingImageProcessor = new SpotifyPlayingImageProcessor();
                         img = spotifyPlayingImageProcessor.processImage(event.getGuild(), SpotifyWebUtil.getTrack(event.getGuild(), trackUrl), event.getAuthor(), track.getDuration(), tags);
                         //loadingMsg.delete().queue();
-                        action = event.getChannel().sendFile(img);
+                        action = event.getChannel().sendFiles(FileUpload.fromData(img));
                         break;
                     default:
                         EmbedBuilder eb = new EmbedBuilder();
                         eb.setColor(new Color(0x244aff));
                         eb.addField(trackInfo.title, String.format("곡이 대기열에 추가되었습니다.\n``%s``", event.getAuthor().getName()), false);
-                        action = event.getChannel().sendMessage(eb.build());
+                        action = event.getChannel().sendMessageEmbeds(eb.build());
                 }
+
+                action.addActionRow(
+                        Button.primary("pause", "Pause").withStyle(ButtonStyle.SECONDARY),
+                        Button.primary("stop", "Stop").withStyle(ButtonStyle.SECONDARY),
+                        Button.primary("skip", "Skip").withStyle(ButtonStyle.SECONDARY),
+                        Button.primary("track", "Track List").withStyle(ButtonStyle.SECONDARY)
+                );
+
                 return action;
             }
 
@@ -219,7 +232,7 @@ public class PlayerManager {
                                 tracks.length,
                                 event.getAuthor().getName()
                         ), false);
-                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessageEmbeds(eb.build()).queue();
                 event.getMessage().delete().queue();
                 for (Object track : tracks) {
                     play(musicManager, (AudioTrack) track);
@@ -231,14 +244,14 @@ public class PlayerManager {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0xff3e3e));
                 eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n ``No Matches`` ``%s``", event.getAuthor().getName()), false);
-                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessageEmbeds(eb.build()).queue();
             }
 
             public void loadFailed(FriendlyException e) {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0xff3e3e));
                 eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n ``LoadFailed`` ``%s``", event.getAuthor().getName()), false);
-                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessageEmbeds(eb.build()).queue();
                 event.getChannel().sendMessage("> " + e.toString()).queue();
             }
         });
@@ -275,7 +288,7 @@ public class PlayerManager {
                                 audioPlaylist.getName(),
                                 event.getUser().getName()
                         ), false);
-                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessageEmbeds(eb.build()).queue();
 
                 play(musicManager, firstTrack);
             }
@@ -284,14 +297,14 @@ public class PlayerManager {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0xff3e3e));
                 eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getUser().getName()), false);
-                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessageEmbeds(eb.build()).queue();
             }
 
             public void loadFailed(FriendlyException e) {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0xff3e3e));
                 eb.addField(trackUrl, String.format("곡을 찾을수 없습니다.\n``%s``", event.getUser().getName()), false);
-                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessageEmbeds(eb.build()).queue();
                 event.getChannel().sendMessage("> " + e.toString()).queue();
             }
         });

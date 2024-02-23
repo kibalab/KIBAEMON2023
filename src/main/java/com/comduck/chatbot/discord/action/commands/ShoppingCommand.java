@@ -19,7 +19,7 @@ public class ShoppingCommand implements Command {
         MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
         Shopping shop = new Shopping();
         EmbedBuilder eb = shop.manager(msg.replace("shopping ", "").replace("shop ", ""));
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     @Override

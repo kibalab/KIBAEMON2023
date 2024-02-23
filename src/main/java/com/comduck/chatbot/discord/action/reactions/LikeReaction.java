@@ -6,11 +6,12 @@ import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.ReactionCommand;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.MessageReaction;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,7 +32,7 @@ public class LikeReaction implements Command {
         }
         event.getChannel().retrieveMessageById(event.getMessageId()).queue( m -> {
             for(MessageReaction reaction : m.getReactions()) {
-                if(reaction.getReactionEmote().getEmoji().equals("⭐"))
+                if(reaction.getEmoji().equals("⭐"))
                 {
                     if(reaction.getCount() >= 5) {
                         try {
@@ -45,7 +46,7 @@ public class LikeReaction implements Command {
 
                                 ResultSet r1 = MariaDB.Get(Table.SERVER_SETTINGS, "server_id", event.getGuild().getId());
                                 if(r1.next()) {
-                                    TextChannel ch = event.getGuild().getTextChannelById(r1.getString("like_ch_id"));
+                                    MessageChannel ch = event.getGuild().getTextChannelById(r1.getString("like_ch_id"));
                                     CopyMessage(event, ch);
                                 }
                             }
@@ -73,7 +74,7 @@ public class LikeReaction implements Command {
             String msgLink = "https://discord.com/channels/"+event.getGuild().getId()+"/"+event.getChannel().getId()+"/"+event.getMessageId();
             for (Message.Attachment a :message.getAttachments()) {
                 try {
-                    dest.sendFile(a.retrieveInputStream().get(30, TimeUnit.SECONDS), a.getFileName()).queue();
+                    dest.sendFiles(FileUpload.fromData(a.retrieveInputStream().get(30, TimeUnit.SECONDS), a.getFileName())).queue();
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 } catch (ExecutionException ex) {

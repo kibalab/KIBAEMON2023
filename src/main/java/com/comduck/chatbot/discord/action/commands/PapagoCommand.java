@@ -27,7 +27,7 @@ public class PapagoCommand implements Command {
         eb.setColor(new Color(0x1FFF2A));
         eb.setAuthor("Papago", "https://papago.naver.com/", "https://papago.naver.com/static/img/papago_og.png");
         eb.addField(String.format("[:flag_%s: -> :flag_%s:]", sourceLang, targetLang), result, false);
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     @Override

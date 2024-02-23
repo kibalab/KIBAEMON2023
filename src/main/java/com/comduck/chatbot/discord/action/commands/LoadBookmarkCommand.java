@@ -6,12 +6,14 @@ import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
 
+import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.ExecutionException;
@@ -59,7 +61,7 @@ public class LoadBookmarkCommand implements Command {
             String msgLink = "https://discord.com/channels/"+event.getGuild().getId()+"/"+event.getChannel().getId()+"/"+event.getMessageId();
             for (Message.Attachment a :message.getAttachments()) {
                 try {
-                    dest.sendFile(a.retrieveInputStream().get(30, TimeUnit.SECONDS), a.getFileName()).queue();
+                    dest.sendFiles(FileUpload.fromData(a.retrieveInputStream().get(30, TimeUnit.SECONDS), a.getFileName())).queue();
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 } catch (ExecutionException ex) {

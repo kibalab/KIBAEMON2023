@@ -6,7 +6,7 @@ import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
@@ -33,12 +33,11 @@ public class BookmarkShareCommand implements Command {
             if(ch.getTopic().startsWith(event.getAuthor().getId())) channel = ch;
         }
         Collection<Permission> perm = new ArrayList<>();
-        perm.add(Permission.MESSAGE_READ);
         perm.add(Permission.VIEW_CHANNEL);
 
         TextChannel finalChannel = channel;
-        event.getGuild().retrieveMemberById(event.getMessage().getMentions().get(0).getId()).queue(member -> {
-            finalChannel.createPermissionOverride(member).setAllow(perm).queue();
+        event.getGuild().retrieveMemberById(event.getMessage().getMentions().getMentions().get(0).getId()).queue(member -> {
+            finalChannel.upsertPermissionOverride(member).setAllowed(perm).queue();
             event.getChannel().sendMessage("> Invite complate!").queue();
         });
     }

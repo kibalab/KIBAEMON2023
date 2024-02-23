@@ -38,7 +38,7 @@ public class GotoCommand implements Command {
                         reactionEvent.getUser().getName()
                 ), false);
             }
-            genEvent.getChannel().sendMessage(eb.build()).queue();
+            genEvent.getChannel().sendMessageEmbeds(eb.build()).queue();
         } else { //비어있지 않으면
 
             //파라미터(시간 문자열)를 프레임단위로 환산하여 Position에 넣음

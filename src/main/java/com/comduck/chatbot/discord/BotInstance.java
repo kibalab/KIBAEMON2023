@@ -36,11 +36,9 @@ public class BotInstance {
     public AudioPlayer player; // = musicManager.player;
     public TrackScheduler scheduler; // = musicManager.scheduler;
     public SpotifyApi spotifyApi;
-    public List<PostCommandListener> postCommandListeners;
     public int globalVolume = 10;
 
     public BotInstance(Guild guild, SpotifyApi spotifyApi) {
-        this.postCommandListeners = new ArrayList<>();
         this.spotifyApi = spotifyApi;
         this.INSTANCE_GUILD = guild;
         CreateGuildAudioPlayer();
@@ -51,12 +49,11 @@ public class BotInstance {
     {
         PlayerManager manager = PlayerManager.getInstance();
 
-        manager.playerManager.registerSourceManager(new YoutubeAudioSourceManager(true));
+        manager.playerManager.registerSourceManager(new YoutubeAudioSourceManager());
         manager.playerManager.registerSourceManager(new BandcampAudioSourceManager());
-        manager.playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         manager.playerManager.registerSourceManager(new HttpAudioSourceManager());
         manager.playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
-        manager.playerManager.registerSourceManager(new NicoAudioSourceManager("kjh030529", "and7song&"));
+        manager.playerManager.registerSourceManager(new NicoAudioSourceManager("kjh030529@gmail.com", "and7song&"));
 
         this.musicManager = manager.getGuildMusicManager(INSTANCE_GUILD);
         this.player = musicManager.player;
@@ -65,22 +62,5 @@ public class BotInstance {
 
     static public BotInstance getInstance(String guildId) {
         return INSTANCES.get(guildId);
-    }
-
-    // 커맨드 실행 기록 이벤트의 리스너 생성
-    public void addPostCommandListener(PostCommandListener listener) {
-        this.postCommandListeners.add(listener);
-    }
-
-    // 커맨드 실행 기록 이벤트의 리스너 삭제
-    public void removePostCommandListener(PostCommandListener listener) {
-        this.postCommandListeners.remove(listener);
-    }
-
-    // 커맨드 실행 기록 이벤트 발생
-    public void raisePostCommand(GenericMessageEvent event) {
-        for (PostCommandListener listener : postCommandListeners) {
-            listener.onPostCommand(event);
-        }
     }
 }

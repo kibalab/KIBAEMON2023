@@ -4,7 +4,7 @@ import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import com.comduck.chatbot.discord.audiocore.PlayerManager;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
@@ -28,10 +28,10 @@ public class ClipCommand implements Command {
 
         // GenericMessageEvent 종속 메소드 분리
         if (event instanceof MessageReceivedEvent) {
-            Vch = event.getMember().getVoiceState().getChannel();
+            Vch = event.getMember().getVoiceState().getChannel().asVoiceChannel();
         } else {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
-            Vch = reactionEvent.getMember().getVoiceState().getChannel();
+            Vch = reactionEvent.getMember().getVoiceState().getChannel().asVoiceChannel();
         }
 
         if (!audiomng.isConnected()) {
@@ -42,7 +42,6 @@ public class ClipCommand implements Command {
         File clip = new File( "AudioClips/" + msg + ".mp3");
         if(clip.exists()){
             System.out.println("[CommandManager] Play Clip : " + clip.getAbsolutePath());
-            instance.raisePostCommand(event);
             PlayerManager playerManager = PlayerManager.getInstance();
             playerManager.loadAndPlay(event, clip.getAbsolutePath());
             playerManager.getGuildMusicManager(event.getGuild()).player.setVolume(instance.globalVolume * 2);

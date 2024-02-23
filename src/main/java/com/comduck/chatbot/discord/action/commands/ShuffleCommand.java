@@ -5,6 +5,7 @@ import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
@@ -55,6 +56,9 @@ public class ShuffleCommand implements Command {
         } else if (e instanceof GenericMessageReactionEvent) {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
             reactionEvent.getChannel().sendMessage(String.format("> 대기열 셔플 ``%s``", ((GenericMessageReactionEvent) e).getUser().getName())).queue();
+        } else if (e instanceof ButtonInteractionEvent) {
+            ButtonInteractionEvent reactionEvent = (ButtonInteractionEvent) e;
+            reactionEvent.reply(String.format("> 대기열 셔플 ``%s``", ((ButtonInteractionEvent) e).getUser().getName())).setEphemeral(true).queue();
         }
     }
 

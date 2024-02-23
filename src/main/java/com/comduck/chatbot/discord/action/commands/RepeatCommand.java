@@ -5,6 +5,7 @@ import com.comduck.chatbot.discord.CommandManager;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
@@ -14,27 +15,28 @@ public class RepeatCommand implements Command {
 
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
-        GenericMessageEvent genEvent = (GenericMessageEvent) e;
 
         //재생되고 있는 트랙이 있는지 확인
         if (instance.player.getPlayingTrack() == null) {
             return;
         }
 
-        //1. 현재 재생되고 있는 트랙의 url정보를 가져옴
-        //2. url 정보를 커맨드 메시지처럼 사용하기 위해 수정함
-        //3. playCommand 호출
-
-        CommandManager.ExcuteMessageCommend("play", genEvent, msg);
-
-        msg = "play " + instance.player.getPlayingTrack().getInfo().uri;
+        MessageReceivedEvent msgEvent = null;
+        GenericMessageReactionEvent reactionEvent = null;
+        ButtonInteractionEvent buttonEvent = null;
 
         if (e instanceof MessageReceivedEvent) {
-            MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
+            msgEvent = (MessageReceivedEvent) e;
+            CommandManager.ExcuteMessageCommend("play", msgEvent, msg);
             msgEvent.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((MessageReceivedEvent) e).getAuthor().getName())).queue();
         } else if (e instanceof GenericMessageReactionEvent) {
-            GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
+            reactionEvent = (GenericMessageReactionEvent) e;
+            CommandManager.ExcuteMessageCommend("play", reactionEvent, msg);
             reactionEvent.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((GenericMessageReactionEvent) e).getUser().getName())).queue();
+        } else if (e instanceof ButtonInteractionEvent) {
+            buttonEvent = (ButtonInteractionEvent) e;
+            CommandManager.ExcuteMessageCommend("play", buttonEvent, msg);
+            buttonEvent.reply(String.format("> 현재곡 재등록 ``%s``", ((ButtonInteractionEvent) e).getUser().getName())).setEphemeral(true).queue();
         }
     }
 

@@ -6,12 +6,13 @@ import com.comduck.chatbot.discord.action.MessageCommand;
 import com.comduck.chatbot.discord.audiocore.PlayerManager;
 import com.comduck.chatbot.discord.action.commands.util.WebUtil;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
+import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.net.MalformedURLException;
@@ -32,16 +33,17 @@ public class PlayCommand implements Command {
         PlayerManager manager = PlayerManager.getInstance();
         AudioManager audiomng = genEvent.getGuild().getAudioManager();
         String url = msg.replaceFirst("play", "").replace(" ", "");
+
         URL link = new URL(url);
         String host = link.getHost();
 
         // GenericMessageEvent 종속 메소드 분리
         if (e instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
-            Vch = ((MessageReceivedEvent) e).getMember().getVoiceState().getChannel();
+            Vch = msgEvent.getMember().getVoiceState().getChannel().asVoiceChannel();
         } else {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
-            Vch = ((GenericMessageReactionEvent) e).getMember().getVoiceState().getChannel();
+            Vch = reactionEvent.getMember().getVoiceState().getChannel().asVoiceChannel();
         }
 
         if (!audiomng.isConnected()) {
@@ -74,8 +76,6 @@ public class PlayCommand implements Command {
 
             }
         }
-        //커맨드 실행 기록 이벤트 발생
-        instance.raisePostCommand(genEvent);
     }
 
     @Override

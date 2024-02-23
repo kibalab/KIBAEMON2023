@@ -10,6 +10,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
@@ -25,7 +26,22 @@ public class TracklistCommand implements Command {
 
     @Override
     public void OnCommand(BotInstance instance, GenericEvent event, String msg, boolean isAdd) {
-        GenericMessageEvent genEvent = (GenericMessageEvent) event;
+
+        String channelID = "";
+        MessageReceivedEvent msgEvent = null;
+        GenericMessageReactionEvent reactionEvent = null;
+        ButtonInteractionEvent buttonEvent = null;
+
+        if (event instanceof MessageReceivedEvent) {
+            msgEvent = (MessageReceivedEvent) event;
+            channelID = msgEvent.getChannel().getId();
+        } else if (event instanceof GenericMessageReactionEvent) {
+            reactionEvent = (GenericMessageReactionEvent) event;
+            channelID = reactionEvent.getChannel().getId();
+        } else if (event instanceof ButtonInteractionEvent) {
+            buttonEvent = (ButtonInteractionEvent) event;
+            channelID = buttonEvent.getChannelId();
+        }
 
         //재생되고 있는 트랙이 있는지 확인
         // (재생되고 있는 트랙이 없으면 tracklist도 비어있는걸로 판단)
@@ -33,19 +49,23 @@ public class TracklistCommand implements Command {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0xff6624));
             if (event instanceof MessageReceivedEvent) {
-                MessageReceivedEvent msgEvent = (MessageReceivedEvent) event;
+                channelID = msgEvent.getChannel().getId();
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
                         ((MessageReceivedEvent) event).getAuthor().getName()
                 ), false);
+                msgEvent.getChannel().sendMessageEmbeds(eb.build()).queue();
             } else if (event instanceof GenericMessageReactionEvent) {
-                GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) event;
+                channelID = reactionEvent.getChannel().getId();
                 eb.addField("경고 Warning", String.format(
                         "대기열이 비어 있습니다.\n``%s``",
                         ((GenericMessageReactionEvent) event).getUser().getName()
                 ), false);
+                reactionEvent.getChannel().sendMessageEmbeds(eb.build()).queue();
+            } else if (event instanceof ButtonInteractionEvent) {
+                channelID = buttonEvent.getChannelId();
+                buttonEvent.reply("대기열이 비어 있습니다.").setEphemeral(true).queue();
             }
-            genEvent.getChannel().sendMessage(eb.build()).queue();
         } else { // 비어있지 않으면
 
             //현재재생되고 있는 트랙의 정보를 가져옴 (title, Position, Duration)
@@ -91,6 +111,16 @@ public class TracklistCommand implements Command {
                 str = "None";
             }
 
+            if(buttonEvent != null) {
+                buttonEvent.reply(String.format(
+                        "재생중 - %s [%s/%s] \n%s",
+                        info.title,
+                        TimeUtil.formatTime(instance.player.getPlayingTrack().getPosition()),
+                        TimeUtil.formatTime(instance.player.getPlayingTrack().getDuration()),
+                        str
+                )).setEphemeral(true).queue();
+                return;
+            }
 
             try {
                 String tsplist = "";
@@ -112,8 +142,7 @@ public class TracklistCommand implements Command {
 
             eb.addField("TrackList", str, false);
             eb.setFooter(String.format("TotalDuration - %s", TimeUtil.formatTime(TotalDuration)), null);
-            genEvent.getChannel().sendMessage(eb.build()).queue();
-            instance.raisePostCommand(genEvent);
+            event.getJDA().getTextChannelById(channelID).sendMessageEmbeds(eb.build()).queue();
         }
     }
 

@@ -5,18 +5,27 @@ import com.sedmelluq.discord.lavaplayer.player.*;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.ReadyEvent;
-import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.entities.sticker.Sticker;
+import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -36,7 +45,6 @@ import java.sql.*;
 public class DiscordBotMain extends ListenerAdapter implements PostCommandListener {
     static public SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId("ee42dee9338d44b5a1dba476c5e75055").setClientSecret("da310a9627714fdfa2869742ed022986").build();
 
-    Queue commandQueue = new LinkedList<GenericMessageEvent>();
 
     public static void main(String[] args) throws Exception {
         StartArgumentCommand(args);
@@ -49,13 +57,14 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         ProcessorManager.LoadAllCommands();
 
         ImageIO.scanForPlugins();
-        JDABuilder builder = new JDABuilder(AccountType.BOT);
 
         JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader(new File("Bots.json"))));
 
         String token = (String)bots.get(bot);
 
+        JDABuilder builder = JDABuilder.createDefault(token);
         builder.setToken(token);
+        builder.enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.GUILD_EMOJIS_AND_STICKERS, GatewayIntent.GUILD_MEMBERS);
         builder.setActivity(Activity.playing("<가동중> ?help"));
         builder.addEventListeners(this);
         builder.build();
@@ -112,9 +121,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     }
 
     public void onReadyMessage(GuildReadyEvent event) {
-
-
-
         for(TextChannel channel : event.getGuild().getTextChannels()) {
             boolean channelTrue = false;
             //channelTrue = channel.getId().equals("607208059504427018"); // Nerine Force - bot_command
@@ -140,7 +146,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                         Runtime.getRuntime().freeMemory()
                 ), true);
                 eb.setFooter("KIBAEMON 2019", null);
-                channel.sendMessage(eb.build()).queue();
+                channel.sendMessageEmbeds(eb.build()).queue();
             }
         }
 
@@ -151,26 +157,33 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         super.onShutdown(event);
     }
 
-
     @Override
-    public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
-        super.onGuildVoiceLeave(event);
+    public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
+        AudioChannelUnion joinedChannel = event.getChannelJoined();
+        AudioChannelUnion leftChannel = event.getChannelLeft();
 
-        System.out.printf(
-                "{'Type': 'LeaveVoice', 'Guild_Name': '%s#%s', 'VoiceChennal_Name': '%s#%s', 'User': '%s#%s'}%n",
-                event.getGuild().getName(), event.getGuild().getId(),
-                event.getChannelLeft().getName(), event.getChannelLeft().getId(),
-                event.getMember().getUser().getName(), event.getMember().getUser().getId()
-        );
+        String state = "";
+        VoiceChannel channel = null;
 
-        if (event.getChannelLeft().getMembers().size() == 1) {
-            try {
-                if (event.getGuild().getAudioManager().getConnectedChannel().getId().equals(event.getChannelLeft().getId())) {
-                    event.getGuild().getAudioManager().closeAudioConnection();
-                }
-            } catch (Exception e) {  }
+        if (joinedChannel != null) {
+            state = "JoinVoice";
+            channel = event.getChannelJoined().asVoiceChannel();
+        }
+        if (leftChannel != null) {
+            state = "LeaveVoice";
+            channel = event.getChannelLeft().asVoiceChannel();
+        }
+        if (joinedChannel != null && leftChannel != null) {
+            state = "MoveVoice";
         }
 
+        System.out.printf(
+                "{'Type': '%s', 'Guild_Name': '%s#%s', 'VoiceChennal_Name': '%s#%s', 'User': '%s#%s'}%n",
+                state,
+                event.getGuild().getName(), event.getGuild().getId(),
+                channel.getName(), channel.getId(),
+                event.getMember().getUser().getName(), event.getMember().getUser().getId()
+        );
     }
 
     /**
@@ -178,73 +191,38 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
      *
      * @param event
      */
+
     @Override
-    public void onGenericMessageReaction(GenericMessageReactionEvent event) {
-        super.onGenericMessageReaction(event);
+    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
+        if (event.getUser().isBot()) return;
         System.out.printf(
-                "{'Type': 'Reaction', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}%n",
+                "{'Type': 'ReactionAdd', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}%n",
                 event.getGuild().getName(), event.getGuild().getId(),
                 event.getChannel().getName(), event.getChannel().getId(),
                 event.getUser().getName(), event.getUser().getId(),
                 event.getMessageId(),
-                event.getReactionEmote()
+                event.getReaction().getEmoji().getAsReactionCode()
         );
-
-        if (!event.getUser().isBot()) {
-            onReactionBindCommand(event);
-        }
-    }
-
-    @Override
-    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        CommandManager.ExcuteReactionCommend(event.getReactionEmote(), event, true);
+        CommandManager.ExcuteReactionCommend(event.getReaction(), event, true);
     }
 
     @Override
     public void onMessageReactionRemove(@NotNull MessageReactionRemoveEvent event) {
-        CommandManager.ExcuteReactionCommend(event.getReactionEmote(), event, false);
+        if (event.getUser().isBot()) return;
+        System.out.printf(
+                "{'Type': 'ReactionRemove', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}%n",
+                event.getGuild().getName(), event.getGuild().getId(),
+                event.getChannel().getName(), event.getChannel().getId(),
+                event.getUser().getName(), event.getUser().getId(),
+                event.getMessageId(),
+                event.getReaction().getEmoji().getAsReactionCode()
+        );
+        CommandManager.ExcuteReactionCommend(event.getReaction(), event, false);
     }
 
-    /**
-     * 리액션 커맨드
-     *
-     * @param event
-     */
-    private void onReactionBindCommand(GenericMessageReactionEvent event) {
-
-        //Pause
-        if (event.getReactionEmote().getName().equals("⏯")) {
-            CommandManager.ExcuteMessageCommend("pause", event, "");
-        }
-        //Stop
-        if (event.getReactionEmote().getName().equals("⏹")) {
-            CommandManager.ExcuteMessageCommend("stop", event, "");
-        }
-        //Skip
-        if (event.getReactionEmote().getName().equals("⏭")) {
-            CommandManager.ExcuteMessageCommend("skip", event, "");
-        }
-        //printURL
-        if (event.getReactionEmote().getName().equals("🎦")) {
-            PlayerManager manager = PlayerManager.getInstance();
-            GuildMusicManager musicManager = manager.getGuildMusicManager(event.getGuild());
-            AudioPlayer player = musicManager.player;
-            TrackScheduler scheduler = musicManager.scheduler;
-
-            event.getChannel().sendMessage(String.format("> %s", player.getPlayingTrack().getInfo().uri)).queue();
-        }
-        //TrackList
-        if (event.getReactionEmote().getName().equals("\uD83C\uDFB6")) {
-            CommandManager.ExcuteMessageCommend("tracklist", event, "");
-        }
-        //Shuffle TrackList
-        if (event.getReactionEmote().getName().equals("\uD83D\uDD00")) {
-            CommandManager.ExcuteMessageCommend("shuffle", event, "");
-        }
-        //Repeat
-        if (event.getReactionEmote().getName().equals("\uD83D\uDD02")) {
-            CommandManager.ExcuteMessageCommend("repeat", event, "");
-        }
+    @Override
+    public void onButtonInteraction(ButtonInteractionEvent event) {
+        CommandManager.ExcuteMessageCommend(event.getButton().getId(), event, "");
     }
 
     /**
@@ -263,45 +241,24 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
                 event.getAuthor().getName(), event.getAuthor().getId(),
                 event.getMessage().getContentRaw()
         );
-        //System.out.println("[Log] " + event.getGuild().getName() + event.getAuthor().getName().getName() + " : " + event.getMessage().getContentDisplay());
 
-        if (event.getAuthor().isBot()) {
-            if (commandQueue.size() >= 1) {
-                reactionInterface(event);
-            }
-        }
+        List<StickerItem> stickers = event.getMessage().getStickers();
+        stickers.forEach(stickerItem -> {
+            System.out.printf(
+                    "{'Type': 'Sticker#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'Context': '%s'}%n",
+                    event.getMessage().getId(),
+                    event.getGuild().getName(), event.getGuild().getId(),
+                    event.getChannel().getName(), event.getChannel().getId(),
+                    event.getAuthor().getName(), event.getAuthor().getId(),
+                    stickerItem.getName()+ "#" + stickerItem.getId()
+            );
+        });
 
         //커맨드 모음에 데이터 인풋
         boolean commandRun = commandInterface(event);
         if (commandRun) {
             System.out.printf("{'Error': 'Unknown Command', 'Context': '%s'}%n", event.getMessage().getContentRaw() );
-            }
         }
-
-    private boolean reactionInterface(MessageReceivedEvent event) {
-        Message sendMsg = event.getMessage();
-
-        if(event.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong()) {
-
-            String msg = ((Message) commandQueue.poll()).getContentDisplay();
-            System.out.println("[DiscordBotMain] Check Remoteable Command Message");
-            if (msg.startsWith("?play") || msg.startsWith("tracklist") || msg.startsWith("songlist") || msg.startsWith("tlist") || msg.startsWith("tl") || msg.startsWith("slist") || msg.startsWith("queue") || msg.startsWith("q")) {
-                wait_reaction(sendMsg, "⏯");//pause
-                wait_reaction(sendMsg, "⏹");//stop
-                wait_reaction(sendMsg, "⏭");//skip
-                wait_reaction(sendMsg, "\uD83C\uDFA6");//printURL
-                wait_reaction(sendMsg, "\uD83C\uDFB6");//tracklist
-                wait_reaction(sendMsg, "\uD83D\uDD00");//Shuffle
-                wait_reaction(sendMsg, "\uD83D\uDD02");//Repeat
-                wait_reaction(sendMsg, "⭐");
-                System.out.println("[DiscordBotMain] OnEnd Create Reaction Remote");
-                ClearLastMessageReaction(event);
-                BotInstance.getInstance(event.getGuild().getId()).musicManager.lastPlayMessage = sendMsg;
-                System.out.println("[DiscordBotMain] Update Last message");
-                return true;
-            }
-        }
-        return false;
     }
 
     private void ClearLastMessageReaction(MessageReceivedEvent event){
@@ -348,22 +305,9 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         CommandManager.ExcuteMessageCommend(cmd, event, msg);
     }
 
-    //미완성
-    private void wait_reaction(Message msg, String emote) {
-        msg.addReaction(emote).queue();
-        System.out.printf("[DiscordBotMain] Set Reaction : %s to %s%n", emote, msg.getId());
-    }
-
     @Override
     public void onPostCommand(GenericMessageEvent genericMessageEvent) {
-        try {
-            MessageReceivedEvent msgEvent = (MessageReceivedEvent) genericMessageEvent;
-            System.out.printf("[DiscordBotMain] CommandQueue Add data: %s%n", msgEvent.getMessage().getContentRaw());
-            commandQueue.add(msgEvent.getMessage());
-        } catch (Exception e) {
-
-        }
-
+        
     }
 
     //#endregion

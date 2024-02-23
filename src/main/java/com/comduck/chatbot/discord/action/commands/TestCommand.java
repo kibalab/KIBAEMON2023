@@ -53,7 +53,7 @@ public class TestCommand implements Command {
         eb.setColor(new Color(0x244aff));
         eb.addField("Test Embed", "이 Embed 메시지는 다용도 테스트 메시지 입니다.", false);
         eb.addField("Title", trackRequest.execute().getName(), false);
-        msgEvent.getChannel().sendMessage(eb.build()).queue();
+        msgEvent.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     @Override

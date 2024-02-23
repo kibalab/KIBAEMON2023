@@ -4,7 +4,7 @@ import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -29,7 +29,7 @@ public class JoinCommand implements Command {
             if(!VchID.equals("")) {
                 Vch = ((MessageReceivedEvent) event).getGuild().getVoiceChannelById(VchID);
             } else {
-                Vch = ((MessageReceivedEvent) event).getMember().getVoiceState().getChannel();
+                Vch = ((MessageReceivedEvent) event).getMember().getVoiceState().getChannel().asVoiceChannel();
             }
 
             genEvent.getChannel().sendMessage(String.format(
@@ -53,7 +53,7 @@ public class JoinCommand implements Command {
                     Vch.getName(),
                     ((MessageReceivedEvent) event).getAuthor().getName()
             ), false);
-            genEvent.getChannel().sendMessage(eb.build()).queue();
+            genEvent.getChannel().sendMessageEmbeds(eb.build()).queue();
 
         }
     }

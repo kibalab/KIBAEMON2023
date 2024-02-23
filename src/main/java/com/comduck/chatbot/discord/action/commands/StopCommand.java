@@ -4,6 +4,7 @@ import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
@@ -13,7 +14,6 @@ public class StopCommand implements Command {
 
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
-        GenericMessageEvent genEvent = (GenericMessageEvent) e;
 
         //재생되고 있는 트랙이 있는지 확인
         if (instance.player.getPlayingTrack() == null) {
@@ -35,6 +35,13 @@ public class StopCommand implements Command {
                     "> 대기열 재생 중지 ``%s``",
                     reactionEvent.getUser().getName()
             )).queue();
+        } else if (e instanceof ButtonInteractionEvent) {
+            ButtonInteractionEvent reactionEvent = (ButtonInteractionEvent) e;
+
+            reactionEvent.reply(String.format(
+                    "> 대기열 재생 중지 ``%s``",
+                    reactionEvent.getUser().getName()
+            )).setEphemeral(true).queue();
         }
 
         //1. tracklist를 초기화
@@ -43,9 +50,6 @@ public class StopCommand implements Command {
         instance.scheduler.getQueue().clear();
         instance.player.stopTrack();
         instance.player.setPaused(false);
-
-        //커맨드 실행 기록 이벤트 발생
-        instance.raisePostCommand(genEvent);
     }
 
     @Override

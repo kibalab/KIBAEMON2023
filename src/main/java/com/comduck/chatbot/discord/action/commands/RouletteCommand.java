@@ -32,7 +32,7 @@ public class RouletteCommand implements Command {
         DecimalFormat form = new DecimalFormat("###,###,###,###,###,###,###,###,###,###,###");
         String rs = Arrays.toString(r).replaceAll("\\[", "").replaceAll("]", "");
         eb.addField(String.format("[%s] - %dx", rs, f), String.format("현재 금액 : %s", form.format(roulette.getMoney(event.getAuthor()))), false);
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     @Override

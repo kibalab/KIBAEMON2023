@@ -2,6 +2,7 @@ package com.comduck.chatbot.discord.action;
 
 import com.comduck.chatbot.discord.BotInstance;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import org.apache.hc.core5.http.ParseException;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 

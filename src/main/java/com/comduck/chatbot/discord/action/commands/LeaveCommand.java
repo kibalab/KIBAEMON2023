@@ -3,7 +3,7 @@ package com.comduck.chatbot.discord.action.commands;
 import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -18,7 +18,7 @@ public class LeaveCommand implements Command {
         VoiceChannel Vch = null;
 
         if (e instanceof MessageReceivedEvent) {
-            Vch = ((MessageReceivedEvent) e).getMember().getVoiceState().getChannel();
+            Vch = ((MessageReceivedEvent) e).getMember().getVoiceState().getChannel().asVoiceChannel();
             event.getChannel().sendMessage(String.format(
                     "> %s 퇴장 ``%s``",
                     Vch.getName(),

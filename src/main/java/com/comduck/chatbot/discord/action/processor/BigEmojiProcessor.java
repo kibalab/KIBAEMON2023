@@ -18,8 +18,8 @@ public class BigEmojiProcessor implements Processor {
     public void OnProcess(GenericMessageEvent e, String msg) {
         MessageReceivedEvent event = (MessageReceivedEvent) e;
 
-        if (event.getMessage().getEmotes().size() == 1 && event.getMessage().getContentRaw().startsWith("<") && event.getMessage().getContentRaw().endsWith(">") && event.getMessage().getGuild().getIdLong() != 102788723690700800L) { // 542727743909920798L
-            String emojiUrl = event.getMessage().getEmotes().get(0).getImageUrl();
+        if (event.getMessage().getMentions().getCustomEmojis().size() == 1 && event.getMessage().getContentRaw().startsWith("<") && event.getMessage().getContentRaw().endsWith(">") && event.getMessage().getGuild().getIdLong() != 102788723690700800L) { // 542727743909920798L
+            String emojiUrl = event.getMessage().getMentions().getCustomEmojis().get(0).getImageUrl();
             User user  = event.getMessage().getAuthor();
 
             event.getMessage().delete().queue();
@@ -28,7 +28,7 @@ public class BigEmojiProcessor implements Processor {
             eb.setAuthor(user.getName(), user.getAvatarUrl(), user.getAvatarUrl());
             eb.setImage(emojiUrl);
             eb.setColor(new Color(0x244aff));
-            event.getChannel().sendMessage(eb.build()).queue();
+            event.getChannel().sendMessageEmbeds(eb.build()).queue();
         }
     }
 }
