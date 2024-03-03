@@ -23,12 +23,12 @@ public class ShuffleCommand implements Command {
         GenericMessageEvent genEvent = (GenericMessageEvent) e;
 
         //재생되고 있는 트랙이 있는지 확인
-        if (instance.player.getPlayingTrack() == null) {
+        if (instance.playerInstance.player.getPlayingTrack() == null) {
             return;
         }
 
         //큐를 가져옴, 빈 리스트(AudioTrack) 생성
-        Queue queue = instance.scheduler.getQueue();
+        Queue queue = instance.playerInstance.trackScheduler.getTracks();
         List<AudioTrack> list = new ArrayList<>();
 
         //큐에서 하나씩 빼서 리스트에 넣음

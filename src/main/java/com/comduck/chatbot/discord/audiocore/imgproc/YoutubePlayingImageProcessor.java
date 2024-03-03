@@ -1,6 +1,14 @@
 package com.comduck.chatbot.discord.audiocore.imgproc;
 
+import com.comduck.chatbot.discord.audiocore.webutil.YoutubeWebUtil;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import org.json.simple.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -17,6 +25,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.TimeZone;
 
 public class YoutubePlayingImageProcessor {
@@ -32,20 +41,47 @@ public class YoutubePlayingImageProcessor {
 
    }
 
-    public File processImage(JSONObject details, User user, URL uploaderIconFile, long x_duration, String[] tags) {
+    public File processImage(AudioTrack track, String[] tags) {
         try {
 
-            String id = (String) details.get("id");
+            var userData = track.getUserData(HashMap.class);
+            JSONObject details = (JSONObject) userData.get("details");
+            AudioTrackInfo info = track.getInfo();
+
+            GenericEvent e = (GenericEvent) userData.get("event");
+            User user = null;
+            if (e instanceof MessageReceivedEvent) {
+                MessageReceivedEvent event = (MessageReceivedEvent) e;
+                user = event.getAuthor();
+            } else if (e instanceof GenericMessageReactionEvent) {
+                GenericMessageReactionEvent event = (GenericMessageReactionEvent) e;
+                user = event.getUser();
+            } else if (e instanceof ButtonInteractionEvent) {
+                ButtonInteractionEvent event = (ButtonInteractionEvent) e;
+                user = event.getUser();
+            } else if (e instanceof ModalInteractionEvent) {
+                ModalInteractionEvent event = (ModalInteractionEvent) e;
+                user = event.getUser();
+            }
+
+
             String uploader = (String) details.get("author_name");
             String title = (String) details.get("title");
-            String thumbUrl = (String) details.get("thumbnail_url");
-            Date duration = new Date(x_duration);
+            String thumbUrl = info.artworkUrl.replace("vi_webp", "vi").replace("webp", "jpg");
+            Date duration = new Date(track.getDuration());
 
             //Load Image
+            URL uploaderIconFile = YoutubeWebUtil.getUserImage(details.get("author_url").toString());
             BufferedImage image = ImageIO.read(canvasFile);
             BufferedImage thum = null;
             BufferedImage uicon = null;
-            boolean thumbIsSd = false;
+
+            try {
+                thum = ImageIO.read(new URL(thumbUrl).openConnection().getInputStream());
+                System.out.println("[ImageProcessor] Succeeded Load Image - " + thumbUrl);
+            } catch (Exception ex) {
+                System.out.println("[ImageProcessor] Failed Load Image - " + thumbUrl.toString());
+            }
 
             try {
                 for (int i = 0; i < 5; i++) { // 최대 5번 시도
@@ -55,7 +91,7 @@ public class YoutubePlayingImageProcessor {
                         break;
                     }
                 }
-            }catch (Exception e){
+            }catch (Exception ex){
                 System.out.println("[ImageProcessor] Failed Read Uploader Profile Image");
             }
 
@@ -122,32 +158,12 @@ public class YoutubePlayingImageProcessor {
             g2d.setClip(new Ellipse2D.Float(693, 569, 79.13f, 79.13f));
             if (ricon != null) g2d.drawImage(ricon, 693, 569, 79, 79, null);
 
-
-            String[] sizes = {"maxresdefault", "sddefault"};
-            String[] servers = {"i.ytimg", "i1.ytimg", "i2.ytimg", "i3.ytimg", "i4.ytimg", "img.youtube"};
-
-            for(String size : sizes) {
-                for(String server : servers) {
-                    URL thumbnailFile = null;
-                    try {
-                        thumbnailFile = new URL(thumbUrl.replace("hqdefault", size).replace("i.ytimg", server));
-                        thum = ImageIO.read(thumbnailFile.openConnection().getInputStream());
-                        System.out.println("[ImageProcessor] Succeeded Load Image - " + thumbnailFile);
-                    } catch (Exception e) {
-                        System.out.println("[ImageProcessor] Failed Load Image - " + thumbnailFile.toString());
-                    }
-                    if(thum != null) break;
-                } if(thum != null) break;
-            }
-
-
             //Thumnail Image
             g2d.setClip(new RoundRectangle2D.Float(11, 12, 1260, 446, 90, 90));
 
             System.out.println("[ImageProcessor] Tumbnail Size :" + thum.getWidth() + "/" + thum.getHeight());
             float sizeFit = Math.round(1260.0f/thum.getWidth() * 10) / 10;
             System.out.println("[ImageProcessor] Tumbnail Size ratio :" + sizeFit);
-            //g2d.setPaint(new TexturePaint(thum, new Rectangle2D.Double(11, 12, 1260, 446)));
             if (thum != null) g2d.drawImage(thum, 0, 0, (int)(thum.getWidth() * sizeFit), (int)(thum.getHeight() * sizeFit),null);
 
             //Edit close

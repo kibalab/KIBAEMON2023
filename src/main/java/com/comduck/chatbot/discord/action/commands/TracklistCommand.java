@@ -45,7 +45,7 @@ public class TracklistCommand implements Command {
 
         //재생되고 있는 트랙이 있는지 확인
         // (재생되고 있는 트랙이 없으면 tracklist도 비어있는걸로 판단)
-        if (instance.player.getPlayingTrack() == null) {
+        if (instance.playerInstance.player.getPlayingTrack() == null) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0xff6624));
             if (event instanceof MessageReceivedEvent) {
@@ -69,23 +69,23 @@ public class TracklistCommand implements Command {
         } else { // 비어있지 않으면
 
             //현재재생되고 있는 트랙의 정보를 가져옴 (title, Position, Duration)
-            AudioTrackInfo info = instance.player.getPlayingTrack().getInfo();
+            AudioTrackInfo info = instance.playerInstance.player.getPlayingTrack().getInfo();
 
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0x244aff));
             eb.setTitle(String.format(
                     "재생중 - %s [%s/%s] \n",
                     info.title,
-                    TimeUtil.formatTime(instance.player.getPlayingTrack().getPosition()),
-                    TimeUtil.formatTime(instance.player.getPlayingTrack().getDuration())
-            ), instance.player.getPlayingTrack().getInfo().uri);
+                    TimeUtil.formatTime(instance.playerInstance.player.getPlayingTrack().getPosition()),
+                    TimeUtil.formatTime(instance.playerInstance.player.getPlayingTrack().getDuration())
+            ), instance.playerInstance.player.getPlayingTrack().getInfo().uri);
 
             //1. tracklist 큐의 데이터를 리스트로 복제
             //2. list의 인덱스를 확인하여 문자열에 담음
             //3. Embed메시지를 생성하여 출력
-            List playelist = new ArrayList(instance.scheduler.getQueue());
+            List playelist = new ArrayList(instance.playerInstance.trackScheduler.trackCount());
             String str = "";
-            long TotalDuration = instance.player.getPlayingTrack().getDuration() - instance.player.getPlayingTrack().getPosition();
+            long TotalDuration = instance.playerInstance.player.getPlayingTrack().getDuration() - instance.playerInstance.player.getPlayingTrack().getPosition();
             boolean overtext = false;
             if (playelist.size() != 0) {
                 for (int i = 0; true; i++) {
@@ -115,8 +115,8 @@ public class TracklistCommand implements Command {
                 buttonEvent.reply(String.format(
                         "재생중 - %s [%s/%s] \n%s",
                         info.title,
-                        TimeUtil.formatTime(instance.player.getPlayingTrack().getPosition()),
-                        TimeUtil.formatTime(instance.player.getPlayingTrack().getDuration()),
+                        TimeUtil.formatTime(instance.playerInstance.player.getPlayingTrack().getPosition()),
+                        TimeUtil.formatTime(instance.playerInstance.player.getPlayingTrack().getDuration()),
                         str
                 )).setEphemeral(true).queue();
                 return;
@@ -125,7 +125,7 @@ public class TracklistCommand implements Command {
             try {
                 String tsplist = "";
                 YoutubeDownloader yd = new YoutubeDownloader();
-                YoutubeVideo video = yd.getVideo(instance.player.getPlayingTrack().getIdentifier());
+                YoutubeVideo video = yd.getVideo(instance.playerInstance.player.getPlayingTrack().getIdentifier());
                 String dsc = video.details().description();
                 System.out.println(dsc);
                 Pattern p1 = Pattern.compile("([0-9]{2}):([0-9]{2})((\\s*)?)(([\\S|\\s]*))(\\n?)");

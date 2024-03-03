@@ -1,23 +1,20 @@
 package com.comduck.chatbot.discord;
 
+import com.comduck.chatbot.discord.audioV2.QuickController;
 import com.comduck.chatbot.discord.audiocore.*;
-import com.sedmelluq.discord.lavaplayer.player.*;
-import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.entities.sticker.Sticker;
 import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -25,12 +22,9 @@ import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.reflections.Reflections;
-import org.mariadb.jdbc.*;
 import se.michaelthelin.spotify.SpotifyApi;
 
 import javax.imageio.ImageIO;
@@ -40,14 +34,56 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import java.sql.*;
-
-public class DiscordBotMain extends ListenerAdapter implements PostCommandListener {
-    static public SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId("ee42dee9338d44b5a1dba476c5e75055").setClientSecret("da310a9627714fdfa2869742ed022986").build();
+public class DiscordBotMain extends ListenerAdapter {
+    public static SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId("ee42dee9338d44b5a1dba476c5e75055").setClientSecret("da310a9627714fdfa2869742ed022986").build();
+    public static boolean logging = false;
 
 
     public static void main(String[] args) throws Exception {
         StartArgumentCommand(args);
+    }
+
+    public static void StartArgumentCommand(String[] Arg) throws Exception {
+
+        for(int i = 0; Arg.length > i; i++)
+        {
+            switch (Arg[i])
+            {
+                case "--run" :
+                case "-r" :
+                    new DiscordBotMain().start(Arg[++i]);
+                    System.out.println("[DiscordBotMain] Set Bot Client : " + Arg[i]);
+                    break;
+
+                case "-b" :
+                case "--bots" :
+                    JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader("Bots.json")));
+                    Iterator<String> keys = (Iterator<String>) bots.keySet();
+                    System.out.println("[ Bots.js List ]");
+                    int index = 1;
+                    while(keys.hasNext()) {
+                        String key = keys.next();
+                        System.out.printf("%d. %s : %s%n", index, key, bots.get(key));
+                        index++;
+                    }
+                    break;
+
+                case "-l" :
+                case "--log" :
+                    logging = Boolean.parseBoolean(Arg[++i].toLowerCase());
+                    System.out.println("[DiscordBotMain] Set Logger Activation : " + logging);
+                    break;
+
+                default :
+                    System.out.println("[ KIBATION2019-JAVA ]");
+                    System.out.println("[ K13A_Laboratories ]\n");
+                    System.out.println("-r  --run   {BotName}   : Login with Token in Bots.json.");
+                    System.out.println("-h  --help      : Print out help.");
+                    System.out.println("-b  --bot      : Output the bot list in Bots.json.");
+                    System.out.println("-l  --log   {true|false}   : Set Message Logger activation");
+                    break;
+            }
+        }
     }
 
     private void start(String bot) throws Exception {
@@ -58,7 +94,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         ImageIO.scanForPlugins();
 
-        JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader(new File("Bots.json"))));
+        JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader("Bots.json")));
 
         String token = (String)bots.get(bot);
 
@@ -70,29 +106,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         builder.build();
     }
 
-    public static void StartArgumentCommand(String[] Arg) throws Exception {
-
-        if(Arg[0].startsWith("-r") || Arg[0].startsWith("--run") ) {
-            new DiscordBotMain().start(Arg[1]);
-        } else if(Arg[0].startsWith("-b") || Arg[0].startsWith("--bots") ){
-            JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader(new File("Bots.json"))));
-            Iterator<String> keys = bots.keySet().iterator();
-            System.out.println("[ Bots.js List ]");
-            int i = 1;
-            while(keys.hasNext()) {
-                String key = keys.next();
-                System.out.printf("%d. %s : %s%n", i, key, bots.get(key));
-                i++;
-            }
-        } else {
-            System.out.println("[ KIBATION2019-JAVA ]");
-            System.out.println("[ K13A_Laboratories ]\n");
-            System.out.println("-r  --run   {BotName}   : Login with Token in Bots.json.");
-            System.out.println("-h  --help      : Print out help.");
-            System.out.println("-b  --bot      : Output the bot list in Bots.json.");
-        }
-    }
-
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         super.onGuildJoin(event);
@@ -101,16 +114,18 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     @Override
     public void onGuildReady(GuildReadyEvent event) {
-        String str = null;
-        str = event.getGuild().getName() + "[" + event.getGuild().getId() + "]" + " : ";
-        for(TextChannel c : event.getGuild().getTextChannels()) {
-            str += c.getName() + "[" + c.getId() + "]" + " : " + c.canTalk() + " : {";
-            for(Member m : c.getMembers()) {
-                str += m.getNickname() + "(" + m.getUser().getName() + "#" + m.getUser().getId() + ")";
+        if (logging) {
+            String str = null;
+            str = event.getGuild().getName() + "[" + event.getGuild().getId() + "]" + " : ";
+            for (TextChannel c : event.getGuild().getTextChannels()) {
+                str += c.getName() + "[" + c.getId() + "]" + " : " + c.canTalk() + " : {";
+                for (Member m : c.getMembers()) {
+                    str += m.getNickname() + "(" + m.getUser().getName() + "#" + m.getUser().getId() + ")";
+                }
+                str += "}\n";
             }
-             str += "}\n";
+            System.out.println(str);
         }
-        System.out.println(str);
 
         new BotInstance(event.getGuild(), spotifyApi);
     }
@@ -177,7 +192,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
             state = "MoveVoice";
         }
 
-        System.out.printf(
+        if (logging) System.out.printf(
                 "{'Type': '%s', 'Guild_Name': '%s#%s', 'VoiceChennal_Name': '%s#%s', 'User': '%s#%s'}%n",
                 state,
                 event.getGuild().getName(), event.getGuild().getId(),
@@ -195,7 +210,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
         if (event.getUser().isBot()) return;
-        System.out.printf(
+        if (logging) System.out.printf(
                 "{'Type': 'ReactionAdd', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}%n",
                 event.getGuild().getName(), event.getGuild().getId(),
                 event.getChannel().getName(), event.getChannel().getId(),
@@ -209,7 +224,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     @Override
     public void onMessageReactionRemove(@NotNull MessageReactionRemoveEvent event) {
         if (event.getUser().isBot()) return;
-        System.out.printf(
+        if (logging) System.out.printf(
                 "{'Type': 'ReactionRemove', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}%n",
                 event.getGuild().getName(), event.getGuild().getId(),
                 event.getChannel().getName(), event.getChannel().getId(),
@@ -222,7 +237,27 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
-        CommandManager.ExcuteMessageCommend(event.getButton().getId(), event, "");
+        CommandManager.ExcuteMessageCommend(event.getButton().getId().split(" ")[0], event, "");
+    }
+
+    @Override
+    public void onModalInteraction(ModalInteractionEvent event) {
+        var parms = event.getModalId().split(" ");
+        var id = parms[0];
+        for (String parm : parms) {
+            if(parm.startsWith("@"))
+            {
+                switch (parm)
+                {
+                    case "@rmQck":
+                        QuickController.RemoveController(event.getMessage());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        CommandManager.ExcuteMessageCommend(id, event, id + event.getValue("parm").getAsString());
     }
 
     /**
@@ -233,7 +268,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         //로그 출력
-        System.out.printf(
+        if (logging) System.out.printf(
                 "{'Type': 'Message#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'Context': '%s'}%n",
                 event.getMessage().getId(),
                 event.getGuild().getName(), event.getGuild().getId(),
@@ -243,7 +278,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
         );
 
         List<StickerItem> stickers = event.getMessage().getStickers();
-        stickers.forEach(stickerItem -> {
+        if (logging) stickers.forEach(stickerItem -> {
             System.out.printf(
                     "{'Type': 'Sticker#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'Context': '%s'}%n",
                     event.getMessage().getId(),
@@ -262,7 +297,7 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
     }
 
     private void ClearLastMessageReaction(MessageReceivedEvent event){
-        Message last = BotInstance.getInstance(event.getGuild().getId()).musicManager.lastPlayMessage;
+        Message last = BotInstance.getInstance(event.getGuild().getId()).playerInstance.lastPlayMessage;
         if(last != null) {
             last.clearReactions().queue();
             System.out.println("[DiscordBotMain] Remove Last message reactions");
@@ -303,11 +338,6 @@ public class DiscordBotMain extends ListenerAdapter implements PostCommandListen
 
         String cmd = msg.split(" ")[0];
         CommandManager.ExcuteMessageCommend(cmd, event, msg);
-    }
-
-    @Override
-    public void onPostCommand(GenericMessageEvent genericMessageEvent) {
-        
     }
 
     //#endregion

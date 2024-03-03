@@ -17,7 +17,7 @@ public class RepeatCommand implements Command {
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
 
         //재생되고 있는 트랙이 있는지 확인
-        if (instance.player.getPlayingTrack() == null) {
+        if (instance.playerInstance.player.getPlayingTrack() == null) {
             return;
         }
 

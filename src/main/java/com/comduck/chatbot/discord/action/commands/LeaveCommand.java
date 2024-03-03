@@ -28,9 +28,9 @@ public class LeaveCommand implements Command {
         event.getGuild().getAudioManager().closeAudioConnection();
 
         //stopCommand와 같은 부분
-        instance.scheduler.getQueue().clear();
-        instance.player.stopTrack();
-        instance.player.setPaused(false);
+        instance.playerInstance.trackScheduler.clear();
+        instance.playerInstance.player.stopTrack();
+        instance.playerInstance.player.setPaused(false);
     }
 
     @Override

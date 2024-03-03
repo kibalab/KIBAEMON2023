@@ -22,7 +22,7 @@ public class GotoCommand implements Command {
         msg = msg.replaceFirst("goto ", "");
 
         //재생되고 있는 트랙이 있는지 확인
-        if (instance.player.getPlayingTrack() == null) {
+        if (instance.playerInstance.player.getPlayingTrack() == null) {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setColor(new Color(0xff6624));
             if (e instanceof MessageReceivedEvent) {
@@ -44,7 +44,7 @@ public class GotoCommand implements Command {
             //파라미터(시간 문자열)를 프레임단위로 환산하여 Position에 넣음
             long time = TimeUtil.formatLong(msg);
             System.out.println(time);
-            instance.player.getPlayingTrack().setPosition(time);
+            instance.playerInstance.player.getPlayingTrack().setPosition(time);
 
         }
     }
