@@ -9,7 +9,7 @@ import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import java.io.IOException;
 import java.sql.SQLException;
 
-public interface Command {
+public interface Command extends IAction {
 
     @MessageCommand
     void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) throws SQLException, ClassNotFoundException, IOException, ParseException, SpotifyWebApiException;

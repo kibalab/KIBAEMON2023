@@ -237,27 +237,12 @@ public class DiscordBotMain extends ListenerAdapter {
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
-        CommandManager.ExcuteMessageCommend(event.getButton().getId().split(" ")[0], event, "");
+        CommandManager.ExcuteButtonAction(event.getButton().getId().split(" ")[0], event, "");
     }
 
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
-        var parms = event.getModalId().split(" ");
-        var id = parms[0];
-        for (String parm : parms) {
-            if(parm.startsWith("@"))
-            {
-                switch (parm)
-                {
-                    case "@rmQck":
-                        QuickController.RemoveController(event.getMessage());
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-        CommandManager.ExcuteMessageCommend(id, event, id + event.getValue("parm").getAsString());
+        CommandManager.ExcuteModalAction(event.getModalId().split(" ")[0], event, "");
     }
 
     /**

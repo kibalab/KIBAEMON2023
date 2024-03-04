@@ -35,7 +35,7 @@ public class RepeatCommand implements Command {
             reactionEvent.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((GenericMessageReactionEvent) e).getUser().getName())).queue();
         } else if (e instanceof ButtonInteractionEvent) {
             buttonEvent = (ButtonInteractionEvent) e;
-            CommandManager.ExcuteMessageCommend("play", buttonEvent, msg);
+            CommandManager.ExcuteButtonAction("play", buttonEvent, msg);
             buttonEvent.reply(String.format("> 현재곡 재등록 ``%s``", ((ButtonInteractionEvent) e).getUser().getName())).setEphemeral(true).queue();
         }
     }
