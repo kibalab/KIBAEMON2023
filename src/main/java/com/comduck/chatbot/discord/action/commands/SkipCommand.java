@@ -21,7 +21,7 @@ public class SkipCommand implements Command {
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
 
-        instance.playerInstance.trackScheduler.playNextTrack();
+        instance.playerInstance.trackScheduler.playNextTrack(true);
 
         MessageCreateData resultMsg;
         if(instance.playerInstance.player.getPlayingTrack() == null)

@@ -38,12 +38,13 @@ public class TrackScheduler extends AudioEventAdapter {
         return queue.size();
     }
 
-    public void playNextTrack()
+    public void playNextTrack(boolean noInterrupt)
     {
         var next = queue.poll();
 
         try {
-            player.startTrack(next, false);
+            next.setPosition(0);
+            player.startTrack(next, true);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -68,8 +69,8 @@ public class TrackScheduler extends AudioEventAdapter {
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
 
         QuickController.RemoveController(track, queue.isEmpty());
-        if (endReason.mayStartNext) {
-            playNextTrack();
+        if (endReason.mayStartNext && !queue.isEmpty()) {
+            playNextTrack(true);
         }
 
         // endReason == FINISHED: A track finished or died by an exception (mayStartNext = true).
@@ -83,12 +84,16 @@ public class TrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
         QuickController.RemoveController(track, queue.isEmpty());
-        playNextTrack();
+        playNextTrack(false);
+
+        exception.printStackTrace();
     }
 
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
         QuickController.RemoveController(track, queue.isEmpty());
-        playNextTrack();
+        System.out.println("[TrackScheduler] Track is stuck..." + track.getInfo().title);
+
+        player.startTrack(track, false);
     }
 }

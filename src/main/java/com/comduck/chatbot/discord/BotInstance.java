@@ -34,6 +34,8 @@ public class BotInstance {
     public PlayerInstance playerInstance;
 
     public BotInstance(Guild guild, SpotifyApi spotifyApi) {
+        System.out.println("[BotInstance] Instantiate BotInstance : " + guild.getName());
+
         this.playerInstance = new PlayerInstance();
         this.spotifyApi = spotifyApi;
         this.INSTANCE_GUILD = guild;
