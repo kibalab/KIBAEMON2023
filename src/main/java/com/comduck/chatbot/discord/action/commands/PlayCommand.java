@@ -25,54 +25,30 @@ import java.util.concurrent.atomic.AtomicReference;
 public class PlayCommand implements Command {
 
     @Override
-    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) throws MalformedURLException {
+    public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isUserAction) throws MalformedURLException {
 
         String video = msg.replaceFirst("play", "").replace(" ", "");
 
         TextChannel textCh = null;
         VoiceChannel voiceCh = null;
         final Message[] loadMsg = {null};
+
+        MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
+        textCh = msgEvent.getChannel().asTextChannel();
+        if(instance == null) instance = new BotInstance(msgEvent.getGuild(), DiscordBotMain.spotifyApi);
+        if(!msgEvent.getGuild().getAudioManager().isConnected() && msgEvent.getMember().getVoiceState().getChannel() != null) voiceCh = msgEvent.getMember().getVoiceState().getChannel().asVoiceChannel();
+
+        if(!isUserAction) {
+            msgEvent.getMessage().delete().queue();
+            textCh.sendMessage("> 불러오는 중").queue(_loadMsg -> {
+                loadMsg[0] = _loadMsg;
+            });
+        }
+
         try {
-            if (e instanceof MessageReceivedEvent) {
-                MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
-                textCh = msgEvent.getChannel().asTextChannel();
-                if(instance == null) instance = new BotInstance(msgEvent.getGuild(), DiscordBotMain.spotifyApi);
-                if(!msgEvent.getGuild().getAudioManager().isConnected()) voiceCh = ((MessageReceivedEvent) e).getMember().getVoiceState().getChannel().asVoiceChannel();
-
-                msgEvent.getMessage().delete().queue();
-                textCh.sendMessage("> 불러오는 중").queue(_loadMsg -> {
-                    loadMsg[0] = _loadMsg;
-                });
-            } else if (e instanceof GenericMessageReactionEvent) {
-                GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
-                textCh = reactionEvent.getChannel().asTextChannel();
-                if(instance == null) instance = new BotInstance(reactionEvent.getGuild(), DiscordBotMain.spotifyApi);
-                if(!reactionEvent.getGuild().getAudioManager().isConnected()) voiceCh = ((GenericMessageReactionEvent) e).getMember().getVoiceState().getChannel().asVoiceChannel();
-
-                reactionEvent.getReaction().removeReaction().queue();
-                textCh.sendMessage("> 불러오는 중").queue(_loadMsg -> {
-                    loadMsg[0] = _loadMsg;
-                });
-            } else if (e instanceof ButtonInteractionEvent) {
-                ButtonInteractionEvent reactionEvent = (ButtonInteractionEvent) e;
-                textCh = reactionEvent.getChannel().asTextChannel();
-                if(instance == null) instance = new BotInstance(reactionEvent.getGuild(), DiscordBotMain.spotifyApi);
-                if(!reactionEvent.getGuild().getAudioManager().isConnected()) voiceCh = ((ButtonInteractionEvent) e).getMember().getVoiceState().getChannel().asVoiceChannel();
-                textCh.sendMessage("> 불러오는 중").queue(_loadMsg -> {
-                    loadMsg[0] = _loadMsg;
-                });
-            } else if (e instanceof ModalInteractionEvent) {
-                ModalInteractionEvent reactionEvent = (ModalInteractionEvent) e;
-                textCh = reactionEvent.getChannel().asTextChannel();
-                if(instance == null) instance = new BotInstance(reactionEvent.getGuild(), DiscordBotMain.spotifyApi);
-                if(!reactionEvent.getGuild().getAudioManager().isConnected()) voiceCh = ((ModalInteractionEvent) e).getMember().getVoiceState().getChannel().asVoiceChannel();
-
-                reactionEvent.reply("> 불러오는 중").setEphemeral(true).queue();
-            }
-
             if(instance.playerInstance == null) instance.playerInstance = new PlayerInstance();
             instance.playerInstance.PlayTrackTo(e, textCh, voiceCh, video, (track) -> {
-                loadMsg[0].delete().queue();
+                if(loadMsg[0] != null) loadMsg[0].delete().queue();
             });
         } catch (IOException ex) {
             ex.printStackTrace();

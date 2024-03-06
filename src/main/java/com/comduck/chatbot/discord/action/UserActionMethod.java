@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface UserActionMethod {
     String[] command() default {};
-    String[] modalId() default "";
+    String buttonId() default "";
+    String modalId() default "";
     int order() default 0;
 }

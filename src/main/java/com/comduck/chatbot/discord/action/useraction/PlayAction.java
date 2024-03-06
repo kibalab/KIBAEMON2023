@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
@@ -18,7 +19,7 @@ import net.dv8tion.jda.api.interactions.modals.Modal;
 
 import java.util.HashMap;
 
-@UserActionMethod(command = {"playButton"}, modalId = "playModal")
+@UserActionMethod(command = {"play"}, buttonId = "playButton", modalId = "playModal")
 public class PlayAction implements UserAction {
     @Override
     public Button Build(Guild guild, HashMap<String, String> customValues) {
@@ -39,10 +40,9 @@ public class PlayAction implements UserAction {
             style = ButtonStyle.PRIMARY;
             msg = "곡 추가";
         }
-        return null;
+        return Button.of(style, "playButton", msg);
     }
 
-    @UserActionMethod
     @Override
     public boolean OnClick(ButtonInteractionEvent event) {
         TextInput body = TextInput.create("url", "Video URL", TextInputStyle.PARAGRAPH)
@@ -59,7 +59,8 @@ public class PlayAction implements UserAction {
 
     @Override
     public boolean OnApply(ModalInteractionEvent event) {
-        CommandManager.ExcuteMessageCommend("play", null, event.getValue("url").getAsString());
+        CommandManager.ExcuteMessageCommend("play", new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), event.getValue("url").getAsString(), true);
+        event.reply("> 요청중입니다, 잠시만기다려주세요.").queue();
         return false;
     }
 

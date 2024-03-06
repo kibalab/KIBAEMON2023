@@ -6,7 +6,6 @@ import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 
@@ -27,11 +26,11 @@ public class RepeatCommand implements Command {
 
         if (e instanceof MessageReceivedEvent) {
             msgEvent = (MessageReceivedEvent) e;
-            CommandManager.ExcuteMessageCommend("play", msgEvent, msg);
+            CommandManager.ExcuteMessageCommend("play", msgEvent, msg, false);
             msgEvent.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((MessageReceivedEvent) e).getAuthor().getName())).queue();
         } else if (e instanceof GenericMessageReactionEvent) {
             reactionEvent = (GenericMessageReactionEvent) e;
-            CommandManager.ExcuteMessageCommend("play", reactionEvent, msg);
+            CommandManager.ExcuteMessageCommend("play", reactionEvent, msg, false);
             reactionEvent.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((GenericMessageReactionEvent) e).getUser().getName())).queue();
         } else if (e instanceof ButtonInteractionEvent) {
             buttonEvent = (ButtonInteractionEvent) e;

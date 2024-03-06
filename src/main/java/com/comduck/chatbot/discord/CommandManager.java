@@ -1,23 +1,20 @@
 package com.comduck.chatbot.discord;
 
 import com.comduck.chatbot.discord.action.*;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
+import net.dv8tion.jda.api.interactions.components.Component;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import org.apache.hc.core5.http.ParseException;
 import org.reflections.Reflections;
-import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -29,7 +26,7 @@ public class CommandManager {
 
     static public HashMap<String, Command> commands = new HashMap<>();
     static public HashMap<String, Command> reactions = new HashMap<>();
-    static public HashMap<String, UserAction> userActions = new HashMap<>();
+    static public HashMap<UserActionMethod, UserAction> userActions = new HashMap<>();
 
     static public void LoadAllCommands() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, MalformedURLException {
         Reflections reflections = new Reflections(CommandPackage);
@@ -67,7 +64,7 @@ public class CommandManager {
                 UserAction actionObjecct = (UserAction) p.getConstructor().newInstance();
 
                 for (String cmd: ua.command()) {
-                    AddUserAction(cmd, actionObjecct);
+                    AddUserAction(ua, actionObjecct);
                 }
             }
         }
@@ -83,19 +80,19 @@ public class CommandManager {
         reactions.put(cmd, command);
     }
 
-    static public void AddUserAction(String cmd, UserAction command) {
+    static public void AddUserAction(UserActionMethod cmd, UserAction command) {
         System.out.println("ADD USER_ACTION <" + cmd + "> | " + command.getClass().getName());
         userActions.put(cmd, command);
     }
 
-    static public void ExcuteMessageCommend(String command, GenericMessageEvent event, String msg)
+    static public void ExcuteMessageCommend(String command, GenericMessageEvent event, String msg, boolean isUserAction)
     {
         if(!commands.containsKey(command)) {
             System.out.printf("[CommandManager] Command(%s) Not Founded\n", command);
             return;
         }
         try {
-            commands.get(command).OnCommand(BotInstance.getInstance(event.getGuild().getId()), event, msg, true);
+            commands.get(command).OnCommand(BotInstance.getInstance(event.getGuild().getId()), event, msg, isUserAction);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
@@ -110,24 +107,45 @@ public class CommandManager {
         commands.get(command).OnPostCommand(BotInstance.getInstance(event.getGuild().getId()), event);
     }
 
+    static public Component BuildAction(String command, Guild guild, HashMap<String, String> customData)
+    {
+        for (Map.Entry<UserActionMethod, UserAction> entry : userActions.entrySet()) {
+            UserActionMethod keys = entry.getKey();
+            UserAction value = entry.getValue();
+
+            if (keys.command().equals(command)){
+                return value.Build(guild, customData);
+            }
+        }
+        return null;
+    }
+
     static public void ExcuteButtonAction(String command, ButtonInteractionEvent event, String msg)
     {
-        if(!userActions.containsKey(command)) {
-            System.out.printf("[CommandManager] Command(%s) Not Founded\n", command);
-            return;
+        for (Map.Entry<UserActionMethod, UserAction> entry : userActions.entrySet()) {
+            UserActionMethod keys = entry.getKey();
+            UserAction value = entry.getValue();
+
+            if (keys.buttonId().equals(command)){
+                value.OnClick(event);
+            }
         }
-        userActions.get(command).OnClick(event);
+        System.out.printf("[CommandManager] Action(%s) Not Founded\n", command);
     }
 
     public static void ExcuteModalAction(String command, ModalInteractionEvent event, String msg) {
-        if(!commands.containsKey(command)) {
-            System.out.printf("[CommandManager] Command(%s) Not Founded\n", command);
-            return;
+        for (Map.Entry<UserActionMethod, UserAction> entry : userActions.entrySet()) {
+            UserActionMethod keys = entry.getKey();
+            UserAction value = entry.getValue();
+
+            if (keys.modalId().equals(command)){
+                value.OnApply(event);
+            }
         }
-        userActions.get(command).OnApply(event);
+        System.out.printf("[CommandManager] Action(%s) Not Founded\n", command);
     }
 
-    static public void ExcuteReactionCommend(MessageReaction reaction, GenericMessageEvent event, boolean isAdd)
+    static public void ExcuteReactionCommend(MessageReaction reaction, GenericMessageEvent event, boolean isUserAction)
     {
         if(!reactions.containsKey(reaction.getEmoji().getAsReactionCode())) {
             System.out.printf("[CommandManager] Raction(%s) Not Founded\n", reaction.getEmoji().getAsReactionCode());
@@ -135,7 +153,7 @@ public class CommandManager {
         }
 
         try {
-            reactions.get(reaction.getEmoji().getAsReactionCode()).OnCommand(BotInstance.getInstance(event.getGuild().getId()), event, "", isAdd);
+            reactions.get(reaction.getEmoji().getAsReactionCode()).OnCommand(BotInstance.getInstance(event.getGuild().getId()), event, "", isUserAction);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {

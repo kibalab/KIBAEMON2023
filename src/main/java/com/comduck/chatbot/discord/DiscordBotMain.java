@@ -1,7 +1,5 @@
 package com.comduck.chatbot.discord;
 
-import com.comduck.chatbot.discord.audioV2.QuickController;
-import com.comduck.chatbot.discord.audiocore.*;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -13,7 +11,6 @@ import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
@@ -29,7 +26,6 @@ import se.michaelthelin.spotify.SpotifyApi;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
-import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -322,7 +318,7 @@ public class DiscordBotMain extends ListenerAdapter {
     private void botCommands(final MessageReceivedEvent event, String msg) {
 
         String cmd = msg.split(" ")[0];
-        CommandManager.ExcuteMessageCommend(cmd, event, msg);
+        CommandManager.ExcuteMessageCommend(cmd, event, msg, false);
     }
 
     //#endregion

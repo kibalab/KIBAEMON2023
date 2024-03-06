@@ -1,5 +1,6 @@
 package com.comduck.chatbot.discord.audioV2;
 
+import com.comduck.chatbot.discord.CommandManager;
 import com.comduck.chatbot.discord.audiocore.YoutubeParse;
 import com.comduck.chatbot.discord.audiocore.enums.Platform;
 import com.comduck.chatbot.discord.audiocore.imgproc.YoutubePlayingImageProcessor;
@@ -31,6 +32,8 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
@@ -73,9 +76,11 @@ public class PlayerInstance {
             AudioSourceManagers.registerRemoteSources(playerManager);
         } catch (Exception e) {}
         player = playerManager.createPlayer();
+        System.out.println("[PlayerInstance] Instantiate Player");
 
         trackScheduler = new TrackScheduler(player);
         player.addListener(trackScheduler);
+        System.out.println("[PlayerInstance] Registering Player Listender from TrackScheduler");
     }
 
     /**
@@ -95,7 +100,6 @@ public class PlayerInstance {
         {
             if(callback != null) callback.accept(null);
             textChannel.sendMessage("채널 접속에 실패했습니다.").queue();
-            e.printStackTrace();
         }
 
         if(video.isBlank() || video.isEmpty())
@@ -179,7 +183,8 @@ public class PlayerInstance {
 
                 if(callback != null) callback.accept(track);
 
-                textChannel.sendFiles(FileUpload.fromData(playingImage)).queue(send_msg -> {
+                var msg = textChannel.sendFiles(FileUpload.fromData(playingImage));
+                msg.queue(send_msg -> {
                     userData.put("send_msg", send_msg);
                     trackScheduler.queue(track);
                 });
@@ -205,6 +210,7 @@ public class PlayerInstance {
             public void loadFailed(FriendlyException e) {
                 if(callback != null) callback.accept(null);
                 textChannel.sendMessage("곡을 불러올 수 없습니다.").queue();
+                e.printStackTrace();
             }
         });
     }
