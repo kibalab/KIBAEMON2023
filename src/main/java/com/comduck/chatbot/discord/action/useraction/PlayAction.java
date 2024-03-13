@@ -1,12 +1,11 @@
 package com.comduck.chatbot.discord.action.useraction;
 
 import com.comduck.chatbot.discord.BotInstance;
-import com.comduck.chatbot.discord.CommandManager;
+import com.comduck.chatbot.discord.ActionManager;
 import com.comduck.chatbot.discord.action.UserAction;
 import com.comduck.chatbot.discord.action.UserActionMethod;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -59,13 +58,13 @@ public class PlayAction implements UserAction {
 
     @Override
     public boolean OnApply(ModalInteractionEvent event) {
-        CommandManager.ExcuteMessageCommend("play", new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), event.getValue("url").getAsString(), true);
+        ActionManager.ExcuteMessageCommend("play", new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), event.getValue("url").getAsString(), true);
         event.reply("> 요청중입니다, 잠시만기다려주세요.").queue();
         return false;
     }
 
     @Override
-    public Button OnUpdate(GenericEvent event, Guild guild, Button button) {
+    public Button OnChangeStatus(Guild guild, Button button) {
         BotInstance instance = BotInstance.getInstance(guild.getId());
         AudioPlayer player = instance.playerInstance.player;
         

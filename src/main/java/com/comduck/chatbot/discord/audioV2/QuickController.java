@@ -1,11 +1,9 @@
 package com.comduck.chatbot.discord.audioV2;
 
-import com.comduck.chatbot.discord.CommandManager;
+import com.comduck.chatbot.discord.ActionManager;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
@@ -21,7 +19,7 @@ public class QuickController {
 
         var msg = ((Message)track.getUserData(HashMap.class).get("send_msg"));
         ActionRow updatedActionRow = ActionRow.of(List.of(new Button[]{
-                (Button) CommandManager.BuildAction("play", msg.getGuild(), customData),
+                //(Button) ActionManager.BuildAction("play", msg.getGuild(), customData),
                 Button.primary("pause " + track.getIdentifier(), "일시정지").withStyle(ButtonStyle.SECONDARY),
                 Button.primary("stop " + track.getIdentifier(), "정지").withStyle(ButtonStyle.SECONDARY),
                 Button.primary("skip " + track.getIdentifier(), "스킵").withStyle(ButtonStyle.SECONDARY),

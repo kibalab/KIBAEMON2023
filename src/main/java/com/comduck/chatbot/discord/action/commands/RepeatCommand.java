@@ -1,7 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
-import com.comduck.chatbot.discord.CommandManager;
+import com.comduck.chatbot.discord.ActionManager;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -26,15 +26,15 @@ public class RepeatCommand implements Command {
 
         if (e instanceof MessageReceivedEvent) {
             msgEvent = (MessageReceivedEvent) e;
-            CommandManager.ExcuteMessageCommend("play", msgEvent, msg, false);
+            ActionManager.ExcuteMessageCommend("play", msgEvent, msg, false);
             msgEvent.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((MessageReceivedEvent) e).getAuthor().getName())).queue();
         } else if (e instanceof GenericMessageReactionEvent) {
             reactionEvent = (GenericMessageReactionEvent) e;
-            CommandManager.ExcuteMessageCommend("play", reactionEvent, msg, false);
+            ActionManager.ExcuteMessageCommend("play", reactionEvent, msg, false);
             reactionEvent.getChannel().sendMessage(String.format("> 현재곡 재등록 ``%s``", ((GenericMessageReactionEvent) e).getUser().getName())).queue();
         } else if (e instanceof ButtonInteractionEvent) {
             buttonEvent = (ButtonInteractionEvent) e;
-            CommandManager.ExcuteButtonAction("play", buttonEvent, msg);
+            ActionManager.ExcuteButtonAction("play", buttonEvent, msg);
             buttonEvent.reply(String.format("> 현재곡 재등록 ``%s``", ((ButtonInteractionEvent) e).getUser().getName())).setEphemeral(true).queue();
         }
     }

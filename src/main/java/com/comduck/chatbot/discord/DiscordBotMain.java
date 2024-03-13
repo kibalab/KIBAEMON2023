@@ -85,7 +85,7 @@ public class DiscordBotMain extends ListenerAdapter {
     private void start(String bot) throws Exception {
 
         ResourceManager.loadAll();
-        CommandManager.LoadAllCommands();
+        ActionManager.LoadAllActions();
         ProcessorManager.LoadAllCommands();
 
         ImageIO.scanForPlugins();
@@ -214,7 +214,7 @@ public class DiscordBotMain extends ListenerAdapter {
                 event.getMessageId(),
                 event.getReaction().getEmoji().getAsReactionCode()
         );
-        CommandManager.ExcuteReactionCommend(event.getReaction(), event, true);
+        ActionManager.ExcuteReactionCommend(event.getReaction(), event, true);
     }
 
     @Override
@@ -228,17 +228,17 @@ public class DiscordBotMain extends ListenerAdapter {
                 event.getMessageId(),
                 event.getReaction().getEmoji().getAsReactionCode()
         );
-        CommandManager.ExcuteReactionCommend(event.getReaction(), event, false);
+        ActionManager.ExcuteReactionCommend(event.getReaction(), event, false);
     }
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
-        CommandManager.ExcuteButtonAction(event.getButton().getId().split(" ")[0], event, "");
+        ActionManager.ExcuteButtonAction(event.getButton().getId().split(" ")[0], event, "");
     }
 
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
-        CommandManager.ExcuteModalAction(event.getModalId().split(" ")[0], event, "");
+        ActionManager.ExcuteModalAction(event.getModalId().split(" ")[0], event, "");
     }
 
     /**
@@ -318,7 +318,7 @@ public class DiscordBotMain extends ListenerAdapter {
     private void botCommands(final MessageReceivedEvent event, String msg) {
 
         String cmd = msg.split(" ")[0];
-        CommandManager.ExcuteMessageCommend(cmd, event, msg, false);
+        ActionManager.ExcuteMessageCommend(cmd, event, msg, false);
     }
 
     //#endregion

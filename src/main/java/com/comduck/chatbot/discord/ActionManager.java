@@ -2,12 +2,15 @@ package com.comduck.chatbot.discord;
 
 import com.comduck.chatbot.discord.action.*;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
-import net.dv8tion.jda.api.interactions.components.Component;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.internal.interactions.component.ButtonImpl;
 import org.apache.hc.core5.http.ParseException;
 import org.reflections.Reflections;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
@@ -18,7 +21,7 @@ import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.*;
 
-public class CommandManager {
+public class ActionManager {
 
     static public String CommandPackage = "com.comduck.chatbot.discord.action.commands";
     static public String ReactionPackage = "com.comduck.chatbot.discord.action.reactions";
@@ -28,7 +31,7 @@ public class CommandManager {
     static public HashMap<String, Command> reactions = new HashMap<>();
     static public HashMap<UserActionMethod, UserAction> userActions = new HashMap<>();
 
-    static public void LoadAllCommands() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, MalformedURLException {
+    static public void LoadAllActions() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, MalformedURLException {
         Reflections reflections = new Reflections(CommandPackage);
         Set<Class<? extends IAction>> classes = reflections.getSubTypesOf(IAction.class);
         reflections = new Reflections(ReactionPackage);
@@ -107,7 +110,45 @@ public class CommandManager {
         commands.get(command).OnPostCommand(BotInstance.getInstance(event.getGuild().getId()), event);
     }
 
-    static public Component BuildAction(String command, Guild guild, HashMap<String, String> customData)
+    static public void AttachUserAction(String command, Message msg, HashMap customData)
+    {
+        var rows = msg.getActionRows();
+
+        if(rows.isEmpty()) {
+            List<ItemComponent> components = new ArrayList<>();
+            userActions.forEach((key, value) -> {
+                System.out.println(key.command());
+                System.out.println(command);
+                if (Arrays.stream(key.command()).toList().contains(command)) {
+                    components.add(value.Build(msg.getGuild(), customData));
+                }
+            });
+            msg.editMessage(msg.getContentRaw()).setComponents(ActionRow.of(components)).queue();
+            return;
+        }
+
+
+        var actionRow = rows.get(0).getComponents();
+
+        for (var j = 0; j < actionRow.size(); j++) {
+            var x = actionRow.get(j);
+            if(x.getClass() == ButtonImpl.class)
+            {
+                var button = ((Button) x);
+                int finalI = j;
+                userActions.forEach((key, value) -> {
+                    if(button.getId().equals(key.buttonId()))
+                    {
+                        actionRow.set(finalI, value.OnChangeStatus(msg.getGuild(), button));
+                    }
+                });
+            }
+        }
+
+        msg.editMessage(msg.getContentRaw()).setActionRow(actionRow).queue();
+    }
+
+    static public ItemComponent BuildAction(String command, Guild guild, HashMap<String, String> customData)
     {
         for (Map.Entry<UserActionMethod, UserAction> entry : userActions.entrySet()) {
             UserActionMethod keys = entry.getKey();
