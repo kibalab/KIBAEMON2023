@@ -6,6 +6,7 @@ import com.comduck.chatbot.discord.action.UserAction;
 import com.comduck.chatbot.discord.action.UserActionMethod;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -21,7 +22,7 @@ import java.util.HashMap;
 @UserActionMethod(command = {"test"}, buttonId = "testButton", modalId = "testModal")
 public class TestAction implements UserAction {
     @Override
-    public Button Build(Guild guild, HashMap<String, String> customValues) {
+    public Button Build(Guild guild, Message parent) {
         return Button.of(ButtonStyle.DANGER, "testButton", "테스트");
     }
 
@@ -42,12 +43,12 @@ public class TestAction implements UserAction {
     @Override
     public boolean OnApply(ModalInteractionEvent event) {
         event.reply("> 요청중입니다, 잠시만기다려주세요.").queue();
-        ActionManager.AttachUserAction("test", event.getMessage(), new HashMap());
+        ActionManager.AttachUserAction("test", event.getMessage());
         return false;
     }
 
     @Override
-    public Button OnChangeStatus(Guild guild, Button button) {
+    public Button OnChangeStatus(Guild guild, Message parent, Button button) {
         button = button.withStyle(ButtonStyle.SUCCESS);
         button = button.withLabel("반응됨");
         return button;

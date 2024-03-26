@@ -4,8 +4,10 @@ import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.ActionManager;
 import com.comduck.chatbot.discord.action.UserAction;
 import com.comduck.chatbot.discord.action.UserActionMethod;
+import com.comduck.chatbot.discord.audioV2.TrackScheduler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -21,25 +23,29 @@ import java.util.HashMap;
 @UserActionMethod(command = {"play"}, buttonId = "playButton", modalId = "playModal")
 public class PlayAction implements UserAction {
     @Override
-    public Button Build(Guild guild, HashMap<String, String> customValues) {
+    public Button Build(Guild guild, Message parent) {
         BotInstance instance = BotInstance.getInstance(guild.getId());
         AudioPlayer player = instance.playerInstance.player;
 
-        ButtonStyle style = ButtonStyle.UNKNOWN;
-        String msg = "알수없음";
+        String label;
+        ButtonStyle style;
 
-        if(player.isPaused())
-        {
+        if(player.isPaused()) {
             style = ButtonStyle.DANGER;
-            msg = "일시정지";
-        } else if (customValues.get("trackId").contains(player.getPlayingTrack().getIdentifier())) {
-            style = ButtonStyle.SUCCESS;
-            msg = "재생중";
-        } else {
+            label = "일시정지";
+        } else if(instance.playerInstance.trackScheduler.playing == null) {
             style = ButtonStyle.PRIMARY;
-            msg = "곡 추가";
+            label = "곡추가";
+        } else if (instance.playerInstance.trackScheduler.playing.Message.equals(parent)) {
+            style = ButtonStyle.SUCCESS;
+            label = "재생중";
+        } else {
+            style = ButtonStyle.UNKNOWN;
+            label = "오류";
         }
-        return Button.of(style, "playButton", msg);
+        System.out.println("[PlayAction] Build : " + label);
+
+        return style == ButtonStyle.UNKNOWN ? null : Button.of(style, "playButton", label);
     }
 
     @Override
@@ -64,25 +70,28 @@ public class PlayAction implements UserAction {
     }
 
     @Override
-    public Button OnChangeStatus(Guild guild, Button button) {
+    public Button OnChangeStatus(Guild guild, Message parent, Button button) {
         BotInstance instance = BotInstance.getInstance(guild.getId());
         AudioPlayer player = instance.playerInstance.player;
-        
-        ButtonStyle style = ButtonStyle.UNKNOWN;
-        String msg = "알수없음";
 
-        if(player.isPaused())
-        {
+        String label;
+        ButtonStyle style;
+
+        if(player.isPaused()) {
             style = ButtonStyle.DANGER;
-            msg = "일시정지";
-        } else if (button.getId().contains(player.getPlayingTrack().getIdentifier())) {
-            style = ButtonStyle.SUCCESS;
-            msg = "재생중";
-        } else {
+            label = "일시정지";
+        } else if(instance.playerInstance.trackScheduler.playing.Message == null) {
             style = ButtonStyle.PRIMARY;
-            msg = "곡 추가";
+            label = "곡추가";
+        } else if (instance.playerInstance.trackScheduler.playing.Message.equals(parent)) {
+            style = ButtonStyle.SUCCESS;
+            label = "재생중";
+        } else {
+            style = ButtonStyle.UNKNOWN;
+            label = "오류";
         }
+        System.out.println("[PlayAction] Build : " + label);
 
-        return button.withStyle(style).withLabel(msg);
+        return style == ButtonStyle.UNKNOWN ? null : Button.of(style, "playButton", label);
     }
 }

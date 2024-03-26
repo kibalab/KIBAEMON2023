@@ -28,7 +28,7 @@ public class TestCommand implements Command {
         eb.addField("Test Embed", "이 Embed 메시지는 다용도 테스트 메시지 입니다.", false);
 
         msgEvent.getChannel().sendMessageEmbeds(eb.build()).queue(message -> {
-            ActionManager.AttachUserAction("test", message, new HashMap());
+            ActionManager.AttachUserAction("test", message);
         });
     }
 

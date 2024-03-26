@@ -110,20 +110,34 @@ public class ActionManager {
         commands.get(command).OnPostCommand(BotInstance.getInstance(event.getGuild().getId()), event);
     }
 
-    static public void AttachUserAction(String command, Message msg, HashMap customData)
+    static public void AttachUserAction(String command, Message msg)
     {
         var rows = msg.getActionRows();
 
         if(rows.isEmpty()) {
             List<ItemComponent> components = new ArrayList<>();
             userActions.forEach((key, value) -> {
-                System.out.println(key.command());
-                System.out.println(command);
-                if (Arrays.stream(key.command()).toList().contains(command)) {
-                    components.add(value.Build(msg.getGuild(), customData));
+                for (String _command : key.command())
+                {
+                    if(_command.contains(command))
+                    {
+                        try
+                        {
+                            var component = value.Build(msg.getGuild(), msg);
+                            if(component != null) components.add(component);
+                        }
+                        catch (Exception ex)
+                        {
+                            ex.printStackTrace();
+                        }
+                    }
                 }
             });
-            msg.editMessage(msg.getContentRaw()).setComponents(ActionRow.of(components)).queue();
+            if(components.size() <= 0) {
+                List<ActionRow> emptyActionRows = List.of();
+                msg.editMessageComponents(emptyActionRows).queue();
+            }
+            else msg.editMessage(msg.getContentRaw()).setComponents(ActionRow.of(components)).queue();
             return;
         }
 
@@ -139,26 +153,15 @@ public class ActionManager {
                 userActions.forEach((key, value) -> {
                     if(button.getId().equals(key.buttonId()))
                     {
-                        actionRow.set(finalI, value.OnChangeStatus(msg.getGuild(), button));
+                        var item = value.OnChangeStatus(msg.getGuild(), msg, button);
+                        if(item != null) actionRow.set(finalI, item);
+                        else actionRow.remove(finalI);
                     }
                 });
             }
         }
 
         msg.editMessage(msg.getContentRaw()).setActionRow(actionRow).queue();
-    }
-
-    static public ItemComponent BuildAction(String command, Guild guild, HashMap<String, String> customData)
-    {
-        for (Map.Entry<UserActionMethod, UserAction> entry : userActions.entrySet()) {
-            UserActionMethod keys = entry.getKey();
-            UserAction value = entry.getValue();
-
-            if (keys.command().equals(command)){
-                return value.Build(guild, customData);
-            }
-        }
-        return null;
     }
 
     static public void ExcuteButtonAction(String command, ButtonInteractionEvent event, String msg)

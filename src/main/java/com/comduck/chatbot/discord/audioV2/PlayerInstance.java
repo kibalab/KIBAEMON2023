@@ -32,6 +32,7 @@ import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.hc.core5.http.ParseException;
 import org.jetbrains.annotations.Nullable;
+import org.json.simple.JSONObject;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
@@ -39,8 +40,8 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 public class PlayerInstance {
@@ -148,25 +149,21 @@ public class PlayerInstance {
                 final File playingImage;
                 String[] tags = {};
 
-                HashMap userData = new HashMap<>();
-                track.setUserData(userData);
-                userData.put("event", event);
                 switch (finalTrackType)
                 {
                     case Soundcloud:
                     case http:
                     case Other:
                     case Youtube:
-                        YoutubeParse yp = new YoutubeParse();
-                        userData.put("details", yp.getVideo(track.getIdentifier()));
                         tags = YoutubeWebUtil.getTrackTags(trackInfo.identifier);
                     default:
-                        playingImage = new YoutubePlayingImageProcessor().processImage(track, tags);
+                        YoutubeParse yp = new YoutubeParse();
+                        playingImage = new YoutubePlayingImageProcessor().processImage(event, track, tags, trackInfo.author, trackInfo.title, yp.getVideo(track.getIdentifier()).get("author_url").toString());
                         break;
 
                     case Spotify:
                         tags = new String[]{"Spotify"};
-                        playingImage = new YoutubePlayingImageProcessor().processImage(track, tags);
+                        playingImage = new YoutubePlayingImageProcessor().processImage(event, track, tags, trackInfo.author, trackInfo.title, "");
                         break;
                 }
 
@@ -174,19 +171,22 @@ public class PlayerInstance {
 
                 var msg = textChannel.sendFiles(FileUpload.fromData(playingImage));
                 msg.queue(send_msg -> {
-                    userData.put("send_msg", send_msg);
-                    trackScheduler.queue(track);
+                    trackScheduler.queue(new TrackMessage(send_msg, event, track));
                 });
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
+                AtomicReference<Message> send_msg = null;
+                textChannel.sendMessage(String.format("플레이리스트를 추가합니다. ``%s`` [%d]", playlist.getName(), playlist.getTracks().size())).queue(msg -> {
+                    send_msg.set(msg);
+                });
+
                 for (AudioTrack track : playlist.getTracks()) {
-                    trackScheduler.queue(track);
+                    trackScheduler.queue(new TrackMessage(send_msg.get(), null, track));
                 }
 
                 if(callback != null) callback.accept(null);
-                textChannel.sendMessage(String.format("플레이리스트를 추가합니다. ``%s`` [%d]", playlist.getName(), playlist.getTracks().size())).queue();
             }
 
             @Override

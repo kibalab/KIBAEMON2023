@@ -41,14 +41,12 @@ public class YoutubePlayingImageProcessor {
 
    }
 
-    public File processImage(AudioTrack track, String[] tags) {
+    public File processImage(GenericEvent e, AudioTrack track, String[] tags, String uploader, String title, String author_url) {
         try {
 
             var userData = track.getUserData(HashMap.class);
-            JSONObject details = (JSONObject) userData.get("details");
             AudioTrackInfo info = track.getInfo();
 
-            GenericEvent e = (GenericEvent) userData.get("event");
             User user = null;
             if (e instanceof MessageReceivedEvent) {
                 MessageReceivedEvent event = (MessageReceivedEvent) e;
@@ -64,14 +62,11 @@ public class YoutubePlayingImageProcessor {
                 user = event.getUser();
             }
 
-
-            String uploader = (String) details.get("author_name");
-            String title = (String) details.get("title");
             String thumbUrl = info.artworkUrl.replace("vi_webp", "vi").replace("webp", "jpg");
             Date duration = new Date(track.getDuration());
 
             //Load Image
-            URL uploaderIconFile = YoutubeWebUtil.getUserImage(details.get("author_url").toString());
+            URL uploaderIconFile = YoutubeWebUtil.getUserImage(author_url);
             BufferedImage image = ImageIO.read(canvasFile);
             BufferedImage thum = null;
             BufferedImage uicon = null;
@@ -180,8 +175,8 @@ public class YoutubePlayingImageProcessor {
             ImageIO.write(image, "png", outFile);
 
             return outFile;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         return canvasFile;
     }

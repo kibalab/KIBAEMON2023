@@ -28,6 +28,9 @@ public class StopCommand implements Command {
         //2. 현재 재생되고 있는 트랙 정지
         //3. 플레이어 일시정지
         instance.playerInstance.trackScheduler.clear();
+        var last = instance.playerInstance.trackScheduler.playing;
+        instance.playerInstance.trackScheduler.playing = null;
+        last.OnEnd.accept(last);
         instance.playerInstance.player.stopTrack();
         instance.playerInstance.player.setPaused(false);
 
