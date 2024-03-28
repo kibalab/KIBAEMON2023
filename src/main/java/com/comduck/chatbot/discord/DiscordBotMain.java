@@ -110,6 +110,8 @@ public class DiscordBotMain extends ListenerAdapter {
 
     @Override
     public void onGuildReady(GuildReadyEvent event) {
+
+
         if (logging) {
             String str = null;
             str = event.getGuild().getName() + "[" + event.getGuild().getId() + "]" + " : ";

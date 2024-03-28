@@ -31,7 +31,7 @@ public class PauseCommand implements Command {
             msgEvent.getChannel().sendMessage(resultMsg).queue();
         } else if (e instanceof GenericMessageReactionEvent) {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
-            reactionEvent.getChannel().sendMessageEmbeds(resultMsg.getEmbeds()).queue();
+            reactionEvent.getChannel().sendMessage(resultMsg).queue();
         } else if (e instanceof ButtonInteractionEvent) {
             ButtonInteractionEvent reactionEvent = (ButtonInteractionEvent) e;
             reactionEvent.reply(resultMsg).setEphemeral(true).queue();

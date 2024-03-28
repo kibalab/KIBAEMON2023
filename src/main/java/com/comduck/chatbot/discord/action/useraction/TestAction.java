@@ -1,15 +1,12 @@
 package com.comduck.chatbot.discord.action.useraction;
 
 import com.comduck.chatbot.discord.ActionManager;
-import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.action.UserAction;
 import com.comduck.chatbot.discord.action.UserActionMethod;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
@@ -19,6 +16,11 @@ import net.dv8tion.jda.api.interactions.modals.Modal;
 
 import java.util.HashMap;
 
+/**
+ * @Anno UserActionMethod
+ *
+ * @Desc 테스트용 UserAction 예제 (사용하기 위해  UserActionMethod 주석을 붙여야함)
+ */
 @UserActionMethod(command = {"test"}, buttonId = "testButton", modalId = "testModal")
 public class TestAction implements UserAction {
     @Override

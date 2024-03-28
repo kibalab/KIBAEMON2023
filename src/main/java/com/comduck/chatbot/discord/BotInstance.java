@@ -39,7 +39,7 @@ public class BotInstance {
         this.playerInstance = new PlayerInstance();
         this.spotifyApi = spotifyApi;
         this.INSTANCE_GUILD = guild;
-        //CreateGuildAudioPlayer();
+
         INSTANCES.put(guild.getId(), this);
     }
 

@@ -66,19 +66,17 @@ public class PlayerInstance {
             AudioSourceManagers.registerRemoteSources(playerManager);
         } catch (Exception e) {}
         player = playerManager.createPlayer();
-        System.out.println("[PlayerInstance] Instantiate Player");
 
         trackScheduler = new TrackScheduler(player);
         player.addListener(trackScheduler);
-        System.out.println("[PlayerInstance] Registering Player Listender from TrackScheduler");
     }
 
     /**
      * 트랙 재생 및 채널 접속
      *
-     * @param textChannel
-     * @param voiceChannel
-     * @param video
+     * @param textChannel 재생 메시지를 출력할 텍스트 채널
+     * @param voiceChannel 음악을 재생할 음성 채널
+     * @param video 재생할 비디오 Uri
      */
     public void PlayTrackTo(GenericEvent event, final TextChannel textChannel, final VoiceChannel voiceChannel, String video, @Nullable Consumer<AudioTrack> callback) throws IOException, ParseException, SpotifyWebApiException {
         try {
@@ -183,7 +181,7 @@ public class PlayerInstance {
                 });
 
                 for (AudioTrack track : playlist.getTracks()) {
-                    trackScheduler.queue(new TrackMessage(send_msg.get(), null, track));
+                    trackScheduler.queue(new TrackMessage(send_msg.get(), event, track));
                 }
 
                 if(callback != null) callback.accept(null);

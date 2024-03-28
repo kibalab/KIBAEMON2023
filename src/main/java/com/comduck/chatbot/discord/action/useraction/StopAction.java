@@ -33,7 +33,9 @@ public class StopAction implements UserAction {
         style = ButtonStyle.SECONDARY;
         label = "정지";
 
-        if (!instance.playerInstance.trackScheduler.playing.Message.equals(parent))
+        var deleteOption = instance.playerInstance.trackScheduler.playing == null;
+
+        if (deleteOption || !instance.playerInstance.trackScheduler.playing.Message.equals(parent))
         {
             style = ButtonStyle.UNKNOWN;
             label = "오류";
@@ -45,13 +47,13 @@ public class StopAction implements UserAction {
     @Override
     public boolean OnClick(ButtonInteractionEvent event) {
         ActionManager.ExcuteMessageCommend("stop", new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), "", true);
-        event.reply("> 요청중입니다, 잠시만기다려주세요.").queue();
+        event.reply("> 요청중입니다, 잠시만기다려주세요.").setEphemeral(true).queue();
         return false;
     }
 
     @Override
     public boolean OnApply(ModalInteractionEvent event) {
-        event.reply("> 요청중입니다, 잠시만기다려주세요.").queue();
+        event.reply("> 요청중입니다, 잠시만기다려주세요.").setEphemeral(true).queue();
         return false;
     }
 

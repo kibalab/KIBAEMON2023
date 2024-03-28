@@ -21,15 +21,17 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void queue(TrackMessage track) {
-        System.out.println("[TrackScheduler] Enqueue : " + track.Track.getInfo().title);
         if (playing != null) {
             track.Track.stop();
             queue.offer(track);
         }else{
             playing = track;
             player.startTrack(track.Track, true);
-            System.out.println("[TrackScheduler] Play : " + track.Track.getInfo().title);
         }
+    }
+
+    public boolean isEmpty() {
+        return this.queue.isEmpty();
     }
 
     public BlockingQueue getTracks() {
@@ -49,18 +51,19 @@ public class TrackScheduler extends AudioEventAdapter {
         var next = queue.poll();
 
         try {
-            System.out.println("[TrackScheduler] Play : " + next.Track.getInfo().title);
             next.Track.setPosition(0);
             player.startTrack(next.Track, true);
+
+            var last = playing;
+            playing = next;
+            if(last != null)last.OnEnd.accept(last);
+            playing.OnStart.accept(playing);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        var last = playing;
-        playing = next;
-        last.OnEnd.accept(last);
-        playing.OnStart.accept(playing);
-    }
+
+}
 
     @Override
     public void onPlayerPause(AudioPlayer player) {
@@ -82,7 +85,7 @@ public class TrackScheduler extends AudioEventAdapter {
 
         var ended = playing;
         playing = null;
-        ended.OnEnd.accept(playing);
+        if(ended != null) ended.OnEnd.accept(ended);
         if (endReason.mayStartNext && !queue.isEmpty()) {
             playNextTrack(true);
         }

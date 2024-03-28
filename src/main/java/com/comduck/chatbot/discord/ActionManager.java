@@ -192,7 +192,7 @@ public class ActionManager {
     static public void ExcuteReactionCommend(MessageReaction reaction, GenericMessageEvent event, boolean isUserAction)
     {
         if(!reactions.containsKey(reaction.getEmoji().getAsReactionCode())) {
-            System.out.printf("[CommandManager] Raction(%s) Not Founded\n", reaction.getEmoji().getAsReactionCode());
+            System.out.printf("[CommandManager] Reaction(%s) Not Founded\n", reaction.getEmoji().getAsReactionCode());
             return;
         }
 

@@ -30,20 +30,35 @@ public class PlayAction implements UserAction {
         String label;
         ButtonStyle style;
 
-        if(player.isPaused()) {
-            style = ButtonStyle.DANGER;
-            label = "일시정지";
-        } else if(instance.playerInstance.trackScheduler.playing == null) {
-            style = ButtonStyle.PRIMARY;
-            label = "곡추가";
-        } else if (instance.playerInstance.trackScheduler.playing.Message.equals(parent)) {
-            style = ButtonStyle.SUCCESS;
-            label = "재생중";
-        } else {
-            style = ButtonStyle.UNKNOWN;
-            label = "오류";
+
+        if(instance.playerInstance.trackScheduler.playing == null) {
+            // 재생중인 곡이 없을때
+            if(instance.playerInstance.trackScheduler.isEmpty()) {
+                style = ButtonStyle.PRIMARY;
+                label = "곡추가";
+            }
+            else {
+                style = ButtonStyle.UNKNOWN; // 엑션 제거
+                label = "오류";
+            }
         }
-        System.out.println("[PlayAction] Build : " + label);
+        else{
+            //재생중인 곡이 있을때
+            if (instance.playerInstance.trackScheduler.playing.Message.equals(parent)) {
+                if(player.isPaused()) {
+                    style = ButtonStyle.DANGER;
+                    label = "일시정지";
+                }
+                else {
+                    style = ButtonStyle.SUCCESS;
+                    label = "재생중";
+                }
+            }
+            else{
+                style = ButtonStyle.UNKNOWN; // 엑션 제거
+                label = "오류";
+            }
+        }
 
         return style == ButtonStyle.UNKNOWN ? null : Button.of(style, "playButton", label);
     }
@@ -65,7 +80,7 @@ public class PlayAction implements UserAction {
     @Override
     public boolean OnApply(ModalInteractionEvent event) {
         ActionManager.ExcuteMessageCommend("play", new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), event.getValue("url").getAsString(), true);
-        event.reply("> 요청중입니다, 잠시만기다려주세요.").queue();
+        event.reply("> 요청중입니다, 잠시만기다려주세요.").setEphemeral(true).queue();
         return false;
     }
 

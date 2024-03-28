@@ -73,7 +73,6 @@ public class YoutubePlayingImageProcessor {
 
             try {
                 thum = ImageIO.read(new URL(thumbUrl).openConnection().getInputStream());
-                System.out.println("[ImageProcessor] Succeeded Load Image - " + thumbUrl);
             } catch (Exception ex) {
                 System.out.println("[ImageProcessor] Failed Load Image - " + thumbUrl.toString());
             }
@@ -156,9 +155,7 @@ public class YoutubePlayingImageProcessor {
             //Thumnail Image
             g2d.setClip(new RoundRectangle2D.Float(11, 12, 1260, 446, 90, 90));
 
-            System.out.println("[ImageProcessor] Tumbnail Size :" + thum.getWidth() + "/" + thum.getHeight());
             float sizeFit = Math.round(1260.0f/thum.getWidth() * 10) / 10;
-            System.out.println("[ImageProcessor] Tumbnail Size ratio :" + sizeFit);
             if (thum != null) g2d.drawImage(thum, 0, 0, (int)(thum.getWidth() * sizeFit), (int)(thum.getHeight() * sizeFit),null);
 
             //Edit close
