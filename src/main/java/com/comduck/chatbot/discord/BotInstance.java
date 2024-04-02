@@ -22,6 +22,7 @@ import se.michaelthelin.spotify.SpotifyApi;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +33,7 @@ public class BotInstance {
     public SpotifyApi spotifyApi;
     public int globalVolume = 10;
     public PlayerInstance playerInstance;
+    public OffsetDateTime lastDateTime;
 
     public BotInstance(Guild guild, SpotifyApi spotifyApi) {
         System.out.println("[BotInstance] Instantiate BotInstance : " + guild.getName());
