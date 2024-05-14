@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -13,7 +14,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import java.awt.*;
 
-@MessageCommand(name = {"stop"})
+@MessageCommand(name = {"stop"}, desc = "음악을 정지합니다", cat = Category.Audio)
 public class StopCommand implements Command {
 
     @Override
@@ -28,6 +29,9 @@ public class StopCommand implements Command {
         //2. 현재 재생되고 있는 트랙 정지
         //3. 플레이어 일시정지
         instance.playerInstance.trackScheduler.clear();
+        var last = instance.playerInstance.trackScheduler.playing;
+        instance.playerInstance.trackScheduler.playing = null;
+        last.OnEnd.accept(last);
         instance.playerInstance.player.stopTrack();
         instance.playerInstance.player.setPaused(false);
 
@@ -36,10 +40,10 @@ public class StopCommand implements Command {
 
         if (e instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
-            msgEvent.getChannel().sendMessageEmbeds(resultMsg.getEmbeds()).queue();
+            msgEvent.getChannel().sendMessage(resultMsg).queue();
         } else if (e instanceof GenericMessageReactionEvent) {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
-            reactionEvent.getChannel().sendMessageEmbeds(resultMsg.getEmbeds()).queue();
+            reactionEvent.getChannel().sendMessage(resultMsg).queue();
         } else if (e instanceof ButtonInteractionEvent) {
             ButtonInteractionEvent reactionEvent = (ButtonInteractionEvent) e;
             reactionEvent.reply(resultMsg).setEphemeral(true).queue();

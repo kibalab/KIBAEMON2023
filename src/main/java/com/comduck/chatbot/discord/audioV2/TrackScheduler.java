@@ -11,21 +11,29 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class TrackScheduler extends AudioEventAdapter {
 
-    private final BlockingQueue<AudioTrack> queue;
+    private final BlockingQueue<TrackMessage> queue;
+    public TrackMessage playing;
     private final AudioPlayer player;
 
     public TrackScheduler(AudioPlayer player) {
         this.player = player;
-        this.queue = new LinkedBlockingQueue<AudioTrack>();
+        this.queue = new LinkedBlockingQueue<TrackMessage>();
     }
 
-    public void queue(AudioTrack track) {
-        System.out.println("[TrackScheduler] Enqueue : " + track.getInfo().title);
-        if (!player.startTrack(track, true)) {
-            track.stop();
+    public void queue(TrackMessage track) {
+        if (playing != null) {
+            track.Track.stop();
             queue.offer(track);
+        }else{
+            playing = track;
+            player.startTrack(track.Track, true);
         }
     }
+
+    public boolean isEmpty() {
+        return this.queue.isEmpty();
+    }
+
     public BlockingQueue getTracks() {
         return queue;
     }
@@ -38,39 +46,50 @@ public class TrackScheduler extends AudioEventAdapter {
         return queue.size();
     }
 
-    public void playNextTrack()
+    public void playNextTrack(boolean noInterrupt)
     {
         var next = queue.poll();
 
         try {
-            player.startTrack(next, false);
+            next.Track.setPosition(0);
+            player.startTrack(next.Track, true);
+
+            var last = playing;
+            playing = next;
+            if(last != null)last.OnEnd.accept(last);
+            playing.OnStart.accept(playing);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+
+
+}
 
     @Override
     public void onPlayerPause(AudioPlayer player) {
-        QuickController.UpdateController(player, player.getPlayingTrack());
+        playing.OnPause.accept(playing);
     }
 
     @Override
     public void onPlayerResume(AudioPlayer player) {
-        QuickController.UpdateController(player, player.getPlayingTrack());
+        playing.OnResume.accept(playing);
     }
 
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        QuickController.UpdateController(player, track);
+        playing.OnStart.accept(playing);
     }
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
 
-        QuickController.RemoveController(track, queue.isEmpty());
-        if (endReason.mayStartNext) {
-            playNextTrack();
+        var ended = playing;
+        playing = null;
+        if(ended != null) ended.OnEnd.accept(ended);
+        if (endReason.mayStartNext && !queue.isEmpty()) {
+            playNextTrack(true);
         }
+
 
         // endReason == FINISHED: A track finished or died by an exception (mayStartNext = true).
         // endReason == LOAD_FAILED: Loading of a track failed (mayStartNext = true).
@@ -82,13 +101,15 @@ public class TrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        QuickController.RemoveController(track, queue.isEmpty());
-        playNextTrack();
+        playNextTrack(false);
+
+        exception.printStackTrace();
     }
 
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
-        QuickController.RemoveController(track, queue.isEmpty());
-        playNextTrack();
+        System.out.println("[TrackScheduler] Track is stuck..." + track.getInfo().title);
+
+        player.startTrack(track, false);
     }
 }

@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import com.comduck.chatbot.discord.action.commands.util.TimeUtil;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@MessageCommand(name = {"track", "tlist", "tl", "slist", "queue", "q"})
+@MessageCommand(name = {"track", "tlist", "tl", "slist", "queue", "q"}, desc = "현재 대기열 목록을 출력합니다.", cat = Category.Audio)
 public class TracklistCommand implements Command {
 
     @Override

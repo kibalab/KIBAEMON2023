@@ -1,7 +1,6 @@
 package com.comduck.chatbot.discord;
 
-import com.comduck.chatbot.discord.audioV2.QuickController;
-import com.comduck.chatbot.discord.audiocore.*;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -13,7 +12,6 @@ import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
@@ -29,14 +27,16 @@ import se.michaelthelin.spotify.SpotifyApi;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
-import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 public class DiscordBotMain extends ListenerAdapter {
     public static SpotifyApi spotifyApi = new SpotifyApi.Builder().setClientId("ee42dee9338d44b5a1dba476c5e75055").setClientSecret("da310a9627714fdfa2869742ed022986").build();
     public static boolean logging = false;
+    public static JDA jda;
 
 
     public static void main(String[] args) throws Exception {
@@ -89,7 +89,7 @@ public class DiscordBotMain extends ListenerAdapter {
     private void start(String bot) throws Exception {
 
         ResourceManager.loadAll();
-        CommandManager.LoadAllCommands();
+        ActionManager.LoadAllActions();
         ProcessorManager.LoadAllCommands();
 
         ImageIO.scanForPlugins();
@@ -103,7 +103,7 @@ public class DiscordBotMain extends ListenerAdapter {
         builder.enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.GUILD_EMOJIS_AND_STICKERS, GatewayIntent.GUILD_MEMBERS);
         builder.setActivity(Activity.playing("<가동중> ?help"));
         builder.addEventListeners(this);
-        builder.build();
+        jda = builder.build();
     }
 
     @Override
@@ -114,6 +114,8 @@ public class DiscordBotMain extends ListenerAdapter {
 
     @Override
     public void onGuildReady(GuildReadyEvent event) {
+
+
         if (logging) {
             String str = null;
             str = event.getGuild().getName() + "[" + event.getGuild().getId() + "]" + " : ";
@@ -209,7 +211,7 @@ public class DiscordBotMain extends ListenerAdapter {
 
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        if (event.getUser().isBot()) return;
+        if (event.isFromGuild() && event.getUser().isBot()) return;
         if (logging) System.out.printf(
                 "{'Type': 'ReactionAdd', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}%n",
                 event.getGuild().getName(), event.getGuild().getId(),
@@ -218,12 +220,12 @@ public class DiscordBotMain extends ListenerAdapter {
                 event.getMessageId(),
                 event.getReaction().getEmoji().getAsReactionCode()
         );
-        CommandManager.ExcuteReactionCommend(event.getReaction(), event, true);
+        ActionManager.ExcuteReactionCommend(event.getReaction(), event, true);
     }
 
     @Override
     public void onMessageReactionRemove(@NotNull MessageReactionRemoveEvent event) {
-        if (event.getUser().isBot()) return;
+        if (event.isFromGuild() && event.getUser().isBot()) return;
         if (logging) System.out.printf(
                 "{'Type': 'ReactionRemove', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'MessageID': '%s', 'Emote': '%s'}%n",
                 event.getGuild().getName(), event.getGuild().getId(),
@@ -232,32 +234,17 @@ public class DiscordBotMain extends ListenerAdapter {
                 event.getMessageId(),
                 event.getReaction().getEmoji().getAsReactionCode()
         );
-        CommandManager.ExcuteReactionCommend(event.getReaction(), event, false);
+        ActionManager.ExcuteReactionCommend(event.getReaction(), event, false);
     }
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
-        CommandManager.ExcuteMessageCommend(event.getButton().getId().split(" ")[0], event, "");
+        ActionManager.ExcuteButtonAction(event.getButton().getId().split(" ")[0], event, "");
     }
 
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
-        var parms = event.getModalId().split(" ");
-        var id = parms[0];
-        for (String parm : parms) {
-            if(parm.startsWith("@"))
-            {
-                switch (parm)
-                {
-                    case "@rmQck":
-                        QuickController.RemoveController(event.getMessage());
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-        CommandManager.ExcuteMessageCommend(id, event, id + event.getValue("parm").getAsString());
+        ActionManager.ExcuteModalAction(event.getModalId().split(" ")[0], event, "");
     }
 
     /**
@@ -267,6 +254,8 @@ public class DiscordBotMain extends ListenerAdapter {
      */
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+        BotInstance.getInstance(event.getGuild().getId()).lastDateTime = OffsetDateTime.now();
+
         //로그 출력
         if (logging) System.out.printf(
                 "{'Type': 'Message#%s', 'Guild_Name': '%s#%s', 'Chennal_Name': '%s#%s', 'Author': '%s#%s', 'Context': '%s'}%n",
@@ -317,27 +306,15 @@ public class DiscordBotMain extends ListenerAdapter {
 
         ProcessorManager.ExcuteMessageProcessor(event, msg);
 
-        if (!msg.startsWith("?")) return false;
+        if (!msg.startsWith("?") && !msg.startsWith("키바") && !msg.startsWith("ㅋㅂ")) return false;
 
         for(String cmd : msg.split("\\n")) {
             cmd = cmd.substring(1);
-            botCommands(event, cmd);
+            ActionManager.ExcuteMessageCommend(event, cmd, false);
         }
 
         //명령어가 없을경우 false반환
         return true;
-    }
-
-    /**
-     * 명령어 실행
-     *
-     * @param event
-     * @param msg
-     */
-    private void botCommands(final MessageReceivedEvent event, String msg) {
-
-        String cmd = msg.split(" ")[0];
-        CommandManager.ExcuteMessageCommend(cmd, event, msg);
     }
 
     //#endregion

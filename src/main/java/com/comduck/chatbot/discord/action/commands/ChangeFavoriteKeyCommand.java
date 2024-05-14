@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -11,7 +12,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-@MessageCommand(name = {"change"})
+@MessageCommand(name = {"change"}, parm = {"FavoriteKey"}, desc = "기존 즐겨찾기에 등록된 곡의 이름을 변경합니다.", cat= Category.Audio)
 public class ChangeFavoriteKeyCommand implements Command {
 
     private static final String msg_ChangeKeyQuery = "UPDATE FavoriteVideo SET Key=\"%s\" WHERE Key=\"%s\";";

@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.entities.Message;
@@ -16,7 +17,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import java.util.HashMap;
 import java.util.List;
 
-@MessageCommand(name = {"pause"})
+@MessageCommand(name = {"pause"}, desc = "음악을 일시정지합니다", cat = Category.Audio)
 public class PauseCommand implements Command {
 
     @Override
@@ -28,10 +29,10 @@ public class PauseCommand implements Command {
 
         if (e instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
-            msgEvent.getChannel().sendMessageEmbeds(resultMsg.getEmbeds()).queue();
+            msgEvent.getChannel().sendMessage(resultMsg).queue();
         } else if (e instanceof GenericMessageReactionEvent) {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
-            reactionEvent.getChannel().sendMessageEmbeds(resultMsg.getEmbeds()).queue();
+            reactionEvent.getChannel().sendMessage(resultMsg).queue();
         } else if (e instanceof ButtonInteractionEvent) {
             ButtonInteractionEvent reactionEvent = (ButtonInteractionEvent) e;
             reactionEvent.reply(resultMsg).setEphemeral(true).queue();

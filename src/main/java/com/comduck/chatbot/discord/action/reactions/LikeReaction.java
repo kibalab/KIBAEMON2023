@@ -30,32 +30,30 @@ public class LikeReaction implements Command {
         {
             return;
         }
+
         event.getChannel().retrieveMessageById(event.getMessageId()).queue( m -> {
             for(MessageReaction reaction : m.getReactions()) {
-                if(reaction.getEmoji().equals("⭐"))
-                {
-                    if(reaction.getCount() >= 5) {
-                        try {
-                            ResultSet r = MariaDB.Get(Table.LIKEMSG, "message_id", event.getMessageId());
-                            if(!r.next()){
-                                HashMap<String, Object> data = new HashMap<>();
-                                data.put("message_id", event.getMessageId());
-                                data.put("channel_id", event.getChannel().getId());
-                                data.put("server_id", event.getGuild().getId());
-                                MariaDB.Add(Table.LIKEMSG, data);
+                if(reaction.getCount() >= 5) {
+                    try {
+                        ResultSet r = MariaDB.Get(Table.LIKEMSG, "message_id", event.getMessageId());
+                        if(!r.next()){
+                            HashMap<String, Object> data = new HashMap<>();
+                            data.put("message_id", event.getMessageId());
+                            data.put("channel_id", event.getChannel().getId());
+                            data.put("server_id", event.getGuild().getId());
+                            MariaDB.Add(Table.LIKEMSG, data);
 
-                                ResultSet r1 = MariaDB.Get(Table.SERVER_SETTINGS, "server_id", event.getGuild().getId());
-                                if(r1.next()) {
-                                    MessageChannel ch = event.getGuild().getTextChannelById(r1.getString("like_ch_id"));
-                                    CopyMessage(event, ch);
-                                }
+                            ResultSet r1 = MariaDB.Get(Table.SERVER_SETTINGS, "server_id", event.getGuild().getId());
+                            if(r1.next()) {
+                                MessageChannel ch = event.getGuild().getTextChannelById(r1.getString("like_ch_id"));
+                                CopyMessage(event, ch);
                             }
-                            break;
-                        } catch (SQLException ex) {
-                            throw new RuntimeException(ex);
-                        } catch (ClassNotFoundException ex) {
-                            throw new RuntimeException(ex);
                         }
+                        break;
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (ClassNotFoundException ex) {
+                        throw new RuntimeException(ex);
                     }
                 }
             }

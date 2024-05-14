@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -15,13 +16,13 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import java.awt.*;
 
-@MessageCommand(name = {"skip", "next"})
+@MessageCommand(name = {"skip", "next"}, desc = "다음 음악을 재생합니다", cat = Category.Audio)
 public class SkipCommand implements Command {
 
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
 
-        instance.playerInstance.trackScheduler.playNextTrack();
+        instance.playerInstance.trackScheduler.playNextTrack(true);
 
         MessageCreateData resultMsg;
         if(instance.playerInstance.player.getPlayingTrack() == null)
@@ -39,10 +40,10 @@ public class SkipCommand implements Command {
 
         if (e instanceof MessageReceivedEvent) {
             MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
-            msgEvent.getChannel().sendMessageEmbeds(resultMsg.getEmbeds()).queue();
+            msgEvent.getChannel().sendMessage(resultMsg).queue();
         } else if (e instanceof GenericMessageReactionEvent) {
             GenericMessageReactionEvent reactionEvent = (GenericMessageReactionEvent) e;
-            reactionEvent.getChannel().sendMessageEmbeds(resultMsg.getEmbeds()).queue();
+            reactionEvent.getChannel().sendMessage(resultMsg).queue();
         } else if (e instanceof ButtonInteractionEvent) {
             ButtonInteractionEvent reactionEvent = (ButtonInteractionEvent) e;
             reactionEvent.reply(resultMsg).setEphemeral(true).queue();

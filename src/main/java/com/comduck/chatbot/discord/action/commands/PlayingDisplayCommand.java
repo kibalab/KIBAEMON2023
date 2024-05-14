@@ -1,13 +1,14 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import com.comduck.chatbot.discord.action.commands.db.UpdateDB;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
-@MessageCommand(name = {"PlayingDisplay"})
+@MessageCommand(name = {"PlayingDisplay"}, cat = Category.Hide)
 public class PlayingDisplayCommand implements Command {
 
     @Override

@@ -3,6 +3,7 @@ package com.comduck.chatbot.discord.action.commands;
 import com.comduck.chatbot.database.MariaDB;
 import com.comduck.chatbot.database.Table;
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.entities.Message;
@@ -20,7 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@MessageCommand(name="loadbm")
+@MessageCommand(name="loadbm", parm = {"ServerID"}, desc = "다른 서버에 저장된 북마크를 불러옵니다.", cat= Category.Social)
 public class LoadBookmarkCommand implements Command {
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) throws SQLException, ClassNotFoundException {

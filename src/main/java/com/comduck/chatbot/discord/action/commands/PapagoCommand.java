@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import com.comduck.chatbot.discord.api.naverapi.Papago;
@@ -11,7 +12,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.awt.*;
 
-@MessageCommand(name = {"papago"})
+@MessageCommand(name = {"papago"}, parm = {"Text", "SourceLang", "TargetLang"}, desc = "파파고 번역기능을 사용합니다.", cat= Category.API)
 public class PapagoCommand implements Command {
 
     @Override

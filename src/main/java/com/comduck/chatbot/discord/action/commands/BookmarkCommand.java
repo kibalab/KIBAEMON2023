@@ -3,6 +3,7 @@ package com.comduck.chatbot.discord.action.commands;
 import com.comduck.chatbot.database.MariaDB;
 import com.comduck.chatbot.database.Table;
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -11,7 +12,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-@MessageCommand(name = "bookmark")
+@MessageCommand(name = "bookmark", parm = {"CategoryID"}, desc = "서버내에 개인 북마크 채널을 생성할 채널카테고리를 등록합니다.", cat= Category.Social)
 public class BookmarkCommand implements Command {
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) throws ClassNotFoundException {

@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -15,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 
-@MessageCommand(name = {"shuffle", "mix", "sf"})
+@MessageCommand(name = {"shuffle", "mix", "sf"}, desc = "대기열 순서를 랜덤하게 변경합니다.", cat = Category.Audio)
 public class ShuffleCommand implements Command {
 
     @Override

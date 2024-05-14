@@ -41,14 +41,12 @@ public class YoutubePlayingImageProcessor {
 
    }
 
-    public File processImage(AudioTrack track, String[] tags) {
+    public File processImage(GenericEvent e, AudioTrack track, String[] tags, String uploader, String title, String author_url) {
         try {
 
             var userData = track.getUserData(HashMap.class);
-            JSONObject details = (JSONObject) userData.get("details");
             AudioTrackInfo info = track.getInfo();
 
-            GenericEvent e = (GenericEvent) userData.get("event");
             User user = null;
             if (e instanceof MessageReceivedEvent) {
                 MessageReceivedEvent event = (MessageReceivedEvent) e;
@@ -64,21 +62,17 @@ public class YoutubePlayingImageProcessor {
                 user = event.getUser();
             }
 
-
-            String uploader = (String) details.get("author_name");
-            String title = (String) details.get("title");
             String thumbUrl = info.artworkUrl.replace("vi_webp", "vi").replace("webp", "jpg");
             Date duration = new Date(track.getDuration());
 
             //Load Image
-            URL uploaderIconFile = YoutubeWebUtil.getUserImage(details.get("author_url").toString());
+            URL uploaderIconFile = YoutubeWebUtil.getUserImage(author_url);
             BufferedImage image = ImageIO.read(canvasFile);
             BufferedImage thum = null;
             BufferedImage uicon = null;
 
             try {
                 thum = ImageIO.read(new URL(thumbUrl).openConnection().getInputStream());
-                System.out.println("[ImageProcessor] Succeeded Load Image - " + thumbUrl);
             } catch (Exception ex) {
                 System.out.println("[ImageProcessor] Failed Load Image - " + thumbUrl.toString());
             }
@@ -161,9 +155,7 @@ public class YoutubePlayingImageProcessor {
             //Thumnail Image
             g2d.setClip(new RoundRectangle2D.Float(11, 12, 1260, 446, 90, 90));
 
-            System.out.println("[ImageProcessor] Tumbnail Size :" + thum.getWidth() + "/" + thum.getHeight());
             float sizeFit = Math.round(1260.0f/thum.getWidth() * 10) / 10;
-            System.out.println("[ImageProcessor] Tumbnail Size ratio :" + sizeFit);
             if (thum != null) g2d.drawImage(thum, 0, 0, (int)(thum.getWidth() * sizeFit), (int)(thum.getHeight() * sizeFit),null);
 
             //Edit close
@@ -176,11 +168,12 @@ public class YoutubePlayingImageProcessor {
 
             //image = blur(image);
 
+            System.out.println("[ImageProcessor] Save Image :" + outFile.getName());
             ImageIO.write(image, "png", outFile);
 
             return outFile;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         return canvasFile;
     }

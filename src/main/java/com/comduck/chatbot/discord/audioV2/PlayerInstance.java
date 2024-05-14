@@ -20,16 +20,11 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.message.GenericMessageEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
@@ -37,20 +32,21 @@ import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.hc.core5.http.ParseException;
 import org.jetbrains.annotations.Nullable;
+import org.json.simple.JSONObject;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+/**
+ * @Desc 각 서버에 할당되는 오디오 인스턴스
+ */
 public class PlayerInstance {
 
     public final AudioPlayerManager playerManager;
@@ -65,6 +61,7 @@ public class PlayerInstance {
         playerManager = new DefaultAudioPlayerManager();
         playerManager.registerSourceManager(new YoutubeAudioSourceManager());
         playerManager.registerSourceManager(new BandcampAudioSourceManager());
+        playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
         playerManager.registerSourceManager(new HttpAudioSourceManager());
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
@@ -81,9 +78,9 @@ public class PlayerInstance {
     /**
      * 트랙 재생 및 채널 접속
      *
-     * @param textChannel
-     * @param voiceChannel
-     * @param video
+     * @param textChannel 재생 메시지를 출력할 텍스트 채널
+     * @param voiceChannel 음악을 재생할 음성 채널
+     * @param video 재생할 비디오 Uri
      */
     public void PlayTrackTo(GenericEvent event, final TextChannel textChannel, final VoiceChannel voiceChannel, String video, @Nullable Consumer<AudioTrack> callback) throws IOException, ParseException, SpotifyWebApiException {
         try {
@@ -95,30 +92,7 @@ public class PlayerInstance {
         {
             if(callback != null) callback.accept(null);
             textChannel.sendMessage("채널 접속에 실패했습니다.").queue();
-            e.printStackTrace();
         }
-
-        if(video.isBlank() || video.isEmpty())
-        {
-            if (event instanceof ButtonInteractionEvent) {
-                ButtonInteractionEvent reactionEvent = (ButtonInteractionEvent) event;
-                TextInput body = TextInput.create("parm", "Video URL", TextInputStyle.PARAGRAPH)
-                        .setPlaceholder("Your concerns go here")
-                        .setMinLength(5)
-                        .setMaxLength(1000)
-                        .build();
-                Modal modal = Modal.create("play " + (trackScheduler.trackCount() <= 0 ? "@rmQck " : "") + Instant.now().toString(), "영상 재생하기")
-                        .addComponents(ActionRow.of(body))
-                        .build();
-                reactionEvent.replyModal(modal).queue();
-            }
-            else{
-                if(callback != null) callback.accept(null);
-                textChannel.sendMessage("URL을 입력해주세요.").queue();
-            }
-            return;
-        }
-
         Platform TrackType = Platform.http;
 
         if(video.contains("spotify"))
@@ -144,8 +118,10 @@ public class PlayerInstance {
         }
         if(video.contains("youtu"))
             TrackType = Platform.Youtube;
-        if(video.contains("soundcloud"))
+        else if(video.contains("soundcloud"))
             TrackType = Platform.Soundcloud;
+        else
+            TrackType = Platform.http;
 
         Platform finalTrackType = TrackType;
         playerManager.loadItem(video, new AudioLoadResultHandler() {
@@ -155,44 +131,56 @@ public class PlayerInstance {
                 final File playingImage;
                 String[] tags = {};
 
-                HashMap userData = new HashMap<>();
-                track.setUserData(userData);
-                userData.put("event", event);
                 switch (finalTrackType)
                 {
-                    case Soundcloud:
-                    case http:
                     case Other:
                     case Youtube:
-                        YoutubeParse yp = new YoutubeParse();
-                        userData.put("details", yp.getVideo(track.getIdentifier()));
                         tags = YoutubeWebUtil.getTrackTags(trackInfo.identifier);
                     default:
-                        playingImage = new YoutubePlayingImageProcessor().processImage(track, tags);
+                        YoutubeParse yp = new YoutubeParse();
+                        playingImage = new YoutubePlayingImageProcessor().processImage(event, track, tags, trackInfo.author, trackInfo.title, yp.getVideo(track.getIdentifier()).get("author_url").toString());
                         break;
+
+                    case http:
+                        if(callback != null) callback.accept(track);
+                        textChannel.sendMessage("> Play audio file\n" + track.getInfo().title + " | " + track.getInfo().author).queue(send_msg -> {
+                            trackScheduler.queue(new TrackMessage(send_msg, event, track));
+                        });
+                        return;
+
+                    case Soundcloud:
+                        if(callback != null) callback.accept(track);
+                        textChannel.sendMessage("> Play SoundCloud\n" + track.getInfo().title + " | " + track.getInfo().author).queue(send_msg -> {
+                            trackScheduler.queue(new TrackMessage(send_msg, event, track));
+                        });
+                        return;
 
                     case Spotify:
                         tags = new String[]{"Spotify"};
-                        playingImage = new YoutubePlayingImageProcessor().processImage(track, tags);
+                        playingImage = new YoutubePlayingImageProcessor().processImage(event, track, tags, trackInfo.author, trackInfo.title, "");
                         break;
                 }
 
                 if(callback != null) callback.accept(track);
 
-                textChannel.sendFiles(FileUpload.fromData(playingImage)).queue(send_msg -> {
-                    userData.put("send_msg", send_msg);
-                    trackScheduler.queue(track);
+                var msg = textChannel.sendFiles(FileUpload.fromData(playingImage));
+                msg.queue(send_msg -> {
+                    trackScheduler.queue(new TrackMessage(send_msg, event, track));
                 });
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
+                AtomicReference<Message> send_msg = new AtomicReference<>();
+                textChannel.sendMessage(String.format("플레이리스트를 추가합니다. ``%s`` [%d]", playlist.getName(), playlist.getTracks().size())).queue(msg -> {
+                    send_msg.set(msg);
+                });
+
                 for (AudioTrack track : playlist.getTracks()) {
-                    trackScheduler.queue(track);
+                    trackScheduler.queue(new TrackMessage(send_msg.get(), event, track));
                 }
 
                 if(callback != null) callback.accept(null);
-                textChannel.sendMessage(String.format("플레이리스트를 추가합니다. ``%s`` [%d]", playlist.getName(), playlist.getTracks().size())).queue();
             }
 
             @Override
@@ -205,6 +193,7 @@ public class PlayerInstance {
             public void loadFailed(FriendlyException e) {
                 if(callback != null) callback.accept(null);
                 textChannel.sendMessage("곡을 불러올 수 없습니다.").queue();
+                e.printStackTrace();
             }
         });
     }

@@ -3,6 +3,7 @@ package com.comduck.chatbot.discord.action.commands;
 import com.comduck.chatbot.database.MariaDB;
 import com.comduck.chatbot.database.Table;
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -11,7 +12,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-@MessageCommand(name = "like")
+@MessageCommand(name = "like", parm = {"ChannelID"}, desc = "서버내에 베스트 채팅을 보관할 채널을 등록합니다.", cat= Category.Social)
 public class LikeCommand implements Command {
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) throws SQLException, ClassNotFoundException {

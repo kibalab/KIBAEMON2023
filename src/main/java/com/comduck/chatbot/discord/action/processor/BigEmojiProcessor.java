@@ -12,7 +12,9 @@ import java.awt.*;
 @Permission(guildId = "1042050645320019988", channelId = "", userId = "") // 연구소
 @Permission(guildId = "814906163111526412", channelId = "", userId = "") // 배칠수
 @Permission(guildId = "1169720331292905562", channelId = "", userId = "") // Bot Test
-@Permission(guildId = "873927976197173249") // 오카부
+@Permission(guildId = "873927976197173249", channelId = "", userId = "") // 오카부
+@Permission(guildId = "921806181264138240", channelId = "", userId = "") // Null님 서버
+@Permission(guildId = "914106003585396756", channelId = "", userId = "") // Null님 서버
 public class BigEmojiProcessor implements Processor {
     @Override
     public void OnProcess(GenericMessageEvent e, String msg) {

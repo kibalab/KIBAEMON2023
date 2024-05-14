@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -12,7 +13,7 @@ import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.awt.*;
 
-@MessageCommand(name = {"join"})
+@MessageCommand(name = {"join"}, parm = {"VoiceChannelID"}, desc = "음성채널에 접속합니다.", cat = Category.Audio)
 public class JoinCommand implements Command {
 
     @Override
