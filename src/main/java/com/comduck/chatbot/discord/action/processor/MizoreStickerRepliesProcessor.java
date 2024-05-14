@@ -37,9 +37,14 @@ public class MizoreStickerRepliesProcessor implements Processor {
                 //이렘 울먹
                 event.getMessage().addReaction(Emoji.fromUnicode("U+1F63F")).queue();
             }
-            else if(event.getMessage().getStickers().stream().findFirst().get().getId().equals("1237784110055952424")){
+            else if(event.getMessage().getStickers().stream().findFirst().get().getId().equals("1237782989606228160")){
                 //이렘 (화들짝)
                 event.getMessage().addReaction(Emoji.fromUnicode("U+1F640")).queue();
+            }
+            else if(event.getMessage().getStickers().stream().findFirst().get().getId().equals("1237782813819015269")){
+                //나쟈 울먹
+                event.getMessage().addReaction(Emoji.fromUnicode("U+1F97A")).queue();
+                event.getMessage().addReaction(Emoji.fromUnicode("U+1F64F")).queue();
             }
         }
 
