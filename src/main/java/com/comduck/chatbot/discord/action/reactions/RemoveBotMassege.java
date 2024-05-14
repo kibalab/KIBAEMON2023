@@ -23,12 +23,19 @@ public class RemoveBotMassege implements Command {
 
         if(event.getReaction().isSelf()) return;
 
+
+        if(!event.isFromGuild())
+        {
+            var privateCh = event.getChannel().asPrivateChannel();
+            privateCh.deleteMessageById(event.getMessageId()).queue();
+            return;
+        }
+
         event.getChannel().retrieveMessageById(event.getMessageId()).queue(message -> {
             if(message.getAuthor().isBot())
             {
                 message.delete().queue();
             }
-            event.getChannel().sendMessage("> :wastebasket: OK");
         });
     }
 

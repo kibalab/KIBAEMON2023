@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
@@ -8,7 +9,7 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
-@MessageCommand(name = {"leave", "out"})
+@MessageCommand(name = {"leave", "out"}, desc = "음성채널을 나갑니다.", cat = Category.Audio)
 public class LeaveCommand implements Command {
 
     @Override

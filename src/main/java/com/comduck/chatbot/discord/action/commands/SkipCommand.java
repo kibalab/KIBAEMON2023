@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -15,7 +16,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import java.awt.*;
 
-@MessageCommand(name = {"skip", "next"})
+@MessageCommand(name = {"skip", "next"}, desc = "다음 음악을 재생합니다", cat = Category.Audio)
 public class SkipCommand implements Command {
 
     @Override

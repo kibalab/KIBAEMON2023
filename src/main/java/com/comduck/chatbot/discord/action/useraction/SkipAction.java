@@ -46,7 +46,7 @@ public class SkipAction implements UserAction {
 
     @Override
     public boolean OnClick(ButtonInteractionEvent event) {
-        ActionManager.ExcuteMessageCommend("skip", new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), "", true);
+        ActionManager.ExcuteMessageCommend(new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), "?skip", true);
         event.reply("> 요청중입니다, 잠시만기다려주세요.").setEphemeral(true).queue();
         return false;
     }

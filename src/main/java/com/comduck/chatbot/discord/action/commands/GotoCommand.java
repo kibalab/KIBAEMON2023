@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import com.comduck.chatbot.discord.action.commands.util.TimeUtil;
@@ -12,7 +13,7 @@ import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 
 import java.awt.*;
 
-@MessageCommand(name = {"goto"})
+@MessageCommand(name = {"goto"}, parm = {"Time(00:00)"}, desc = "현재 재생중인 음원의 특정시간으로 이동합니다.", cat = Category.Audio)
 public class GotoCommand implements Command {
 
     @Override

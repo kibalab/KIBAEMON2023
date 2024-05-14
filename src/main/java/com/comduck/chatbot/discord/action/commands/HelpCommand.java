@@ -1,6 +1,8 @@
 package com.comduck.chatbot.discord.action.commands;
 
+import com.comduck.chatbot.discord.ActionManager;
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -8,13 +10,61 @@ import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
-@MessageCommand(name = {"help", "hlp"})
+@MessageCommand(name = {"help", "hlp"}, desc = "사용가능한 명령어의 목록과 설명을 출력합니다.", cat= Category.ETC)
 public class HelpCommand implements Command {
 
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isAdd) {
         GenericMessageEvent event = (GenericMessageEvent) e;
+
+        var helpText = "```[ Commands (Prefix = ?) ]\n";
+
+        for (Category cat : Category.values())
+        {
+            if(cat.equals(Category.Hide)) continue;
+
+            helpText += cat.name() + " - \n";
+            var commandGroup = (LinkedList<Command>) ActionManager.GetCommandsByCategory(cat);
+            for (Command command : commandGroup) {
+                 var annotation = command.getClass().getDeclaredAnnotation(MessageCommand.class);
+                 var commandPrefix = annotation.name();
+                 var parms = annotation.parm();
+
+                 var parmText = "";
+                 for (String parm : parms)
+                 {
+                     parmText += String.format("<%s> ", parm);
+                 }
+
+                 helpText += String.format("    %s %s: %s", commandPrefix[0], parmText, annotation.desc());
+
+
+
+                 if(annotation.name().length > 1)
+                 {
+                     helpText += " [";
+                     helpText += String.join(", ", commandPrefix).replace(commandPrefix[0]+", ", "");
+                     helpText += " (으)로 대체가능]";
+                 }
+
+                 if(helpText.length() >= 1500) {
+                     helpText += "```";
+                     event.getChannel().sendMessage(helpText).queue();
+                     helpText = "```";
+                 } else {
+                     helpText += '\n';
+                 }
+
+            }
+        }
+        helpText += "```";
+        event.getChannel().sendMessage(helpText).queue();
+
+        /*
 
         String helpmsg = "***임시 명령어 도움말***\r"+
                 "```접두사 : '?' (명령어를 사용할때 가장앞에 반드시 포함되어있어야 합니다)\r"+
@@ -46,6 +96,7 @@ public class HelpCommand implements Command {
                 "제작 : KIBA#4466\r";
         event.getChannel().sendFiles(FileUpload.fromData(new File("play_help.png"))).queue();
         event.getChannel().sendMessage(helpmsg).queue();
+         */
     }
 
     @Override

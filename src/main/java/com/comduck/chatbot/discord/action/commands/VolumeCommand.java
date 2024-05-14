@@ -1,12 +1,13 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
 
-@MessageCommand(name = {"volume", "vol"})
+@MessageCommand(name = {"volume", "vol"}, parm = {"Volume%"}, desc = "플레이어의 음량을 조절합니다.", cat= Category.Audio)
 public class VolumeCommand implements Command {
 
     @Override

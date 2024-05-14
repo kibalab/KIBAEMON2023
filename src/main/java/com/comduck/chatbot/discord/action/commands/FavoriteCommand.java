@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -8,7 +9,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.sql.*;
 
-@MessageCommand(name = {"favorite"})
+@MessageCommand(name = {"favorite"}, parm = {"FavoriteKey"}, desc = "현재 재생중인곡을 즐겨찾기에 추가합니다.", cat = Category.Audio)
 public class FavoriteCommand implements Command {
 
     private static final String Msg_loadFavoriteQuery = "SELECT * FROM FavoriteVideo WHERE Server=%s AND Key=\"%s\";";

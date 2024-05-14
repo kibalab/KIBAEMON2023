@@ -32,14 +32,19 @@ public class ProcessorManager {
     {
         for (Processor p : processors)
         {
-            Permission[] permissions = p.getClass().getDeclaredAnnotation(Permissions.class).value();
-
             boolean excutable = false;
+            var anno = p.getClass().getDeclaredAnnotation(Permissions.class);
+            if(anno == null) excutable = true;
+            else{
+            Permission[] permissions = anno.value();
+
+            excutable = permissions.length == 0;
             for (Permission perm: permissions)
                 if(perm.guildId().equals(event.getGuild().getId()) || perm.guildId().isEmpty())
                     if(perm.channelId().equals(event.getChannel().getId()) || perm.channelId().isEmpty())
                         if(perm.userId().equals(((MessageReceivedEvent) event).getAuthor().getId()) || perm.userId().isEmpty())
                             excutable = true;
+            }
 
             if(excutable) p.OnProcess(event, msg);
         }

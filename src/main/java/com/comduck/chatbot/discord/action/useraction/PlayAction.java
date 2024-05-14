@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 
 import java.util.HashMap;
+import java.util.List;
 
 @UserActionMethod(command = {"play"}, buttonId = "playButton", modalId = "playModal")
 public class PlayAction implements UserAction {
@@ -79,7 +80,14 @@ public class PlayAction implements UserAction {
 
     @Override
     public boolean OnApply(ModalInteractionEvent event) {
-        ActionManager.ExcuteMessageCommend("play", new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), event.getValue("url").getAsString(), true);
+
+        var instance = BotInstance.getInstance(event.getGuild().getId());
+        if(instance.playerInstance.trackScheduler.playing == null) {
+            List<ActionRow> emptyActionRows = List.of();
+            event.getMessage().editMessageComponents(emptyActionRows).queue();
+        }
+
+        ActionManager.ExcuteMessageCommend(new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), "?play " + event.getValue("url").getAsString(), true);
         event.reply("> 요청중입니다, 잠시만기다려주세요.").setEphemeral(true).queue();
         return false;
     }

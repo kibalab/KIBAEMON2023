@@ -35,7 +35,7 @@ public class YoutubePlayingImageProcessor {
     // File outFile = processor.processImage(new File("testImage.png"), new File("testThum.png"), new File("iconTest.png"));
     // outFile 전송 후 파일 삭제
     // outFile.delete();
-    final File canvasFile = new File("PlayerTempletF2.png");
+    final File canvasFile = new File("PlayerTempletF3.png");
 
    public YoutubePlayingImageProcessor() {
 

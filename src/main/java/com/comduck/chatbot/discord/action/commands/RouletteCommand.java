@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import com.comduck.chatbot.discord.minigame.Roulette;
@@ -12,7 +13,7 @@ import java.awt.*;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 
-@MessageCommand(name = {"roulette", "rol"})
+@MessageCommand(name = {"roulette", "rol"}, parm = {"Amount"}, desc = "간단한 룰렛 게임입니다.", cat= Category.Game)
 public class RouletteCommand implements Command {
 
     static Roulette roulette = new Roulette();

@@ -2,6 +2,7 @@ package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.ActionManager;
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import com.comduck.chatbot.discord.action.useraction.PlayAction;
@@ -16,7 +17,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 //?test
-@MessageCommand(name = {"test"}, order = 0)
+@MessageCommand(name = {"test"}, order = 0, cat = Category.Hide)
 public class TestCommand implements Command {
 
     @Override

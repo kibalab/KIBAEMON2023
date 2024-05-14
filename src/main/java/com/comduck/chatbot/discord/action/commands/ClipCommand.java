@@ -1,6 +1,7 @@
 package com.comduck.chatbot.discord.action.commands;
 
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
@@ -14,7 +15,7 @@ import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import java.io.File;
 import java.io.IOException;
 
-@MessageCommand(name = {"clip"})
+@MessageCommand(name = {"clip"}, cat = Category.Hide)
 public class ClipCommand implements Command {
 
     @Override

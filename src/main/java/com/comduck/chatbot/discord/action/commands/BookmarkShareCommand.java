@@ -3,6 +3,7 @@ package com.comduck.chatbot.discord.action.commands;
 import com.comduck.chatbot.database.MariaDB;
 import com.comduck.chatbot.database.Table;
 import com.comduck.chatbot.discord.BotInstance;
+import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
 import com.comduck.chatbot.discord.action.MessageCommand;
 import net.dv8tion.jda.api.Permission;
@@ -15,7 +16,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-@MessageCommand(name = "bmshare")
+@MessageCommand(name = "bmshare", parm = {"@Mention"}, desc = "자신의 북마크를 다른 유저에게 공유합니다.", cat= Category.Social)
 public class BookmarkShareCommand implements Command {
 
     @Override

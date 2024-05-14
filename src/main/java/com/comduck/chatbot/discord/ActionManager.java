@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.GenericMessageEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -18,6 +19,7 @@ import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -32,6 +34,11 @@ public class ActionManager {
     static public HashMap<UserActionMethod, UserAction> userActions = new HashMap<>();
 
     static public void LoadAllActions() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException, MalformedURLException {
+
+        commands = new HashMap<>();
+        reactions = new HashMap<>();
+        userActions = new HashMap<>();
+
         Reflections reflections = new Reflections(CommandPackage);
         Set<Class<? extends IAction>> classes = reflections.getSubTypesOf(IAction.class);
         reflections = new Reflections(ReactionPackage);
@@ -88,26 +95,21 @@ public class ActionManager {
         userActions.put(cmd, command);
     }
 
-    static public void ExcuteMessageCommend(String command, GenericMessageEvent event, String msg, boolean isUserAction)
+    static public void ExcuteMessageCommend(GenericMessageEvent event, String msg, boolean isUserAction)
     {
-        if(!commands.containsKey(command)) {
-            System.out.printf("[CommandManager] Command(%s) Not Founded\n", command);
+        var msgEvent = new CommandEvent<MessageReceivedEvent>((MessageReceivedEvent) event, msg);
+        System.out.println(msgEvent);
+
+        if(!commands.containsKey(msgEvent.name)) {
+            System.out.printf("[CommandManager] Command(%s) Not Founded\n", msgEvent.name);
             return;
         }
         try {
-            commands.get(command).OnCommand(BotInstance.getInstance(event.getGuild().getId()), event, msg, isUserAction);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        } catch (SpotifyWebApiException e) {
+            commands.get(msgEvent.name).OnCommand(BotInstance.getInstance(event.getGuild().getId()), event, msg, isUserAction);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        commands.get(command).OnPostCommand(BotInstance.getInstance(event.getGuild().getId()), event);
+        commands.get(msgEvent.name).OnPostCommand(BotInstance.getInstance(event.getGuild().getId()), event);
     }
 
     static public void AttachUserAction(String command, Message msg)
@@ -197,18 +199,23 @@ public class ActionManager {
         }
 
         try {
-            reactions.get(reaction.getEmoji().getAsReactionCode()).OnCommand(BotInstance.getInstance(event.getGuild().getId()), event, "", isUserAction);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        } catch (SpotifyWebApiException e) {
+            reactions.get(reaction.getEmoji().getAsReactionCode()).OnCommand(event.isFromGuild() ? BotInstance.getInstance(event.getGuild().getId()) : null, event, "", isUserAction);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        reactions.get(reaction.getEmoji().getAsReactionCode()).OnPostCommand(BotInstance.getInstance(event.getGuild().getId()), event);
+        reactions.get(reaction.getEmoji().getAsReactionCode()).OnPostCommand(event.isFromGuild() ? BotInstance.getInstance(event.getGuild().getId()) : null, event);
+    }
+
+    static public LinkedList GetCommandsByCategory(Category cat)
+    {
+        var commandGroup = new LinkedList<>();
+        commands.forEach((key, value) -> {
+            if(value.getClass().getDeclaredAnnotation(MessageCommand.class).cat() == cat)
+            {
+                if(!commandGroup.contains(value)) commandGroup.add(value);
+            }
+        });
+
+        return commandGroup;
     }
 }
