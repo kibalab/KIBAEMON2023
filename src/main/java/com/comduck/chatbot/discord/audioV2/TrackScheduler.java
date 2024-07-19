@@ -50,9 +50,14 @@ public class TrackScheduler extends AudioEventAdapter {
     {
         var next = queue.poll();
 
+        if(next == null) {
+            player.stopTrack();
+            return;
+        }
+
         try {
             next.Track.setPosition(0);
-            player.startTrack(next.Track, true);
+            player.playTrack(next.Track);
 
             var last = playing;
             playing = next;
@@ -61,9 +66,7 @@ public class TrackScheduler extends AudioEventAdapter {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-}
+    }
 
     @Override
     public void onPlayerPause(AudioPlayer player) {

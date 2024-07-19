@@ -13,8 +13,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>16</source>
-                    <target>16</target>
+                    <source>22</source>
+                    <target>22</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -36,14 +36,14 @@
             <url>https://jitpack.io</url>
         </repository>
         <repository>
-            <id>dv8tion</id>
-            <name>m2-dv8tion</name>
-            <url>https://m2.dv8tion.net/releases</url>
+            <id>arbjerg</id>
+            <name>arbjerg</name>
+            <url>https://maven.lavalink.dev/snapshots</url>
         </repository>
         <repository>
             <id>arbjerg</id>
             <name>arbjerg</name>
-            <url>https://maven.lavalink.dev/snapshots</url>
+            <url>https://maven.lavalink.dev/releases</url>
         </repository>
     </repositories>
 
@@ -63,7 +63,13 @@
         <dependency>
             <groupId>dev.arbjerg</groupId>
             <artifactId>lavaplayer</artifactId>
-            <version>afec211f05c9dcf0b6ee44276a02f0316ea2458a-SNAPSHOT</version>
+            <version>2.2.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.lavalink.youtube</groupId>
+            <artifactId>v2</artifactId>
+            <version>1.4.0</version>
         </dependency>
 
         <dependency>
@@ -111,6 +117,16 @@
             <groupId>com.github.natanbc</groupId>
             <artifactId>lavadsp</artifactId>
             <version>0.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>4.4.1</version>
         </dependency>
     </dependencies>
 </project>

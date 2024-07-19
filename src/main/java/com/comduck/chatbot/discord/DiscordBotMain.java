@@ -29,7 +29,6 @@ import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -45,36 +44,34 @@ public class DiscordBotMain extends ListenerAdapter {
 
     public static void StartArgumentCommand(String[] Arg) throws Exception {
 
-        for(int i = 0; Arg.length > i; i++)
-        {
-            switch (Arg[i])
-            {
-                case "--run" :
-                case "-r" :
+        for (int i = 0; Arg.length > i; i++) {
+            switch (Arg[i]) {
+                case "--run":
+                case "-r":
                     new DiscordBotMain().start(Arg[++i]);
                     System.out.println("[DiscordBotMain] Set Bot Client : " + Arg[i]);
                     break;
 
-                case "-b" :
-                case "--bots" :
+                case "-b":
+                case "--bots":
                     JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader("Bots.json")));
                     Iterator<String> keys = (Iterator<String>) bots.keySet();
                     System.out.println("[ Bots.js List ]");
                     int index = 1;
-                    while(keys.hasNext()) {
+                    while (keys.hasNext()) {
                         String key = keys.next();
                         System.out.printf("%d. %s : %s%n", index, key, bots.get(key));
                         index++;
                     }
                     break;
 
-                case "-l" :
-                case "--log" :
+                case "-l":
+                case "--log":
                     logging = Boolean.parseBoolean(Arg[++i].toLowerCase());
                     System.out.println("[DiscordBotMain] Set Logger Activation : " + logging);
                     break;
 
-                default :
+                default:
                     System.out.println("[ KIBATION2019-JAVA ]");
                     System.out.println("[ K13A_Laboratories ]\n");
                     System.out.println("-r  --run   {BotName}   : Login with Token in Bots.json.");
@@ -96,7 +93,7 @@ public class DiscordBotMain extends ListenerAdapter {
 
         JSONObject bots = (JSONObject) (new JSONParser().parse(new FileReader("Bots.json")));
 
-        String token = (String)bots.get(bot);
+        String token = (String) bots.get(bot);
 
         JDABuilder builder = JDABuilder.createDefault(token);
         builder.setToken(token);
@@ -138,20 +135,20 @@ public class DiscordBotMain extends ListenerAdapter {
     }
 
     public void onReadyMessage(GuildReadyEvent event) {
-        for(TextChannel channel : event.getGuild().getTextChannels()) {
+        for (TextChannel channel : event.getGuild().getTextChannels()) {
             boolean channelTrue = false;
             //channelTrue = channel.getId().equals("607208059504427018"); // Nerine Force - bot_command
             //channelTrue = channel.getId().equals("424887201281605661"); // LucidLab - 명령어
 
-            if(channel.getId().equals("--")) {
+            if (channel.getId().equals("--")) {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setColor(new Color(0x1BC3FF));
-                eb.setAuthor("Ready!",null,"https://cdn.discordapp.com/attachments/452403281428217856/609442329593643019/KIBAEMON-ICON.png"); //
+                eb.setAuthor("Ready!", null, "https://cdn.discordapp.com/attachments/452403281428217856/609442329593643019/KIBAEMON-ICON.png"); //
                 eb.setTitle("KIBAEMON 준비완료!");
                 eb.setThumbnail("https://cdn.discordapp.com/attachments/452403281428217856/609441237228978254/KIBAEMON-LOGO.png");
-                SimpleDateFormat format2 = new SimpleDateFormat ( "yyyy년 MM월dd일");
+                SimpleDateFormat format2 = new SimpleDateFormat("yyyy년 MM월dd일");
                 java.util.Date time = new java.util.Date();
-                eb.addField("기동일(오늘)",format2.format(time),true);
+                eb.addField("기동일(오늘)", format2.format(time), true);
                 eb.addField("라이브러리", "JDA(JAVA)", true);
                 eb.addField("환경", String.format(
                         "OS: %s\nJAVA: %s\nJVM: %s\nJRE: %s\nCORE: %s\nMEMORY(BYTE): %s",
@@ -254,6 +251,7 @@ public class DiscordBotMain extends ListenerAdapter {
      */
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+        if (!event.isFromGuild()) return;
         BotInstance.getInstance(event.getGuild().getId()).lastDateTime = OffsetDateTime.now();
 
         //로그 출력
@@ -274,20 +272,20 @@ public class DiscordBotMain extends ListenerAdapter {
                     event.getGuild().getName(), event.getGuild().getId(),
                     event.getChannel().getName(), event.getChannel().getId(),
                     event.getAuthor().getName(), event.getAuthor().getId(),
-                    stickerItem.getName()+ "#" + stickerItem.getId()
+                    stickerItem.getName() + "#" + stickerItem.getId()
             );
         });
 
         //커맨드 모음에 데이터 인풋
         boolean commandRun = commandInterface(event);
         if (commandRun) {
-            System.out.printf("{'Error': 'Unknown Command', 'Context': '%s'}%n", event.getMessage().getContentRaw() );
+            System.out.printf("{'Error': 'Unknown Command', 'Context': '%s'}%n", event.getMessage().getContentRaw());
         }
     }
 
-    private void ClearLastMessageReaction(MessageReceivedEvent event){
+    private void ClearLastMessageReaction(MessageReceivedEvent event) {
         Message last = BotInstance.getInstance(event.getGuild().getId()).playerInstance.lastPlayMessage;
-        if(last != null) {
+        if (last != null) {
             last.clearReactions().queue();
             System.out.println("[DiscordBotMain] Remove Last message reactions");
         }
@@ -308,7 +306,7 @@ public class DiscordBotMain extends ListenerAdapter {
 
         if (!msg.startsWith("?") && !msg.startsWith("키바") && !msg.startsWith("ㅋㅂ")) return false;
 
-        for(String cmd : msg.split("\\n")) {
+        for (String cmd : msg.split("\\n")) {
             cmd = cmd.substring(1);
             ActionManager.ExcuteMessageCommend(event, cmd, false);
         }

@@ -1,5 +1,6 @@
 package com.comduck.chatbot.discord.action.commands;
 
+import com.comduck.chatbot.discord.ActionManager;
 import com.comduck.chatbot.discord.BotInstance;
 import com.comduck.chatbot.discord.action.Category;
 import com.comduck.chatbot.discord.action.Command;
@@ -30,7 +31,7 @@ public class FavoriteCommand implements Command {
 
             while ( result.next() )
             {
-                //playCommand(event, result.getString(2));
+                ActionManager.ExcuteMessageCommend(new MessageReceivedEvent(event.getJDA(), -1, event.getMessage()), "?play " + result.getString(2), true);
             }
             st.close();
         } catch (SQLException ex) {

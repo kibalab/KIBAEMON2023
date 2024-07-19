@@ -8,7 +8,9 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ProcessorManager {
@@ -32,19 +34,20 @@ public class ProcessorManager {
     {
         for (Processor p : processors)
         {
-            boolean excutable = false;
-            var anno = p.getClass().getDeclaredAnnotation(Permissions.class);
-            if(anno == null) excutable = true;
-            else{
-            Permission[] permissions = anno.value();
+            var annos = p.getClass().getDeclaredAnnotation(Permissions.class);
+            var anno = p.getClass().getDeclaredAnnotation(Permission.class);
 
-            excutable = permissions.length == 0;
+            boolean excutable = false;
+
+            List<Permission> permissions = new ArrayList<>();
+            if(annos != null) permissions.addAll(List.of(annos.value()));
+            if(anno != null) permissions.add(anno);
+
             for (Permission perm: permissions)
                 if(perm.guildId().equals(event.getGuild().getId()) || perm.guildId().isEmpty())
                     if(perm.channelId().equals(event.getChannel().getId()) || perm.channelId().isEmpty())
                         if(perm.userId().equals(((MessageReceivedEvent) event).getAuthor().getId()) || perm.userId().isEmpty())
                             excutable = true;
-            }
 
             if(excutable) p.OnProcess(event, msg);
         }

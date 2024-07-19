@@ -12,7 +12,7 @@ import java.awt.*;
 
 @Permission(guildId = "814906163111526412", channelId = "", userId = "365857982652743681") // 배칠수에서 미조레한테만 반응하기
 // Bot Test
-//@Permission(guildId = "1169720331292905562", channelId = "", userId = "341178729927671814 ")
+//@Permission(guildId = "1169720331292905562", channelId = "", userId = "231776579951263746")
 public class MizoreStickerRepliesProcessor implements Processor {
     @Override
     public void OnProcess(GenericMessageEvent e, String msg) {

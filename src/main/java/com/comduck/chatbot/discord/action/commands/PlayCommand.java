@@ -33,31 +33,34 @@ public class PlayCommand implements Command {
     @Override
     public void OnCommand(BotInstance instance, GenericEvent e, String msg, boolean isUserAction) throws MalformedURLException {
 
+        //TODO: 파일로 재생하는 경우, 파일을 다운로드 받아 재생하는 기능 추가
+
         TextChannel textCh = null;
         VoiceChannel voiceCh = null;
         final Message[] loadMsg = {null};
 
         MessageReceivedEvent msgEvent = (MessageReceivedEvent) e;
         textCh = msgEvent.getChannel().asTextChannel();
-        if(instance == null) instance = new BotInstance(msgEvent.getGuild(), DiscordBotMain.spotifyApi);
-        if(!msgEvent.getGuild().getAudioManager().isConnected() && msgEvent.getMember().getVoiceState().getChannel() != null) voiceCh = msgEvent.getMember().getVoiceState().getChannel().asVoiceChannel();
+        if (instance == null) instance = new BotInstance(msgEvent.getGuild(), DiscordBotMain.spotifyApi);
+        if (!msgEvent.getGuild().getAudioManager().isConnected() && msgEvent.getMember().getVoiceState().getChannel() != null)
+            voiceCh = msgEvent.getMember().getVoiceState().getChannel().asVoiceChannel();
 
         String video = msg.replaceFirst("play", "").replace(" ", "");
+        boolean requireRemove = true;
 
-        if(video.isBlank() || video.isEmpty())
-        {
+        if (video.isBlank() || video.isEmpty()) {
             var attachments = msgEvent.getMessage().getAttachments();
 
-            if(attachments.size() > 0) {
+            if (attachments.size() > 0) {
                 video = attachments.get(0).getUrl();
-            }
-            else {
+                requireRemove = false;
+            } else {
                 textCh.sendMessage("URL을 입력해주세요.").queue();
             }
-
         }
+        System.out.println(video);
 
-        if(!isUserAction) {
+        if (!isUserAction && requireRemove) {
             msgEvent.getMessage().delete().queue();
             textCh.sendMessage("> 불러오는 중").queue(_loadMsg -> {
                 loadMsg[0] = _loadMsg;
@@ -65,15 +68,11 @@ public class PlayCommand implements Command {
         }
 
         try {
-            if(instance.playerInstance == null) instance.playerInstance = new PlayerInstance();
+            if (instance.playerInstance == null) instance.playerInstance = new PlayerInstance();
             instance.playerInstance.PlayTrackTo(e, textCh, voiceCh, video, (track) -> {
-                if(loadMsg[0] != null) loadMsg[0].delete().queue();
+                if (loadMsg[0] != null) loadMsg[0].delete().queue();
             });
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } catch (ParseException ex) {
-            ex.printStackTrace();
-        } catch (SpotifyWebApiException ex) {
+        } catch (IOException | ParseException | SpotifyWebApiException ex) {
             ex.printStackTrace();
         }
     }

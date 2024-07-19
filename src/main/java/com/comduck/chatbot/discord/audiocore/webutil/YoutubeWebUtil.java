@@ -23,7 +23,11 @@ public class YoutubeWebUtil {
             doc2 = Jsoup.connect(channel).get();
 
             Element imageE = doc2.body().select("link[rel^=image_]").first();
-            return new URL(imageE.attr("href"));
+            var image = imageE.attr("href");
+
+            if (image != null) {
+                return new URL(image);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -43,9 +47,10 @@ public class YoutubeWebUtil {
             while (m.find()) {
                 tags.add(m.group());
             }
-        }catch (Exception e) {
-            System.out.println("[YoutubeWebUtil] Failed Load Tag list");
+        } catch (Exception e) {
+            System.err.println("[YoutubeWebUtil] Failed Load Tag list");
         }
-        return tags.toArray(new String[tags.size()]);
+        var size = tags.size();
+        return tags.toArray(new String[size]);
     }
 }
